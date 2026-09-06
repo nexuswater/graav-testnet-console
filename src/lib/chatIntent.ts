@@ -42,8 +42,9 @@ export type KnownMarket = {
 export function resolveKnown(symbolRaw: string): KnownMarket | null {
   const symbol = symbolRaw.replace(/^\$/, "");
   const upper = symbol.toUpperCase();
-  if (upper === "MOMENT" || upper === "MRLUSD") {
-    return { symbol: "MOMENT", factory: RLUSD.factoryAddress || FACTORY_ADDRESS, market: RLUSD.curveAddress || GSWAP_MARKET_ADDRESS, token: RLUSD.coinAddress || GSWAP_TOKEN_ADDRESS, graduated: false };
+  if (upper === "MOMENT" || upper === "MRLUSD" || upper === "COIN") {
+    if (RLUSD.profile !== "testnet-clone" || !RLUSD.factoryAddress || !RLUSD.curveAddress || !RLUSD.coinAddress) return null;
+    return { symbol: "MOMENT", factory: RLUSD.factoryAddress, market: RLUSD.curveAddress, token: RLUSD.coinAddress, graduated: false };
   }
   if (upper === "GSWAP") {
     return {

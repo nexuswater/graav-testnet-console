@@ -18,11 +18,17 @@ import {
   XRPL_EVM_TESTNET_ID,
 } from "@/lib/chain";
 
+/** Coin V1 / mRLUSD testnet clone registry (chain 1449000). */
+export const RLUSD_CLONE_FACTORY_ADDRESS = "0x2E393cfabeC866a38632b8C486B942089644dE93";
+export const RLUSD_CLONE_CURVE_ADDRESS = "0x376D4e428E25A403A3fA5cC122D1910f97B2B712";
+export const RLUSD_CLONE_COIN_ADDRESS = "0xe6A44F18A8375A3a1F3d01904C6e3001D7958A8e";
+
 export const SESSION_CHAIN_ID = XRPL_EVM_TESTNET_ID;
 
 export const ALLOWED_FACTORIES = [
   FACTORY_ADDRESS,
   M22_FACTORY_ADDRESS,
+  RLUSD_CLONE_FACTORY_ADDRESS,
 ] as const;
 
 /** V2 is the only swap target; V1 is allowlisted for scar detection only. */
@@ -36,6 +42,7 @@ export const ALLOWED_DEXES = [
  * gSWAP → M2.2; g589 + meme g* → M2 (pre-grad curve); T589 scar stays M2-only.
  */
 export const ALLOWED_MARKETS = [
+  RLUSD_CLONE_CURVE_ADDRESS,
   GSWAP_MARKET_ADDRESS,
   G589_MARKET_ADDRESS,
   T589_MARKET_ADDRESS,
@@ -43,6 +50,7 @@ export const ALLOWED_MARKETS = [
 ] as const;
 
 export const ALLOWED_TOKENS = [
+  RLUSD_CLONE_COIN_ADDRESS,
   GSWAP_TOKEN_ADDRESS,
   G589_TOKEN_ADDRESS,
   ...MEME_TESTNET_MARKETS.map((m) => m.token),
@@ -79,6 +87,14 @@ export function isM2Factory(addr: string): boolean {
 
 export function isGswapMarket(addr: string): boolean {
   return normAddr(addr) === normAddr(GSWAP_MARKET_ADDRESS);
+}
+
+export function isRlusdCloneFactory(addr: string): boolean {
+  return normAddr(addr) === normAddr(RLUSD_CLONE_FACTORY_ADDRESS);
+}
+
+export function isRlusdCloneMarket(addr: string): boolean {
+  return normAddr(addr) === normAddr(RLUSD_CLONE_CURVE_ADDRESS);
 }
 
 export function isT589Market(addr: string): boolean {
@@ -125,7 +141,7 @@ export function validateAllowlist(input: AllowlistCheckInput): string | null {
     return `chainId must be ${SESSION_CHAIN_ID} (got ${input.chainId})`;
   }
   if (!input.factory || !isAllowedFactory(input.factory)) {
-    return "factory not on allowlist (M2 or M2.2 only)";
+    return "factory not on allowlist (M2, M2.2, or RLUSD clone)";
   }
   if (input.market) {
     if (!isAllowedMarket(input.market)) {
@@ -134,6 +150,10 @@ export function validateAllowlist(input: AllowlistCheckInput): string | null {
     // gSWAP → must bind M2.2 factory (reject gSWAP on M2)
     if (isGswapMarket(input.market) && !isM22Factory(input.factory)) {
       return "gSWAP market must bind M2.2 factory (dual-factory rule)";
+    }
+    // Coin V1 / mRLUSD curve must bind its own clone factory, never X1/M22.
+    if (isRlusdCloneMarket(input.market) && !isRlusdCloneFactory(input.factory)) {
+      return "RLUSD Coin market must bind the testnet clone factory";
     }
     // g589 / T589 scar / meme g* → M2 factory (g589 is curve like meme, not gSWAP)
     if (
