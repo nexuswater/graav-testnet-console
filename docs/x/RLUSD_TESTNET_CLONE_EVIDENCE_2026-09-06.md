@@ -35,3 +35,7 @@ Smoke SELL: `0x82b5fa7ebd82bb1b601dc2470fdda62d6807d2da63b443feec50cdb5cb33e978`
 - Foundry: `forge test --root contracts-rlusd` — 2 passed, 0 failed.
 - TypeScript: `npx tsc --noEmit` — passed.
 - Console clone profile is explicit `RLUSD_TESTNET_CLONE=1`; default target remains mainnet-target and disabled. X1 paths/config remain on chain `1449000` with the existing X1 bind domain.
+
+## Broadcast note
+
+A first infrastructure-only CREATE batch was superseded before any factory launch or smoke use; its factory was `0x4de6DE1aeB38d972fE715bE6502656ddF22404ed` and it has no active coin binding. The active addresses and transactions above are the corrected batch after the signature-prefix fix.
