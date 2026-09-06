@@ -51,6 +51,7 @@ export function AccountMenu({ onStatus }: Props) {
   const [loadingMe, setLoadingMe] = useState(false);
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [metaMaskUrl, setMetaMaskUrl] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
 
   const refreshMe = useCallback(async () => {
@@ -99,11 +100,14 @@ export function AccountMenu({ onStatus }: Props) {
   };
 
   const handleConnect = async () => {
+    setMetaMaskUrl(null);
     setStatus(null);
     const eth = await waitForInjectedEth(3000);
     if (!eth) {
+      const dappUrl = typeof window === "undefined" ? null : `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}${window.location.search}${window.location.hash}`;
+      setMetaMaskUrl(dappUrl);
       setStatus(
-        "MetaMask not found in this browser. Open in the MetaMask in-app browser (or Chrome/Brave with the MetaMask extension)."
+        "MetaMask not found in this browser. Open this page in the MetaMask browser to connect."
       );
       return;
     }
@@ -127,6 +131,7 @@ export function AccountMenu({ onStatus }: Props) {
           return;
         }
       }
+      setMetaMaskUrl(null);
       const chainRes = await ensureXrplEvmTestnet();
       if (!chainRes.ok) {
         setStatus(
@@ -189,6 +194,11 @@ export function AccountMenu({ onStatus }: Props) {
 
   return (
     <div className="g-account" ref={rootRef}>
+      {!isConnected && (
+        <button type="button" className="g-btn g-connect-wallet" disabled={isConnecting} onClick={() => void handleConnect()}>
+          {isConnecting ? "Connecting…" : "Connect wallet"}
+        </button>
+      )}
       <button
         type="button"
         className="g-account-trigger"
@@ -262,24 +272,7 @@ export function AccountMenu({ onStatus }: Props) {
                 Disconnect wallet
               </button>
             </div>
-          ) : (
-            <div className="g-account-section">
-              <button
-                type="button"
-                className="g-btn sm g-account-action"
-                style={{
-                  background: "var(--x)",
-                  color: "#fff",
-                  border: 0,
-                  fontWeight: 650,
-                }}
-                disabled={isConnecting}
-                onClick={() => void handleConnect()}
-              >
-                {isConnecting ? "Connecting…" : "Connect wallet"}
-              </button>
-            </div>
-          )}
+          ) : null}
 
           <div className="g-account-divider" />
 
@@ -319,6 +312,12 @@ export function AccountMenu({ onStatus }: Props) {
               )}
             </div>
           )}
+        </div>
+      )}
+      {metaMaskUrl && !isConnected && (
+        <div className="g-account-help" role="status">
+          <div>MetaMask browser required for wallet injection.</div>
+          <a href={metaMaskUrl}>Open this page in MetaMask</a>
         </div>
       )}
     </div>

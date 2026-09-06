@@ -48,6 +48,7 @@ import { shortAddr } from "@/lib/wallet";
 import type { TradePrefill } from "@/lib/tradePrefill";
 import { Field } from "@/components/ui";
 import { TokenPfp } from "@/components/pfp/TokenPfp";
+import { RLUSD_V1 as RLUSD } from "@/lib/rlusd-v1/config";
 
 function explorerAddress(addr: string) {
   return `${EXPLORER_URL}/address/${addr}`;
@@ -699,6 +700,15 @@ export function TradeTab({
         </div>
       )}
 
+      {RLUSD.profile === "testnet-clone" && (
+        <div className="g-alert good" style={{ marginBottom: 16 }}>
+          <strong>RLUSD testnet clone live</strong> — launch a coin or open the demo Moment.
+          <span className="flex flex-wrap gap-2" style={{ marginTop: 10 }}>
+            <Link href="/launch" className="g-btn sm" style={{ textDecoration: "none" }}>Launch Coin (mRLUSD)</Link>
+            <Link href="/m/demo-moment-2026" className="g-btn sm" style={{ textDecoration: "none" }}>Open demo Moment</Link>
+          </span>
+        </div>
+      )}
       <div className="flex items-center justify-between" style={{ marginBottom: 8 }}>
         <h1 className="g-title">Markets</h1>
         <Link

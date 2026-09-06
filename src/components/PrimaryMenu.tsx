@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { AppTab } from "@/lib/tradePrefill";
+import { RLUSD_V1 as RLUSD } from "@/lib/rlusd-v1/config";
 
 const TABS: AppTab[] = ["Trade", "Portfolio", "Cross-chain", "Chat", "X"];
 
@@ -69,6 +70,16 @@ export function PrimaryMenu({ activeTab, onSelectTab }: Props) {
 
       {open && (
         <div className="g-menu-panel" role="menu">
+          <Link href="/launch" role="menuitem" className={`g-menu-item${pathname.startsWith("/launch") ? " on" : ""}`} onClick={() => setOpen(false)}>
+            {RLUSD.profile === "testnet-clone" ? "Launch Coin (mRLUSD)" : "Launch Coin"}
+          </Link>
+          <Link href="/m/demo-moment-2026" role="menuitem" className={`g-menu-item${pathname.startsWith("/m/") ? " on" : ""}`} onClick={() => setOpen(false)}>
+            Coin demo
+          </Link>
+          <Link href="/you" role="menuitem" className={`g-menu-item${pathname.startsWith("/you") ? " on" : ""}`} onClick={() => setOpen(false)}>
+            You
+          </Link>
+          <div className="g-menu-divider" />
           <Link
             href="/new"
             role="menuitem"

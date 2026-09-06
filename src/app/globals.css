@@ -718,6 +718,35 @@ details.g-details summary {
   position: relative;
   flex-shrink: 0;
 }
+ .g-connect-wallet {
+  background: var(--x);
+  color: #fff;
+  border: 0;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.g-account-help {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: min(280px, calc(100vw - 24px));
+  padding: 12px;
+  background: #111113;
+  border: 1px solid color-mix(in srgb, var(--warn) 45%, var(--line-2));
+  border-radius: var(--radius-m);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+  z-index: 95;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+}
+.g-account-help a {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--x-soft);
+  font-weight: 650;
+  text-decoration: underline;
+}
 .g-account-trigger {
   display: inline-flex;
   align-items: center;
