@@ -14,7 +14,7 @@ export type RlusdQuoteRequest = {
   toChain: string; toToken: string; quoteOnly: true;
 };
 export type AllowlistedBuyAdapter = {
-  kind: "allowlisted-buy-adapter"; provider: "squid-v2"; destinationChainId: 1440000;
+  kind: "allowlisted-buy-adapter"; provider: "squid-v2"; destinationChainId: number;
   quoteToken: string; marketAddress: string; beneficiary: string; enabled: false;
   reason: "BUY_ADAPTER_NOT_CONFIGURED";
 };

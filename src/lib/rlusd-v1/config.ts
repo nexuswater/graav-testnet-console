@@ -1,17 +1,21 @@
-/** Target architecture only. No live signing/deployment capability is supplied. */
+/** Explicit RLUSD profile selector. Mainnet remains disabled by default; the
+ * testnet clone is opt-in and never inherits the X1 bind domain. */
+const CLONE = process.env.RLUSD_TESTNET_CLONE === '1';
+const CLONE_FACTORY = '0x2E393cfabeC866a38632b8C486B942089644dE93';
+const CLONE_QUOTE = '0x9BCd84a6DbBE53FD5ACbC77b065c58F2eF753F6e';
+
 export const RLUSD_V1 = {
+  profile: CLONE ? 'testnet-clone' : 'mainnet-target',
   policyId: 'GRAAV_RLUSD_V1_40_35_20_5',
-  chainId: 1440000,
-  quoteAddress: '0x8d58c0c60b8d6b88fa98b291a646db34d0f98258',
-  quoteSymbol: 'RLUSD',
+  chainId: CLONE ? 1449000 : 1440000,
+  quoteAddress: CLONE ? CLONE_QUOTE : '0x8d58c0c60b8d6b88fa98b291a646db34d0f98258',
+  quoteSymbol: CLONE ? 'mRLUSD' : 'RLUSD',
   gasSymbol: 'XRP',
-  rpc: 'https://rpc.xrplevm.org',
-  explorer: 'https://explorer.xrplevm.org',
-  // Resolve the actual contract; never inherit X1's testnet domain.
-  bindVerifyingContract: null,
-  // Public RPC read at block 7564471: 18. Re-read at runtime before enabling an adapter.
+  rpc: CLONE ? 'https://rpc.testnet.xrplevm.org' : 'https://rpc.xrplevm.org',
+  explorer: CLONE ? 'https://explorer.testnet.xrplevm.org' : 'https://explorer.xrplevm.org',
+  bindVerifyingContract: CLONE ? CLONE_FACTORY : null,
   quoteDecimals: 18,
-  liveExecutionEnabled: false,
+  liveExecutionEnabled: CLONE,
   totalSupplyTokens: 1_000_000_000n,
   tokenDecimals: 18,
   reservedLpTokens: 200_000_000n,

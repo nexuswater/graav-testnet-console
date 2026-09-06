@@ -1,0 +1,34 @@
+{
+  "profile": "GRAAV_RLUSD_V1_TESTNET_CLONE",
+  "chainId": 1449000,
+  "rpc": "https://rpc.testnet.xrplevm.org",
+  "explorer": "https://explorer.testnet.xrplevm.org",
+  "gitCommit": "a71fbe1",
+  "deployer": "0x64FADF4D3FDe272EE100C1D1988b84149fd08DE3",
+  "policyId": "GRAAV_RLUSD_V1_40_35_20_5",
+  "quote": {
+    "name": "MockRLUSD",
+    "symbol": "mRLUSD",
+    "decimals": 18,
+    "address": "0x9BCd84a6DbBE53FD5ACbC77b065c58F2eF753F6e",
+    "txHash": "0x106316fa158d4c4262386735f7cc8b7dd49ed2345e45e7c8d08868132b0da560"
+  },
+  "contracts": {
+    "feeEscrow": { "address": "0xba078e035D8b421152155dF1699264b2a1B5bfeB", "txHash": "0xbb6ad2b71144946779ead883ee3896cdc434fca23ab1453023c4d4f2ead4ff77" },
+    "creatorVault": { "address": "0x864A039a6c66dfCAEC01a2704f831f05677F7eF6", "txHash": "0x96644a9fd545c5f4c6b021e1a11e6555225b9a12994a71ef502fa9d0702a3308" },
+    "launchAuthorizer": { "address": "0x00A6292c7C75463DcAf81aB74F6779a580E4BBDF", "txHash": "0x11aa6ec2d542b5e6e7dd5e10eaac2a4e7deb5f27de86f9692d4258537514b7e3" },
+    "attributionGuard": { "address": "0x37B104817BaDdE46ae5f301ebB5920B827d94C0c", "txHash": "0xd56932696dd203b6589806185e46775feb21acb919f727be110497fc2153a414" },
+    "tokenFactory": { "address": "0x2E393cfabeC866a38632b8C486B942089644dE93", "txHash": "0x5f8fbe821a2751739e0573fbdf074e9c87534210f6bb0eefc4b3274e85f79c53" },
+    "coin": { "address": "0xe6A44F18A8375A3a1F3d01904C6e3001D7958A8e", "curve": "0x376D4e428E25A403A3fA5cC122D1910f97B2B712", "escrow": "0x5357582778fbbceC8407c357c10045734DBBd801", "sourcePostId": "0x48c4b7b36d91ec9295214aebea70c73af0ccf1a326f091406b56edec0a8e1bc1", "createTxHash": "0xc2be44b3afe2e7869dfe5f30d9f8123ab7a641a57f80ee9794d3976bea9cf193" }
+  },
+  "bindDomain": {
+    "name": "GRAAV_RLUSD_TESTNET_CLONE",
+    "version": "1",
+    "chainId": 1449000,
+    "verifyingContract": "0x2E393cfabeC866a38632b8C486B942089644dE93"
+  },
+  "smoke": {
+    "buy": { "txHash": "0x37210457ddb3f35a6acc70aacf6411b0ecc415fc145b05add38204fb51f5a4fc", "grossMockRlusd": "5000000000000000000", "tokenOut": "989998774876516090311" },
+    "sell": { "txHash": "0x82b5fa7ebd82bb1b601dc2470fdda62d6807d2da63b443feec50cdb5cb33e978", "tokenIn": "989998774876516090311", "quoteOut": "4900990099009900000" }
+  }
+}
