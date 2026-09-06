@@ -2,10 +2,11 @@
  * testnet clone is opt-in and never inherits the X1 bind domain. */
 // Coin V1 is the public console default; mainnet is opt-in only.
 const CLONE = process.env.NEXT_PUBLIC_RLUSD_TESTNET_CLONE !== '0' && process.env.RLUSD_TESTNET_CLONE !== '0';
-const CLONE_FACTORY = process.env.NEXT_PUBLIC_RLUSD_FACTORY || '0x2E393cfabeC866a38632b8C486B942089644dE93';
-const CLONE_QUOTE = process.env.NEXT_PUBLIC_RLUSD_MOCK_ADDRESS || '0x9BCd84a6DbBE53FD5ACbC77b065c58F2eF753F6e';
-const CLONE_COIN = process.env.NEXT_PUBLIC_RLUSD_COIN_ADDRESS || '0xe6A44F18A8375A3a1F3d01904C6e3001D7958A8e';
-const CLONE_CURVE = process.env.NEXT_PUBLIC_RLUSD_CURVE_ADDRESS || '0x376D4e428E25A403A3fA5cC122D1910f97B2B712';
+const addressOr = (value: string | undefined, fallback: string) => /^0x[0-9a-fA-F]{40}$/.test(value || "") ? value! : fallback;
+const CLONE_FACTORY = addressOr(process.env.NEXT_PUBLIC_RLUSD_FACTORY, '0x2E393cfabeC866a38632b8C486B942089644dE93');
+const CLONE_QUOTE = addressOr(process.env.NEXT_PUBLIC_RLUSD_MOCK_ADDRESS, '0x9BCd84a6DbBE53FD5ACbC77b065c58F2eF753F6e');
+const CLONE_COIN = addressOr(process.env.NEXT_PUBLIC_RLUSD_COIN_ADDRESS, '0xe6A44F18A8375A3a1F3d01904C6e3001D7958A8e');
+const CLONE_CURVE = addressOr(process.env.NEXT_PUBLIC_RLUSD_CURVE_ADDRESS, '0x376D4e428E25A403A3fA5cC122D1910f97B2B712');
 
 export const RLUSD_V1 = {
   profile: CLONE ? 'testnet-clone' : 'mainnet-target',
