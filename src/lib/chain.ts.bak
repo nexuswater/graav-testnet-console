@@ -1,0 +1,84 @@
+import { defineChain, parseAbi, type Address } from "viem";
+
+export const XRPL_EVM_TESTNET_ID = 1449000;
+
+export const xrplEvmTestnet = defineChain({
+  id: XRPL_EVM_TESTNET_ID,
+  name: "XRPL EVM Testnet",
+  nativeCurrency: { name: "XRP", symbol: "XRP", decimals: 18 },
+  rpcUrls: {
+    default: { http: ["https://rpc.testnet.xrplevm.org"] },
+  },
+  blockExplorers: {
+    default: {
+      name: "XRPL EVM Explorer",
+      url: "https://explorer.testnet.xrplevm.org",
+    },
+  },
+  testnet: true,
+});
+
+export const FACTORY_ADDRESS =
+  "0x72be5a300956f9dF0F4264a4211251dD17CA276B" as Address;
+export const GRADUATION_MANAGER_ADDRESS =
+  "0x99d4b78Fc613FfdC8E1e7e794D686A62F1F99992" as Address;
+export const T589_MARKET_ADDRESS =
+  "0xA24798bE0ff8b0444885d060f78141979c6Dd0a2" as Address;
+/** Josh live market #2 (NXS / creator 0xe3D8…) */
+export const MARKET2_ADDRESS =
+  "0x3Adc0082F3751077fD9D9a6b14F4e5bbD2BA3CD5" as Address;
+export const MARKET2_TOKEN =
+  "0xdcD481d77D57490a0Dd7E36004B0691Fdd29B9f5" as Address;
+
+export const FAUCET_URL = "https://faucet.xrplevm.org";
+export const EXPLORER_URL = "https://explorer.testnet.xrplevm.org";
+export const RPC_URL = "https://rpc.testnet.xrplevm.org";
+
+export const factoryAbi = parseAbi([
+  "event MarketCreated(uint256 indexed marketId, address indexed token, address indexed market, address creator, string symbol, bytes32 originHash)",
+  "function createMarket(string name, string symbol, string metadataURI, bytes32 originHash) returns (uint256 marketId, address token, address market)",
+  "function getMarket(uint256 marketId) view returns ((address token, address market, address creator, bytes32 originHash, uint64 createdAt, uint32 templateVersion, bool graduated))",
+  "function getMarketBySymbol(string symbol) view returns ((address token, address market, address creator, bytes32 originHash, uint64 createdAt, uint32 templateVersion, bool graduated))",
+  "function marketCount() view returns (uint256)",
+]);
+
+export const marketAbi = parseAbi([
+  "function buy(uint256 minTokensOut) payable returns (uint256 tokensOut)",
+  "function sell(uint256 tokenAmount, uint256 minXrpOut) returns (uint256 xrpOut)",
+  "function realXrp() view returns (uint256)",
+  "function tokenReserve() view returns (uint256)",
+  "function graduated() view returns (bool)",
+  "function token() view returns (address)",
+  "function price() view returns (uint256)",
+  "function previewBuy(uint256 xrpIn) view returns (uint256 tokensOut, uint256 creatorFee, uint256 protocolFee, uint256 distributorFee)",
+  "function previewSell(uint256 tokenAmount) view returns (uint256 xrpOut, uint256 creatorFee, uint256 protocolFee, uint256 distributorFee)",
+  "function graduationThresholdXrp() view returns (uint256)",
+  "function virtualXrp() view returns (uint256)",
+]);
+
+export const graduationManagerAbi = parseAbi([
+  "function graduate(address market)",
+  "function tryGraduate(address market)",
+]);
+
+export const erc20Abi = parseAbi([
+  "function balanceOf(address account) view returns (uint256)",
+  "function approve(address spender, uint256 amount) returns (bool)",
+  "function allowance(address owner, address spender) view returns (uint256)",
+  "function decimals() view returns (uint8)",
+  "function symbol() view returns (string)",
+  "function name() view returns (string)",
+]);
+
+export type MarketInfo = {
+  token: Address;
+  market: Address;
+  creator: Address;
+  originHash: `0x${string}`;
+  createdAt: bigint;
+  templateVersion: number;
+  graduated: boolean;
+};
+
+export const ZERO_ADDRESS =
+  "0x0000000000000000000000000000000000000000" as Address;

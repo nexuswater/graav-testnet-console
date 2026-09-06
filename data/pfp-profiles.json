@@ -1,0 +1,47 @@
+{
+  "gSWAP": {
+    "ticker": "gSWAP",
+    "pfpURI": "/pfps/gswap.5b579f7b9ab8.png",
+    "contentType": "image/png",
+    "sha256": "5b579f7b9ab8",
+    "generated": false,
+    "source": "official-simple",
+    "updatedAt": "2026-09-05T01:18:07Z"
+  },
+  "gswap": {
+    "ticker": "gSWAP",
+    "pfpURI": "/pfps/gswap.5b579f7b9ab8.png",
+    "contentType": "image/png",
+    "sha256": "5b579f7b9ab8",
+    "generated": false,
+    "source": "official-simple",
+    "updatedAt": "2026-09-05T01:18:07Z"
+  },
+  "GSWAP": {
+    "ticker": "gSWAP",
+    "pfpURI": "/pfps/gswap.5b579f7b9ab8.png",
+    "contentType": "image/png",
+    "sha256": "5b579f7b9ab8",
+    "generated": false,
+    "source": "official-simple",
+    "updatedAt": "2026-09-05T01:18:07Z"
+  },
+  "g589": {
+    "ticker": "g589",
+    "pfpURI": "/pfps/g589.9d7023eb1f49.png",
+    "contentType": "image/png",
+    "sha256": "9d7023eb1f49",
+    "generated": false,
+    "source": "official-simple",
+    "updatedAt": "2026-09-05T01:18:07Z"
+  },
+  "G589": {
+    "ticker": "g589",
+    "pfpURI": "/pfps/g589.9d7023eb1f49.png",
+    "contentType": "image/png",
+    "sha256": "9d7023eb1f49",
+    "generated": false,
+    "source": "official-simple",
+    "updatedAt": "2026-09-05T01:18:07Z"
+  }
+}
