@@ -3,7 +3,7 @@
   "chainId": 1449000,
   "rpc": "https://rpc.testnet.xrplevm.org",
   "explorer": "https://explorer.testnet.xrplevm.org",
-  "gitCommit": "a71fbe1",
+  "gitCommit": "83882e0",
   "deployer": "0x64FADF4D3FDe272EE100C1D1988b84149fd08DE3",
   "policyId": "GRAAV_RLUSD_V1_40_35_20_5",
   "quote": {
