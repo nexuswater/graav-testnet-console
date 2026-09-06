@@ -1,7 +1,7 @@
 # Coin V1 Console Default — Production Evidence
 
 Date: 2026-09-06
-Deployment: dpl_8TAXA44fBajXSctgAhrucsCmngUo
+Deployment: dpl_Gq3LyCuySX8mf4z9HjenqdvaxfaD
 Production: https://graav-testnet-console.vercel.app
 
 ## Shipped

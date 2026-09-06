@@ -24,16 +24,16 @@ export function MockBuyCard({ xPostId }: { xPostId: string }) {
   const sellDone = state?.sellQuoteOut !== undefined;
   return <div className="g-card" style={{ marginTop: 20 }}>
     <div className="g-status">LOCAL MOCK BUY</div>
-    <h2 className="g-display" style={{ fontSize: 25, marginTop: 8 }}>Buy 5 RLUSD</h2>
-    <p className="g-sub" style={{ marginTop: 8 }}>Mock quote token · no wallet · no Squid route · no broadcast</p>
-    {!sessionId ? <button className="g-cta" onClick={() => void begin()} disabled={busy}>{busy ? "Preparing…" : "Prepare 5-RLUSD session"}</button> : <>
+    <h2 className="g-display" style={{ fontSize: 25, marginTop: 8 }}>Buy 5 mRLUSD</h2>
+    <p className="g-sub" style={{ marginTop: 8 }}>Mock mRLUSD quote · preview the market before your wallet signs</p>
+    {!sessionId ? <button className="g-cta" onClick={() => void begin()} disabled={busy}>{busy ? "Preparing…" : "Prepare 5 mRLUSD session"}</button> : <>
       <div className="g-kv" style={{ marginTop: 16 }}><span>Session</span><span className="g-mono">{sessionId.slice(0, 24)}…</span></div>
       <div className="g-kv"><span>State</span><span>{complete ? "destination BUY verified" : "awaiting local execution"}</span></div>
       {state?.tokensOut && <div className="g-kv"><span>Tokens out</span><span className="g-mono">{String(state.tokensOut)}</span></div>}
       {state?.referralCredit && <div className="g-kv"><span>Referral credit</span><span>{String(state.referralCredit)} base units (MOCK)</span></div>}
       {!complete && <button className="g-cta" onClick={() => void execute()} disabled={busy}>{busy ? "Executing…" : "Execute mock destination BUY"}</button>}
       {complete && !sellDone && <button className="g-cta" onClick={() => void execute("SELL")} disabled={busy}>{busy ? "Selling…" : "SELL tokens against actual reserve"}</button>}
-      {sellDone && <div className="g-alert good" style={{ marginTop: 12 }}>SELL complete against actual local reserve: {String(state.sellQuoteOut)} RLUSD base units out.</div>}
+      {sellDone && <div className="g-alert good" style={{ marginTop: 12 }}>SELL complete against actual local reserve: {String(state.sellQuoteOut)} mRLUSD base units out.</div>}
       <Link href={`/s/${sessionId}`} className="g-cta ghost" style={{ display: "block", textAlign: "center", textDecoration: "none", marginTop: 12 }}>Open signing-session view</Link>
     </>}
     {error && <div className="g-alert bad" style={{ marginTop: 12 }}>{error}</div>}
