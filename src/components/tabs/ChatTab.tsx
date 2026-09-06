@@ -23,7 +23,7 @@ export function ChatTab({ onHandoff }: Props) {
     {
       id: "welcome",
       role: "bot",
-      text: "GRAAV chat (@graav_xyz · local). Try: PORTFOLIO · BUY g589 0.1 · BUY gSWAP 0.1 · LAUNCH MYTK. Intents mint /s/{id} or hand off to Trade — never send a tx.",
+      text: "GRAAV chat · Coin V1 intents. Try: BUY MOMENT 0.1 · SELL 1 MOMENT · LAUNCH MYCOIN. Wallet approval is required; chat never signs or sends a transaction.",
     },
   ]);
 

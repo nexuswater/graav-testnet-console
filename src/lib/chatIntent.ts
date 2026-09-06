@@ -3,6 +3,7 @@
  * Chat ≠ authorization — never sends txs; only plans session mint + handoff.
  */
 import type { AppTab, TradePrefill } from "@/lib/tradePrefill";
+import { RLUSD_V1 as RLUSD } from "@/lib/rlusd-v1/config";
 import {
   FACTORY_ADDRESS,
   M22_FACTORY_ADDRESS,
@@ -41,6 +42,9 @@ export type KnownMarket = {
 export function resolveKnown(symbolRaw: string): KnownMarket | null {
   const symbol = symbolRaw.replace(/^\$/, "");
   const upper = symbol.toUpperCase();
+  if (upper === "MOMENT" || upper === "MRLUSD") {
+    return { symbol: "MOMENT", factory: RLUSD.factoryAddress || FACTORY_ADDRESS, market: RLUSD.curveAddress || GSWAP_MARKET_ADDRESS, token: RLUSD.coinAddress || GSWAP_TOKEN_ADDRESS, graduated: false };
+  }
   if (upper === "GSWAP") {
     return {
       symbol: "gSWAP",
@@ -220,6 +224,6 @@ export function parseIntent(raw: string): IntentPlan {
   return {
     kind: text ? "unknown" : "help",
     reply:
-      "Local intents only (@graav_xyz · X write fail-closed): PORTFOLIO · BUY <symbol> <xrp> · SELL <pct|amount> <symbol> · LAUNCH|CREATE <ticker> (create → /s mint). Aggregated Pay-with-USDC OFF until settle PASS. Chat ≠ auth. Known: gSWAP, g589, meme g*.",
+      "Coin V1 intents: BUY <coin> <mRLUSD> · SELL <amount> <coin> · LAUNCH <ticker>. Chat plans an action; your wallet approves it. Featured rail: MOMENT · mRLUSD.",
   };
 }

@@ -1,6 +1,7 @@
 /** Explicit RLUSD profile selector. Mainnet remains disabled by default; the
  * testnet clone is opt-in and never inherits the X1 bind domain. */
-const CLONE = process.env.NEXT_PUBLIC_RLUSD_TESTNET_CLONE === '1' || process.env.RLUSD_TESTNET_CLONE === '1';
+// Coin V1 is the public console default; mainnet is opt-in only.
+const CLONE = process.env.NEXT_PUBLIC_RLUSD_TESTNET_CLONE !== '0' && process.env.RLUSD_TESTNET_CLONE !== '0';
 const CLONE_FACTORY = process.env.NEXT_PUBLIC_RLUSD_FACTORY || '0x2E393cfabeC866a38632b8C486B942089644dE93';
 const CLONE_QUOTE = process.env.NEXT_PUBLIC_RLUSD_MOCK_ADDRESS || '0x9BCd84a6DbBE53FD5ACbC77b065c58F2eF753F6e';
 const CLONE_COIN = process.env.NEXT_PUBLIC_RLUSD_COIN_ADDRESS || '0xe6A44F18A8375A3a1F3d01904C6e3001D7958A8e';
