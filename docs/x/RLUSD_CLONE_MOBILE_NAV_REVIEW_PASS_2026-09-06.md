@@ -1,6 +1,6 @@
 # RLUSD clone mobile navigation — REVIEW PASS (2026-09-06)
 
-**Production deployment:** `dpl_31xum2vHgq7cKyU8jepQBKpZBDUK`
+**Production deployment:** `dpl_9J9wMXQQLZTpfETFJNFZxx7dapu7`
 **URL:** https://graav-testnet-console.vercel.app
 
 ## Changes
