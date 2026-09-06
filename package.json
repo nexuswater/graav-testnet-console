@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "check": "tsc --noEmit",
-    "test:rlusd": "node --import tsx --test --test-concurrency=1 tests/rlusd.test.ts"
+    "test:rlusd": "node --import tsx --test --test-concurrency=1 tests/rlusd.test.ts tests/rlusd-ingress.test.ts"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",

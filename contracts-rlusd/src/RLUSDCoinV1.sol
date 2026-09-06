@@ -45,6 +45,7 @@ contract MomentToken is IERC20 {
 }
 
 contract FeeEscrow {
+    uint256 private claimEntered;
     enum Role { PROTOCOL, CREATOR, REFERRER, MIDWIFE }
     IERC20 public immutable quote;
     address public immutable admin;
@@ -58,7 +59,7 @@ contract FeeEscrow {
     function authorizeMarket(address m, bool allowed) external { require(msg.sender == admin, "ADMIN"); market[m] = allowed; emit MarketAuthorization(m, allowed); }
     function credit(Role role, address beneficiary, uint256 amount, bytes32 orderId) external { require(market[msg.sender], "MARKET"); if (amount == 0) return; claimable[role][beneficiary] += amount; liabilities[role] += amount; emit FeeCredited(role, beneficiary, amount, orderId); }
     function claim(Role role) external nonReentrantClaim { uint256 amount = claimable[role][msg.sender]; require(amount > 0, "NOTHING"); claimable[role][msg.sender] = 0; liabilities[role] -= amount; TokenOps.push(quote, msg.sender, amount); emit FeeClaimed(role, msg.sender, amount); }
-    modifier nonReentrantClaim() { _; }
+    modifier nonReentrantClaim() { require(claimEntered == 0, "REENTRANT_CLAIM"); claimEntered = 1; _; claimEntered = 0; }
 }
 
 contract ProtocolPair is ReentrancyGuard {
@@ -82,7 +83,7 @@ contract RlusdCurve is ReentrancyGuard {
     constructor(IERC20 t,IERC20 q,FeeEscrow e,address a,uint256 inventory,uint256 lp,uint256 threshold_,uint256 x,uint256 y) { require(x>0&&y>0&&threshold_>0, "PARAMS"); token=t;quote=q;escrow=e;admin=a;curveInventory=inventory;reservedLp=lp;threshold=threshold_;virtualX=x;virtualY=y; }
     function buy(uint256 gross,uint256 minOut,address recipient,address referrer,address midwife,bytes32 orderId) external nonReentrant returns(uint256 out) { require(!graduated&&gross>0&&recipient!=address(0),"BUY"); quote.pull(msg.sender,address(this),gross); uint256 fee=gross/100; uint256 net=gross-fee; require(realQuote+net<=threshold,"THRESHOLD"); uint256 nextX=(virtualX*virtualY+virtualY+net-1)/(virtualY+net); out=virtualX-nextX; require(out>=minOut&&out<=curveInventory,"OUTPUT"); virtualX=nextX;virtualY+=net;realQuote+=net;curveInventory-=out; _fees(gross,fee,referrer,midwife,orderId); token.push(recipient,out); emit Buy(msg.sender,recipient,gross,fee,out,orderId); }
     function sell(uint256 amount,uint256 minOut,address recipient,bytes32 orderId) external nonReentrant returns(uint256 out) { require(!graduated&&amount>0,"SELL"); token.pull(msg.sender,address(this),amount); uint256 nextY=(virtualX*virtualY+virtualX+amount-1)/(virtualX+amount); uint256 gross=virtualY-nextY; require(gross<=realQuote,"REAL_RESERVE"); uint256 fee=gross/100;out=gross-fee;require(out>=minOut,"SLIPPAGE");virtualX+=amount;virtualY=nextY;realQuote-=gross;curveInventory+=amount;_fees(gross,fee,address(0),address(0),orderId);quote.push(recipient,out);emit Sell(msg.sender,recipient,amount,gross,fee,out,orderId); }
-    function graduate(ProtocolPair p) external nonReentrant { require(!graduated&&realQuote>=threshold,"NOT_READY"); pair=p; uint256 tokenSeed=realQuote*virtualX/virtualY; require(tokenSeed>0&&tokenSeed<=reservedLp,"LP_INVENTORY"); uint256 dust=curveInventory-tokenSeed; graduated=true; quote.push(address(p),realQuote); token.push(address(p),tokenSeed); if(dust>0) MomentToken(address(token)).burn(dust); p.initialize(tokenSeed,realQuote); emit Graduated(address(p),realQuote,tokenSeed,dust); }
+    function graduate(ProtocolPair p) external nonReentrant { require(!graduated&&realQuote>=threshold,"NOT_READY"); pair=p; uint256 tokenSeed=realQuote*virtualX/virtualY; require(tokenSeed>0&&tokenSeed<=reservedLp,"LP_INVENTORY"); uint256 dust=curveInventory + (reservedLp-tokenSeed); graduated=true; quote.push(address(p),realQuote); token.push(address(p),tokenSeed); if(dust>0) MomentToken(address(token)).burn(dust); p.initialize(tokenSeed,realQuote); emit Graduated(address(p),realQuote,tokenSeed,dust); }
     function _fees(uint256 gross,uint256 fee,address referrer,address midwife,bytes32 orderId) private { quote.push(address(escrow), fee); uint256 creator=gross*35/10000; uint256 ref=(referrer != address(0) ? gross*20/10000 : 0); uint256 mid=(midwife != address(0) && midwife != admin ? gross*5/10000 : 0); uint256 protocol=fee-creator-ref-mid; escrow.credit(FeeEscrow.Role.PROTOCOL,admin,protocol,orderId); escrow.credit(FeeEscrow.Role.CREATOR,admin,creator,orderId); escrow.credit(FeeEscrow.Role.REFERRER,referrer,ref,orderId); escrow.credit(FeeEscrow.Role.MIDWIFE,midwife,mid,orderId); }
 }
 
