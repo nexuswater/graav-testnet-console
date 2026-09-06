@@ -6,6 +6,10 @@ import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 import { isAddress } from "viem";
 import {
   validateAllowlist,
+  normAddr,
+  RLUSD_CLONE_FACTORY_ADDRESS,
+  RLUSD_CLONE_CURVE_ADDRESS,
+  RLUSD_CLONE_COIN_ADDRESS,
   type SessionAction,
   SESSION_CHAIN_ID,
 } from "@/lib/sessionAllowlist";
@@ -62,6 +66,15 @@ function safeEqual(a: string, b: string): boolean {
   return timingSafeEqual(ba, bb);
 }
 
+function isKnownRlusdCloneAddress(addr: string): boolean {
+  const known = [RLUSD_CLONE_FACTORY_ADDRESS, RLUSD_CLONE_CURVE_ADDRESS, RLUSD_CLONE_COIN_ADDRESS];
+  return known.some((candidate) => normAddr(candidate) === normAddr(addr));
+}
+
+function isValidBoundAddress(addr: string): boolean {
+  return isAddress(addr) || (isKnownRlusdCloneAddress(addr) && isAddress(addr, { strict: false }));
+}
+
 const ACTIONS: SessionAction[] = ["buy", "sell", "swap", "create"];
 
 export function createNonce(): string {
@@ -116,16 +129,16 @@ export function buildPayload(
   });
   if (allowErr) return { ok: false, error: allowErr };
 
-  if (factory && !isAddress(factory)) {
+  if (factory && !isValidBoundAddress(factory)) {
     return { ok: false, error: "factory must be a valid address" };
   }
-  if (market && !isAddress(market)) {
+  if (market && !isValidBoundAddress(market)) {
     return { ok: false, error: "market must be a valid address" };
   }
-  if (dex && !isAddress(dex)) {
+  if (dex && !isValidBoundAddress(dex)) {
     return { ok: false, error: "dex must be a valid address" };
   }
-  if (token && !isAddress(token)) {
+  if (token && !isValidBoundAddress(token)) {
     return { ok: false, error: "token must be a valid address" };
   }
 
