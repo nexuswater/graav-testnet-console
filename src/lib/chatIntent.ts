@@ -80,21 +80,38 @@ export function resolveKnown(symbolRaw: string): KnownMarket | null {
 }
 
 /**
- * Strip leading @graav_xyz (and bare @graav) so mention text matches Chat commands.
+ * Strip @graav_xyz (and bare @graav) wherever it appears so mention noise does
+ * not prevent the same command from working in Chat or from an X reply.
  */
 export function stripProductMention(raw: string): string {
   return raw
-    .replace(/^@graav_xyz\b/i, "")
-    .replace(/^@graav\b/i, "")
+    .replace(/@graav_xyz\b|@graav\b/gi, "")
+    .replace(/\s+/g, " ")
     .trim();
+}
+
+
+const tickerPattern = String.raw`\$?[A-Za-z][A-Za-z0-9_]{0,14}`;
+const amountPattern = String.raw`\d+(?:\.\d+)?`;
+
+/** Pull a strict command out of prose while keeping garbage fail-closed. */
+function extractCommand(text: string): string {
+  const patterns = [
+    new RegExp(`\\bBUY\\s+${tickerPattern}\\s+${amountPattern}\\b`, "i"),
+    new RegExp(`\\bSELL\\s+${amountPattern}%?\\s+${tickerPattern}\\b`, "i"),
+    new RegExp(`\\b(?:LAUNCH|CREATE)\\s+${tickerPattern}\\b`, "i"),
+    /\bPORTFOLIO\b/i,
+  ];
+  const matches = patterns.map((pattern) => pattern.exec(text)).filter((match): match is RegExpExecArray => match !== null).sort((a, b) => a.index - b.index);
+  return matches[0]?.[0] ?? text;
 }
 
 /**
  * Parse buy/sell/portfolio/launch intents (same allowlist as ChatTab).
- * Accepts optional leading @graav_xyz.
+ * Accepts @graav_xyz/@graav anywhere, with natural-language noise around the command.
  */
 export function parseIntent(raw: string): IntentPlan {
-  const text = stripProductMention(raw.trim());
+  const text = extractCommand(stripProductMention(raw.trim()));
   const upper = text.toUpperCase();
 
   if (upper === "PORTFOLIO" || upper.startsWith("PORTFOLIO ")) {
