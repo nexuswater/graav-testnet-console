@@ -5,6 +5,8 @@ import { X1 } from '@/lib/graav-x1/core/config';
 import type { TypedData } from '@/lib/graav-x1/core/types';
 import { api,ensureChain,requireWallet,short,type WalletProps } from './wallet';
 import { address,need } from './web-validation';
+import { XMark } from '@/components/XMark';
+import { XrplMark } from '@/components/XrplMark';
 
 type Status={x:{xUserId:string;handle:string|null};binding:{id:string;wallet:string;boundAt:number}|null};
 type Rewards={balanceWei:string;entries:{id:string;kind:string;amount_wei:string;distributor_wallet:string;explorerUrl:string}[]};
@@ -36,8 +38,8 @@ export function YouPanel(props:WalletProps & {onXLogin():void}) {
   return <main className="graav-x1">
     <p className="eyebrow">GRAAV / YOU</p><h1>Your rewards identity</h1>
     <div className="x1-card">
-      <div className="x1-row"><span>X</span><strong>{status ? `@${status.x.handle||status.x.xUserId}`:'Not signed in'}</strong><span>{status?.binding?'Bound':status?'Logged in':''}</span></div>
-      <div className="x1-row"><span>Wallet</span><strong>{props.connectedWallet?short(props.connectedWallet):'Not connected'}</strong><span>{props.connectedWallet?'Connected':''}</span></div>
+      <div className="x1-row"><span style={{display:'inline-flex',alignItems:'center',gap:8}}><XMark size={18} /> X</span><strong>{status ? `@${status.x.handle||status.x.xUserId}`:'Not signed in'}</strong><span>{status?.binding?'Bound':status?'Logged in':''}</span></div>
+      <div className="x1-row"><span style={{display:'inline-flex',alignItems:'center',gap:8}}><XrplMark size={22} /> Wallet</span><strong>{props.connectedWallet?short(props.connectedWallet):'Not connected'}</strong><span>{props.connectedWallet?'Connected':''}</span></div>
       <div className="x1-row"><span>Bind</span><strong>{status?.binding?short(status.binding.wallet):'Not bound'}</strong></div>
       <p>Needed for creator and share rewards. Never signs trades.</p>
       <p className="muted">Linking your identity does not move XRP.</p>

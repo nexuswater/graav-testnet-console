@@ -37,6 +37,15 @@ type Props = {
   onStatus?: (msg: unknown) => void;
 };
 
+function PersonMark({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <circle cx="12" cy="7.5" r="3.25" fill="currentColor" />
+      <path d="M5.5 20c.45-3.55 2.72-5.5 6.5-5.5s6.05 1.95 6.5 5.5H5.5Z" fill="currentColor" />
+    </svg>
+  );
+}
+
 export function AccountMenu({ onStatus }: Props) {
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
@@ -179,8 +188,14 @@ export function AccountMenu({ onStatus }: Props) {
         aria-label="Account menu"
         onClick={() => setOpen((v) => !v)}
       >
-        {walletReady ? <span className="g-av">{avLetter}</span> : <span className="g-av g-av-idle">·</span>}
-        {xBound && <span className="g-account-xmark" title={`@${me!.username}`}><XMark /></span>}
+        {xBound && me?.profileImageUrl && !xAvatarFailed ? (
+          <img className="g-account-trigger-avatar" src={me.profileImageUrl} alt="" onError={() => setXAvatarFailed(true)} />
+        ) : walletReady ? (
+          <span className="g-av">{avLetter}</span>
+        ) : (
+          <span className="g-av g-av-idle"><PersonMark /></span>
+        )}
+        {xBound && (!me?.profileImageUrl || xAvatarFailed) && <span className="g-account-xmark" title={`@${me!.username}`}><XMark /></span>}
         {idle && <span className="g-account-label">Account</span>}
         {!idle && !xBound && isConnected && <span className="g-account-label g-account-label-short">{shortAddr(address)}</span>}
         <span className="g-account-caret" aria-hidden>▾</span>

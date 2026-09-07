@@ -1,11 +1,11 @@
 type XrplMarkProps = { size?: number };
 
-/** Minimal white XRPL-style mark for wallet identity surfaces. */
+/** Official XRPL EVM Sidechain symbol from the network brand mark. */
 export function XrplMark({ size = 28 }: XrplMarkProps) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" aria-hidden="true" focusable="false">
-      <path d="M5 7h5.6l5.4 5.3L21.4 7H27l-8.2 8 8.2 8h-5.6L16 17.7 10.6 23H5l8.2-8L5 7Z" fill="currentColor" />
-      <path d="M5 9.5h3.8l7.2 6.9 7.2-6.9H27l-11 10.6L5 9.5Z" fill="#111113" />
+    <svg width={size} height={size} viewBox="0 0 405 297" aria-hidden="true" focusable="false" preserveAspectRatio="xMidYMid meet">
+      <path d="M222.695 163.591C248.112 163.591 272.767 172.582 291.543 190.2L396.762 288.792H346.309L266.528 214.061C254.792 203.104 239.145 197.244 222.715 197.244C206.285 197.244 190.638 203.104 178.902 214.061L99.121 288.792H48.6684L153.887 190.2C172.664 172.602 197.298 163.591 222.735 163.591H222.695ZM222.695 140.132C197.278 140.132 172.623 131.142 153.847 113.522L48.6483 14.9103H99.101L178.882 89.642C190.618 100.599 206.265 106.458 222.695 106.458C239.125 106.458 254.772 100.599 266.508 89.642L346.289 14.9103H396.742L291.523 113.502C272.746 131.102 248.112 140.112 222.675 140.112L222.695 140.132Z" fill="currentColor" />
+      <path d="M134.689 151.872L24.7764 244.985C16.5717 252.41 7.18323 248.898 7.18323 237.941V65.7815C7.18323 54.8246 16.5717 51.3128 24.7764 58.7378L134.689 151.851V151.872Z" fill="currentColor" />
     </svg>
   );
 }

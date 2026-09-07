@@ -24,7 +24,7 @@ export function GraavLogo({ href = "/", height = 30 }: Props) {
         maxWidth: "min(168px, 42vw)",
         display: "block",
         objectFit: "contain",
-        flexShrink: 0,
+        flexShrink: 1,
       }}
       decoding="async"
     />
@@ -39,7 +39,7 @@ export function GraavLogo({ href = "/", height = 30 }: Props) {
         display: "inline-flex",
         alignItems: "center",
         lineHeight: 0,
-        flexShrink: 0,
+        flexShrink: 1,
         minWidth: 0,
       }}
       aria-label="GRAAV home"

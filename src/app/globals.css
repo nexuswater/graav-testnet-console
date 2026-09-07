@@ -108,6 +108,7 @@ a.link-x:hover {
   backdrop-filter: saturate(1.4) blur(16px);
   z-index: 50;
   overflow: visible;
+  min-width: 0;
 }
 
 .g-mark {
@@ -632,12 +633,24 @@ details.g-details summary {
   gap: 8px;
   min-width: 0;
   flex: 1 1 auto;
+  overflow: hidden;
 }
+.g-top-brand .g-mark {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.g-top-brand .g-mark img {
+  width: auto;
+  max-width: 100%;
+  min-width: 0;
+}
+
 .g-top-actions {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-shrink: 0;
+  flex: 0 0 auto;
+  min-width: max-content;
   margin-left: auto;
 }
 
@@ -839,6 +852,17 @@ details.g-details summary {
   cursor: pointer;
   max-width: 42vw;
 }
+.g-av svg {
+  display: block;
+}
+.g-account-trigger-avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  object-fit: cover;
+  flex: 0 0 auto;
+}
+
 .g-av-idle {
   background: #1a1a1e;
   color: var(--dim);
@@ -921,11 +945,19 @@ details.g-details summary {
     display: none;
   }
   .g-top {
+    flex-wrap: nowrap;
+
     padding: 8px 10px;
-    gap: 8px;
+    gap: 5px;
   }
+  .g-top-brand { gap: 5px; }
+  .g-top-brand .g-mark { max-width: 116px; }
+  .g-top-actions { gap: 5px; }
   .g-mark img {
-    max-width: min(148px, 40vw);
+    width: 100%;
+    max-width: 116px !important;
+    height: 26px;
+
   }
 }
 
@@ -970,4 +1002,20 @@ details.g-details summary {
   color: #fff;
   font-size: 15px;
   font-weight: 700;
+}
+
+@media (max-width: 360px) {
+  .g-top-brand .g-mark {
+    max-width: 102px;
+  }
+  .g-top-brand .g-mark img {
+    max-width: 102px !important;
+  }
+  .g-pill {
+    font-size: 9px;
+    padding-inline: 5px;
+  }
+  .g-account-label {
+    display: none;
+  }
 }
