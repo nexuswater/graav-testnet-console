@@ -77,7 +77,6 @@ export function SigningSessionClient({ initial }: Props) {
   const walletConnectConnector = connectors.find((c) => c.id === "walletConnect" || c.name.toLowerCase().includes("walletconnect"));
 
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
-  const [showMobileWalletHelp, setShowMobileWalletHelp] = useState(false);
   const [blockReason, setBlockReason] = useState<string | null>(null);
   const [tokenAddr, setTokenAddr] = useState<Address | null>(
     (payload?.token as Address) || null
@@ -274,11 +273,9 @@ export function SigningSessionClient({ initial }: Props) {
 
   const handleConnect = async () => {
     setStatusMsg(null);
-    setShowMobileWalletHelp(false);
     const eth = await waitForInjectedEth(3000);
     if (!eth) {
       setStatusMsg(walletConnectConnector ? "MetaMask not found. Open in MetaMask or use WalletConnect." : "MetaMask not found. Open this URL in MetaMask in-app browser.");
-      setShowMobileWalletHelp(true);
       return;
     }
     try {
@@ -304,7 +301,6 @@ export function SigningSessionClient({ initial }: Props) {
     }
     try {
       await connectAsync({ connector: walletConnectConnector });
-      setShowMobileWalletHelp(false);
       setStatusMsg("WalletConnect connected. Check the network before signing.");
     } catch (err: unknown) {
       setStatusMsg(`WalletConnect failed: ${err instanceof Error ? err.message : String(err)}`);

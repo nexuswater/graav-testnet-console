@@ -2,7 +2,9 @@
 
 import { http, createConfig } from "wagmi";
 import { injected } from "@wagmi/core";
-import { walletConnect } from "@wagmi/connectors";
+// Deep-import only walletConnect — barrel pulls @base-org/account → broken @x402/evm.
+// @ts-expect-error deep entry avoids @wagmi/connectors barrel
+import { walletConnect } from "../../node_modules/@wagmi/connectors/dist/esm/walletConnect.js";
 import { xrplEvmTestnet, RPC_URL } from "./chain";
 
 const walletConnectProjectId = process.env.NEXT_PUBLIC_WC_PROJECT_ID?.trim();
