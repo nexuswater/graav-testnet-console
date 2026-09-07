@@ -22,11 +22,11 @@ export function MockBuyCard({ xPostId }: { xPostId: string }) {
   }
   const complete = state?.status === "COMPLETE";
   const sellDone = state?.sellQuoteOut !== undefined;
-  return <div className="g-card" style={{ marginTop: 20 }}>
+  return <div className="g-card rlusd-buy-card" style={{ marginTop: 20 }}>
     <div className="g-status">LOCAL MOCK BUY</div>
     <h2 className="g-display" style={{ fontSize: 25, marginTop: 8 }}>Buy 5 mRLUSD</h2>
     <p className="g-sub" style={{ marginTop: 8 }}>Mock mRLUSD quote · preview the market before your wallet signs</p>
-    {!sessionId ? <button className="g-cta" onClick={() => void begin()} disabled={busy}>{busy ? "Preparing…" : "Prepare 5 mRLUSD session"}</button> : <>
+    {!sessionId ? <button className="g-cta rlusd-primary-cta" onClick={() => void begin()} disabled={busy}>{busy ? "Preparing…" : "Prepare 5 mRLUSD session"}</button> : <>
       <div className="g-kv" style={{ marginTop: 16 }}><span>Session</span><span className="g-mono">{sessionId.slice(0, 24)}…</span></div>
       <div className="g-kv"><span>State</span><span>{complete ? "destination BUY verified" : "awaiting local execution"}</span></div>
       {state?.tokensOut && <div className="g-kv"><span>Tokens out</span><span className="g-mono">{String(state.tokensOut)}</span></div>}
