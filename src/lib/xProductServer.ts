@@ -259,6 +259,12 @@ export function buildCapabilityMatrix(opts?: {
       present: appUrlPresent,
     },
     {
+      key: "NEXT_PUBLIC_WC_PROJECT_ID",
+      purpose: "WalletConnect (optional; fail-closed if unset)",
+      state: "optional",
+      present: Boolean(process.env.NEXT_PUBLIC_WC_PROJECT_ID?.trim()),
+    },
+    {
       key: "FEATURE_PUBLIC_X_WRITE",
       purpose: "Public reply gate — MUST stay false until keys + explicit GO",
       state: "keep_false_until_go",

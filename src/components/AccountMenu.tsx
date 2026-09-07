@@ -22,6 +22,7 @@ import {
 } from "@/lib/wallet";
 import { getClientXAuthHint } from "@/lib/xAuth";
 import { asStatusText } from "@/lib/statusMsg";
+import { metaMaskDappUrl } from "@/lib/metaMaskDeepLink";
 
 type MeResponse = {
   bound: boolean;
@@ -45,6 +46,7 @@ export function AccountMenu({ onStatus }: Props) {
   const { disconnect } = useDisconnect();
   const { switchChain, isPending: isSwitching } = useSwitchChain();
   const onCorrectChain = chainId === XRPL_EVM_TESTNET_ID;
+  const walletConnectConnector = connectors.find((c) => c.id === "walletConnect" || c.name.toLowerCase().includes("walletconnect"));
 
   const hint = useMemo(() => getClientXAuthHint(), []);
   const [me, setMe] = useState<MeResponse | null>(null);
@@ -104,7 +106,7 @@ export function AccountMenu({ onStatus }: Props) {
     setStatus(null);
     const eth = await waitForInjectedEth(3000);
     if (!eth) {
-      const dappUrl = typeof window === "undefined" ? null : `https://metamask.app.link/dapp/${window.location.host}${window.location.pathname}${window.location.search}${window.location.hash}`;
+      const dappUrl = typeof window === "undefined" ? null : metaMaskDappUrl();
       setMetaMaskUrl(dappUrl);
       setStatus(
         "MetaMask not found in this browser. Open this page in the MetaMask browser to connect."
@@ -141,6 +143,21 @@ export function AccountMenu({ onStatus }: Props) {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       setStatus(`Connect failed: ${msg}`);
+    }
+  };
+
+  const handleWalletConnect = async () => {
+    setStatus(null);
+    if (!walletConnectConnector) {
+      setStatus("WalletConnect is unavailable until NEXT_PUBLIC_WC_PROJECT_ID is configured.");
+      return;
+    }
+    try {
+      await connectAsync({ connector: walletConnectConnector });
+      setMetaMaskUrl(null);
+      setOpen(false);
+    } catch (err: unknown) {
+      setStatus(`WalletConnect failed: ${err instanceof Error ? err.message : String(err)}`);
     }
   };
 
@@ -318,6 +335,11 @@ export function AccountMenu({ onStatus }: Props) {
         <div className="g-account-help" role="status">
           <div>MetaMask browser required for wallet injection.</div>
           <a href={metaMaskUrl}>Open this page in MetaMask</a>
+          {walletConnectConnector && (
+            <button type="button" className="g-btn sm g-account-action" onClick={() => void handleWalletConnect()} disabled={isConnecting}>
+              {isConnecting ? "Connecting…" : "WalletConnect"}
+            </button>
+          )}
         </div>
       )}
     </div>
