@@ -75,9 +75,7 @@ export function ConnectX({ compact }: Props) {
           title={`@${me.username} · Sign out`}
           aria-label={`@${me.username}, sign out of X`}
         >
-          <span className="g-av" style={{ background: "var(--x)" }}>
-            <XMark />
-          </span>
+          <XMark />
           <span className="g-x-handle">@{me.username}</span>
         </button>
       );
@@ -110,11 +108,11 @@ export function ConnectX({ compact }: Props) {
         type="button"
         onClick={onClick}
         disabled={loadingMe && hint.configured}
-        className="g-btn sm"
+        className={compact ? "g-btn g-wallet-pill" : "g-btn sm"}
         style={compact ? undefined : { borderColor: "var(--x)", color: "var(--x)" }}
       >
         <XMark />
-        {hint.configured ? "Sign in with X" : "Connect X"}
+        {compact ? "X" : hint.configured ? "Sign in with X" : "Connect X"}
       </button>
       {(notice || !hint.configured) && (
         <p

@@ -573,9 +573,9 @@ export function SigningSessionClient({ initial }: Props) {
         {!isConnected ? (
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
             {walletConnectConnector ? (
-              <button type="button" onClick={() => void handleWalletConnect()} disabled={isConnecting} className="g-btn sm" style={{ background: "var(--x)", color: "#fff", border: 0, fontWeight: 650, display: "inline-flex", alignItems: "center", gap: 7 }}>
+              <button type="button" onClick={() => void handleWalletConnect()} disabled={isConnecting} className="g-btn g-wallet-pill">
                 <WalletConnectMark />
-                {isConnecting ? "Connecting…" : "Connect with WalletConnect"}
+                {isConnecting ? "Connecting…" : "WalletConnect"}
               </button>
             ) : (
               <span className="g-micro" role="status" style={{ color: "var(--muted)" }}>
@@ -776,9 +776,9 @@ export function SigningSessionClient({ initial }: Props) {
           {!isConnected ? (
             <div style={{ display: "grid", gap: 8 }}>
               {walletConnectConnector ? (
-                <button type="button" onClick={() => void handleWalletConnect()} disabled={isConnecting} className="g-cta" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                <button type="button" onClick={() => void handleWalletConnect()} disabled={isConnecting} className="g-btn g-wallet-pill g-session-wallet-pill">
                   <WalletConnectMark />
-                  {isConnecting ? "Connecting…" : "Connect with WalletConnect"}
+                  {isConnecting ? "Connecting…" : "WalletConnect"}
                 </button>
               ) : (
                 <p className="g-micro" role="status" style={{ color: "var(--muted)", textAlign: "center" }}>

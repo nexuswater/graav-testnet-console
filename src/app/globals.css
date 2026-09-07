@@ -718,12 +718,50 @@ details.g-details summary {
   position: relative;
   flex-shrink: 0;
 }
- .g-connect-wallet {
-  background: var(--x);
-  color: #fff;
-  border: 0;
+.g-wallet-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 30px;
+  padding: 6px 10px;
+  border: 1px solid var(--line-2);
+  border-radius: 999px;
+  background: #111113;
+  color: var(--text);
+  font-size: 12px;
   font-weight: 650;
+  line-height: 16px;
   white-space: nowrap;
+}
+.g-wallet-pill:hover:not(:disabled) {
+  background: var(--bg-2);
+  border-color: #3a3a40;
+}
+.g-wallet-pill:disabled {
+  background: #111113;
+  border-color: var(--line);
+}
+.g-wallet-pill svg {
+  flex: 0 0 auto;
+}
+.g-connect-wallet {
+  color: var(--text);
+}
+.g-session-wallet-pill {
+  width: 100%;
+  margin-top: 16px;
+  padding: 12px 14px;
+  font-size: 15px;
+}
+.g-x-chip {
+  color: var(--text);
+  background: #111113;
+  border-color: var(--line-2);
+  font-weight: 650;
+}
+.g-x-chip svg {
+  flex: 0 0 auto;
 }
 .g-account-help {
   position: absolute;

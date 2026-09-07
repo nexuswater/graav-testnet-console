@@ -166,9 +166,9 @@ export function AccountMenu({ onStatus }: Props) {
     <div className="g-account" ref={rootRef}>
       {!isConnected && (
         walletConnectConnector ? (
-          <button type="button" className="g-btn g-connect-wallet" disabled={isConnecting} onClick={() => void handleWalletConnect()}>
+          <button type="button" className="g-btn g-wallet-pill g-connect-wallet" disabled={isConnecting} onClick={() => void handleWalletConnect()}>
             <WalletConnectMark />
-            {isConnecting ? "Connecting…" : "Connect with WalletConnect"}
+            {isConnecting ? "Connecting…" : "WalletConnect"}
           </button>
         ) : (
           <span className="g-micro" role="status" style={{ color: "var(--muted)" }}>
