@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { RLUSD_V1 as C } from "./config";
+import { getRlusdMarket } from "./marketRegistry";
 import { buy, initializeCurve, sell, splitFees, type CurveState } from "./model";
 
 export type MockSession = {
@@ -27,22 +28,29 @@ function store(): Store {
   return root[KEY];
 }
 
-export function mockMarketView() {
+export function mockMarketView(xPostId = "demo-moment-2026") {
   const s = store();
+  const registry = getRlusdMarket(xPostId);
+  const wired = registry?.marketAddress === C.curveAddress && registry?.coinAddress === C.coinAddress;
   return {
-    label: "RLUSD MARKET",
+    label: registry ? "RLUSD MARKET" : "UNREGISTERED MARKET",
+    symbol: registry?.symbol ?? null,
+    name: registry?.name ?? "Unknown market",
+    description: registry?.description ?? "This market is not in the RLUSD registry",
+    status: registry?.status ?? "not-wired",
+    wired,
     policyId: C.policyId,
     chainId: C.chainId,
     quoteSymbol: "RLUSD",
     quoteDecimals: C.quoteDecimals,
     quoteAddress: C.quoteAddress,
-    factoryAddress: C.factoryAddress,
-    coinAddress: C.coinAddress,
-    curveAddress: C.curveAddress,
-    xPostId: "demo-moment-2026",
-    reserve: s.curve.realQuote.toString(),
-    threshold: s.curve.threshold.toString(),
-    graduated: s.curve.graduated,
+    factoryAddress: registry?.factoryAddress ?? null,
+    coinAddress: registry?.coinAddress ?? null,
+    curveAddress: registry?.marketAddress ?? null,
+    xPostId,
+    reserve: wired ? s.curve.realQuote.toString() : "—",
+    threshold: wired ? s.curve.threshold.toString() : "—",
+    graduated: wired ? s.curve.graduated : false,
   };
 }
 
@@ -54,6 +62,8 @@ export function quoteMock(grossQuote: bigint) {
 }
 
 export function createMockBuy(xPostId: string, grossQuote: bigint, referralXId: string | null) {
+  const registry = getRlusdMarket(xPostId);
+  if (!registry || registry.marketAddress !== C.curveAddress || registry.coinAddress !== C.coinAddress) throw new Error("RLUSD_MARKET_NOT_WIRED");
   const q = quoteMock(grossQuote);
   const id = `rlusd_${randomUUID().replaceAll("-", "")}`;
   const s = store();

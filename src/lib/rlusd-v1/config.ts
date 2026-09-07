@@ -12,7 +12,7 @@ export const RLUSD_V1 = {
   policyId: 'GRAAV_RLUSD_V1_40_35_20_5',
   chainId: CLONE ? 1449000 : 1440000,
   quoteAddress: CLONE ? CLONE_QUOTE : '0x8d58c0c60b8d6b88fa98b291a646db34d0f98258',
-  quoteSymbol: CLONE ? 'mRLUSD' : 'RLUSD',
+  quoteSymbol: 'RLUSD',
   gasSymbol: 'XRP',
   rpc: CLONE ? 'https://rpc.testnet.xrplevm.org' : 'https://rpc.xrplevm.org',
   explorer: CLONE ? 'https://explorer.testnet.xrplevm.org' : 'https://explorer.xrplevm.org',

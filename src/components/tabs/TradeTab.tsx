@@ -49,6 +49,7 @@ import type { TradePrefill } from "@/lib/tradePrefill";
 import { Field } from "@/components/ui";
 import { TokenPfp } from "@/components/pfp/TokenPfp";
 import { RLUSD_V1 as RLUSD } from "@/lib/rlusd-v1/config";
+import { RLUSD_MARKET_REGISTRY } from "@/lib/rlusd-v1/marketRegistry";
 
 function explorerAddress(addr: string) {
   return `${EXPLORER_URL}/address/${addr}`;
@@ -719,129 +720,61 @@ export function TradeTab({
           New market
         </Link>
       </div>
-      {/* Search markets — meme quick-picks hidden behind Search */}
-      <section>
-        <div className="flex gap-2">
-          <input
-            className="g-search"
-            value={loadQuery}
-            onChange={(e) => setLoadQuery(e.target.value)}
-            onFocus={() => setShowSearchExtras(true)}
-            placeholder="Search markets"
-          />
-          <button
-            type="button"
-            onClick={() => void loadMarket()}
-            className="g-btn"
-            style={{
-              background: "var(--x)",
-              color: "#fff",
-              border: 0,
-              fontWeight: 650,
-              whiteSpace: "nowrap",
-            }}
-          >
-            Load
-          </button>
+      <section aria-labelledby="rlusd-markets">
+        <div className="flex items-center justify-between" style={{ marginBottom: 8 }}>
+          <div>
+            <h2 id="rlusd-markets" className="g-title">RLUSD Markets</h2>
+            <p className="g-hint" style={{ marginTop: 6 }}>Registry-first rail · quote RLUSD · chain {RLUSD.chainId}</p>
+          </div>
         </div>
-        <p className="g-hint" style={{ marginTop: 12 }}>
-          Trending on testnet
-        </p>
-        <div style={{ borderTop: "1px solid var(--line)", marginTop: 8 }}>
-          <Link href="/t/gSWAP" className="g-mkt" style={{ textDecoration: "none", color: "inherit" }}>
-            <TokenPfp ticker="gSWAP" size="sm" />
-            <div>
-              <div className="g-tick">gSWAP</div>
-              <div className="g-sub">
-                <span className="g-dot grad" />
-                Graduated · V2
+        <div style={{ borderTop: "1px solid var(--line)" }}>
+          {RLUSD_MARKET_REGISTRY.map((market) => (
+            <Link key={market.id} href={`/m/${market.sourcePostId}`} className="g-mkt" style={{ textDecoration: "none", color: "inherit" }}>
+              <TokenPfp ticker={market.symbol} size="sm" />
+              <div>
+                <div className="g-tick">{market.symbol}</div>
+                <div className="g-sub">
+                  <span className={`g-dot${market.status === "fixture" ? " grad" : ""}`} />
+                  {market.status === "fixture" ? "Fixture · preview" : "Registry only · not wired"} · RLUSD
+                </div>
               </div>
-            </div>
-            <div className="g-sub">Open →</div>
-          </Link>
-          <Link href="/t/g589" className="g-mkt" style={{ textDecoration: "none", color: "inherit" }}>
-            <TokenPfp ticker="g589" size="sm" />
-            <div>
-              <div className="g-tick">g589</div>
-              <div className="g-sub">
-                <span className="g-dot" />
-                On curve · M2
-              </div>
-            </div>
-            <div className="g-sub">Open →</div>
-          </Link>
+              <div className="g-sub">Open →</div>
+            </Link>
+          ))}
         </div>
+        <p className="g-hint" style={{ marginTop: 12 }}>Fixture rows are labeled; only a verified bind enables preview actions.</p>
+      </section>
 
-        {showSearchExtras && (
-          <details className="g-details" open>
-            <summary>More markets (search)</summary>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setLoadQuery(GSWAP_MARKET_ADDRESS);
-                  void loadMarketByQuery(GSWAP_MARKET_ADDRESS);
-                }}
-                className="g-btn sm"
-              >
-                gSWAP
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setLoadQuery(G589_MARKET_ADDRESS);
-                  void loadMarketByQuery(G589_MARKET_ADDRESS);
-                }}
-                className="g-btn sm"
-                title="Preferred M2 bonding-curve (over T589 scar)"
-              >
-                g589
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setLoadQuery(MARKET2_ADDRESS);
-                  void loadMarketByQuery(MARKET2_ADDRESS);
-                }}
-                className="g-btn sm"
-              >
-                Market #2
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setLoadQuery(T589_MARKET_ADDRESS);
-                  void loadMarketByQuery(T589_MARKET_ADDRESS);
-                }}
-                className="g-btn sm"
-                style={{ color: "var(--dim)" }}
-                title="Scar · v1 no swap — not featured"
-              >
-                T589 · scar
-              </button>
-              {MEME_TESTNET_MARKETS.map((m) => (
-                <button
-                  key={m.symbol}
-                  type="button"
-                  onClick={() => {
-                    setLoadQuery(m.symbol);
-                    void loadMarketByQuery(m.symbol);
-                  }}
-                  className="g-btn sm"
-                  title={m.name}
-                >
-                  {m.symbol}
-                </button>
-              ))}
-            </div>
-          </details>
-        )}
+      <details className="g-details" style={{ marginTop: 16 }}>
+        <summary>Search existing XRP markets</summary>
+        <section style={{ marginTop: 14 }}>
+          <div className="flex gap-2">
+            <input className="g-search" value={loadQuery} onChange={(e) => setLoadQuery(e.target.value)} onFocus={() => setShowSearchExtras(true)} placeholder="Search XRP markets" />
+            <button type="button" onClick={() => void loadMarket()} className="g-btn" style={{ background: "var(--x)", color: "#fff", border: 0, fontWeight: 650, whiteSpace: "nowrap" }}>Load</button>
+          </div>
+          <div style={{ borderTop: "1px solid var(--line)", marginTop: 12 }}>
+            <Link href="/t/gSWAP" className="g-mkt" style={{ textDecoration: "none", color: "inherit" }}><TokenPfp ticker="gSWAP" size="sm" /><div><div className="g-tick">gSWAP</div><div className="g-sub"><span className="g-dot grad" />Graduated · V2 · XRP</div></div><div className="g-sub">Open →</div></Link>
+            <Link href="/t/g589" className="g-mkt" style={{ textDecoration: "none", color: "inherit" }}><TokenPfp ticker="g589" size="sm" /><div><div className="g-tick">g589</div><div className="g-sub"><span className="g-dot" />On curve · M2 · XRP</div></div><div className="g-sub">Open →</div></Link>
+          </div>
+          {showSearchExtras && (
+            <details className="g-details" open>
+              <summary>More XRP markets</summary>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button type="button" onClick={() => { setLoadQuery(GSWAP_MARKET_ADDRESS); void loadMarketByQuery(GSWAP_MARKET_ADDRESS); }} className="g-btn sm">gSWAP</button>
+                <button type="button" onClick={() => { setLoadQuery(G589_MARKET_ADDRESS); void loadMarketByQuery(G589_MARKET_ADDRESS); }} className="g-btn sm" title="Preferred M2 bonding-curve">g589</button>
+                <button type="button" onClick={() => { setLoadQuery(MARKET2_ADDRESS); void loadMarketByQuery(MARKET2_ADDRESS); }} className="g-btn sm">Market #2</button>
+                <button type="button" onClick={() => { setLoadQuery(T589_MARKET_ADDRESS); void loadMarketByQuery(T589_MARKET_ADDRESS); }} className="g-btn sm" style={{ color: "var(--dim)" }} title="Scar · v1 no swap">T589 · scar</button>
+                {MEME_TESTNET_MARKETS.map((m) => <button key={m.symbol} type="button" onClick={() => { setLoadQuery(m.symbol); void loadMarketByQuery(m.symbol); }} className="g-btn sm" title={m.name}>{m.symbol}</button>)}
+              </div>
+            </details>
+          )}
         {loadError && (
           <p className="g-sub mt-2" style={{ color: "var(--bad)" }}>
             {loadError}
           </p>
         )}
       </section>
+      </details>
 
       {marketAddr && (
         <section>
