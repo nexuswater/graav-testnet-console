@@ -107,7 +107,7 @@ export function verifyIdentityCookie(
     const json = JSON.parse(
       Buffer.from(b64 + pad, "base64").toString("utf8")
     ) as XIdentity & { exp?: number };
-    if (!json?.id || !json?.username) return null;
+    if (!json?.id || !json?.username || !/^[1-9][0-9]{0,31}$/.test(String(json.id))) return null;
     if (
       typeof json.exp === "number" &&
       json.exp < Math.floor(Date.now() / 1000)

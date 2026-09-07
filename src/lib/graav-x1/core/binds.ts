@@ -67,6 +67,7 @@ export class BindService {
   }
   async status(ctx: Context) {
     const x = currentX(ctx, this.now()), binding = await activeBind(this.db, 'x_user_id', x.xUserId);
-    return { x: { xUserId: x.xUserId, handle: x.handle }, binding: binding ? { id: binding.id, wallet: binding.wallet, boundAt: binding.bound_at } : null };
+    const wallet = binding ? address(binding.wallet) : null;
+    return { x: { xUserId: x.xUserId, handle: x.handle }, binding: binding ? { id: binding.id, wallet, boundAt: binding.bound_at } : null };
   }
 }
