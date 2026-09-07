@@ -27,8 +27,8 @@ export function AppChrome({
           <span className="g-pill">TESTNET</span>
         </div>
         <div className="g-top-actions">
-          <PrimaryMenu />
           <AccountMenu onStatus={setMsg} />
+          <PrimaryMenu />
         </div>
       </header>
       <p className="g-micro-warn g-micro-warn-quiet px-4 pt-2">

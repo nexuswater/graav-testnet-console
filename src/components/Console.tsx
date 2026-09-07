@@ -56,8 +56,8 @@ export function Console() {
           <span className="g-pill">TESTNET</span>
         </div>
         <div className="g-top-actions">
-          <PrimaryMenu activeTab={tab} onSelectTab={setTab} />
           <AccountMenu onStatus={setStatusMsg} />
+          <PrimaryMenu activeTab={tab} onSelectTab={setTab} />
         </div>
       </header>
 

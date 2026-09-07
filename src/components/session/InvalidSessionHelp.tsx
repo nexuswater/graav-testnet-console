@@ -1,7 +1,11 @@
 "use client";
 
+
 import Link from "next/link";
 import { FAUCET_URL, XRPL_EVM_TESTNET_ID } from "@/lib/chain";
+import { AccountMenu } from "@/components/AccountMenu";
+import { PrimaryMenu } from "@/components/PrimaryMenu";
+import { GraavLogo } from "@/components/GraavLogo";
 import {
   isPlaceholderOrBogusSessionId,
   XRPL_EVM_TESTNET_HEX,
@@ -25,14 +29,14 @@ export function InvalidSessionHelp({ sessionId }: Props) {
   return (
     <div className="g-app">
       <header className="g-top">
-        <Link href="/" className="g-mark" style={{ textDecoration: "none" }}>
-          GRAAV
-        </Link>
-        <span className="g-pill">TESTNET</span>
-        <div className="flex-1" />
-        <Link href="/" className="g-btn sm" style={{ textDecoration: "none" }}>
-          Open Trade
-        </Link>
+        <div className="g-top-brand">
+          <GraavLogo height={30} />
+          <span className="g-pill">TESTNET</span>
+        </div>
+        <div className="g-top-actions">
+          <AccountMenu />
+          <PrimaryMenu />
+        </div>
       </header>
 
       <p className="g-micro-warn px-4 pt-3">

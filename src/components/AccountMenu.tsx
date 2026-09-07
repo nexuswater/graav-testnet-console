@@ -164,18 +164,6 @@ export function AccountMenu({ onStatus }: Props) {
 
   return (
     <div className="g-account" ref={rootRef}>
-      {!isConnected && (
-        walletConnectConnector ? (
-          <button type="button" className="g-btn g-wallet-pill g-connect-wallet" disabled={isConnecting} onClick={() => void handleWalletConnect()}>
-            <WalletConnectMark />
-            {isConnecting ? "Connecting…" : "WalletConnect"}
-          </button>
-        ) : (
-          <span className="g-micro" role="status" style={{ color: "var(--muted)" }}>
-            WalletConnect unavailable — configure NEXT_PUBLIC_WC_PROJECT_ID to connect.
-          </span>
-        )
-      )}
       <button
         type="button"
         className="g-account-trigger"
@@ -184,112 +172,115 @@ export function AccountMenu({ onStatus }: Props) {
         aria-label="Account menu"
         onClick={() => setOpen((v) => !v)}
       >
-        {isConnected ? (
-          <span className="g-av">{avLetter}</span>
-        ) : (
-          <span className="g-av g-av-idle">·</span>
-        )}
-        {xBound && (
-          <span className="g-account-xmark" title={`@${me!.username}`}>
-            <XMark />
-          </span>
-        )}
+        {isConnected ? <span className="g-av">{avLetter}</span> : <span className="g-av g-av-idle">·</span>}
+        {xBound && <span className="g-account-xmark" title={`@${me!.username}`}><XMark /></span>}
         {idle && <span className="g-account-label">Account</span>}
-        {!idle && !xBound && isConnected && (
-          <span className="g-account-label g-account-label-short">
-            {shortAddr(address)}
-          </span>
-        )}
-        <span className="g-account-caret" aria-hidden>
-          ▾
-        </span>
+        {!idle && !xBound && isConnected && <span className="g-account-label g-account-label-short">{shortAddr(address)}</span>}
+        <span className="g-account-caret" aria-hidden>▾</span>
       </button>
-
       {open && (
         <div className="g-account-panel" role="menu">
-          {isConnected && address ? (
-            <div className="g-account-section">
-              <div className="g-account-row">
-                <div className="min-w-0 flex-1">
-                  <div className="g-micro" style={{ color: "var(--muted)" }}>
-                    Wallet
-                  </div>
-                  <button
-                    type="button"
-                    className="g-account-addr"
-                    onClick={() => void copyAddress()}
-                    title="Copy address"
-                  >
-                    {shortAddr(address)}
-                    <span className="g-micro" style={{ marginLeft: 6 }}>
-                      {copied ? "copied" : "copy"}
-                    </span>
-                  </button>
-                </div>
-              </div>
-              {!onCorrectChain && (
-                <button
-                  type="button"
-                  className="g-btn sm g-account-action"
-                  style={{ borderColor: "var(--warn)", color: "var(--warn)" }}
-                  disabled={isSwitching}
-                  onClick={() => void handleSwitch()}
-                >
-                  {isSwitching ? "Switching…" : "Switch to XRPL EVM Testnet"}
-                </button>
-              )}
-              <button
-                type="button"
-                className="g-btn sm g-account-action"
-                onClick={() => {
-                  disconnect();
-                  setOpen(false);
-                }}
-              >
-                Disconnect wallet
-              </button>
-            </div>
-          ) : null}
+      <button
+        type="button"
+        className={`g-btn g-wallet-pill g-account-provider${walletConnectConnector ? "" : " is-muted"}`}
+        disabled={!walletConnectConnector || isConnecting}
+        onClick={() => void handleWalletConnect()}
+        title={walletConnectConnector ? "Connect with WalletConnect" : "WalletConnect unavailable — configure NEXT_PUBLIC_WC_PROJECT_ID"}
+      >
+        <WalletConnectMark size={24} />
+        <span className="g-account-provider-label">
+          {isConnecting ? "Connecting…" : "WalletConnect"}
+        </span>
+        <span className="g-account-chevron" aria-hidden="true">›</span>
+      </button>
 
-          <div className="g-account-divider" />
+      <button
+        type="button"
+        className="g-btn g-wallet-pill g-account-provider"
+        disabled={loadingMe && hint.configured}
+        onClick={onSignInX}
+      >
+        <XMark size={24} />
+        <span className="g-account-provider-label">Login to X</span>
+        <span className="g-account-chevron" aria-hidden="true">›</span>
+      </button>
 
-          {xBound ? (
-            <div className="g-account-section">
-              <div className="g-account-row">
-                <span className="g-av" style={{ background: "var(--x)" }}>
-                  <XMark />
-                </span>
-                <span style={{ color: "var(--text)", fontSize: 13 }}>
-                  @{me!.username}
-                </span>
+      {!walletConnectConnector && (
+        <p className="g-micro g-account-provider-hint" role="status">
+          WalletConnect unavailable — configure NEXT_PUBLIC_WC_PROJECT_ID to connect.
+        </p>
+      )}
+      {!hint.configured && (
+        <p className="g-micro g-account-provider-hint">
+          {hint.message}
+        </p>
+      )}
+
+      {(isConnected || xBound) && <div className="g-account-divider" />}
+
+      {isConnected && address ? (
+        <div className="g-account-section">
+          <div className="g-account-row">
+            <div className="min-w-0 flex-1">
+              <div className="g-micro" style={{ color: "var(--muted)" }}>
+                Wallet
               </div>
               <button
                 type="button"
-                className="g-btn sm g-account-action"
-                onClick={() => void onSignOutX()}
+                className="g-account-addr"
+                onClick={() => void copyAddress()}
+                title="Copy address"
               >
-                Sign out of X
+                {shortAddr(address)}
+                <span className="g-micro" style={{ marginLeft: 6 }}>
+                  {copied ? "copied" : "copy"}
+                </span>
               </button>
             </div>
-          ) : (
-            <div className="g-account-section">
-              <button
-                type="button"
-                className="g-btn sm g-account-action"
-                style={{ borderColor: "var(--x)", color: "var(--x)" }}
-                disabled={loadingMe && hint.configured}
-                onClick={onSignInX}
-              >
-                <XMark />
-                {hint.configured ? "Sign in with X" : "Connect X"}
-              </button>
-              {!hint.configured && (
-                <p className="g-micro" style={{ marginTop: 6 }}>
-                  {hint.message}
-                </p>
-              )}
-            </div>
+          </div>
+          {!onCorrectChain && (
+            <button
+              type="button"
+              className="g-btn sm g-account-action"
+              style={{ borderColor: "var(--warn)", color: "var(--warn)" }}
+              disabled={isSwitching}
+              onClick={() => void handleSwitch()}
+            >
+              {isSwitching ? "Switching…" : "Switch to XRPL EVM Testnet"}
+            </button>
           )}
+          <button
+            type="button"
+            className="g-btn sm g-account-action"
+            onClick={() => {
+              disconnect();
+              setOpen(false);
+            }}
+          >
+            Disconnect wallet
+          </button>
+        </div>
+      ) : null}
+
+      {xBound && (
+        <div className="g-account-section" style={{ marginTop: isConnected ? 10 : 0 }}>
+          <div className="g-account-row">
+            <span className="g-av" style={{ background: "var(--x)" }}>
+              <XMark />
+            </span>
+            <span style={{ color: "var(--text)", fontSize: 13 }}>
+              @{me!.username}
+            </span>
+          </div>
+          <button
+            type="button"
+            className="g-btn sm g-account-action"
+            onClick={() => void onSignOutX()}
+          >
+            Sign out of X
+          </button>
+        </div>
+      )}
         </div>
       )}
     </div>

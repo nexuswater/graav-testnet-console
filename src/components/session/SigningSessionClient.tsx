@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { GraavLogo } from "@/components/GraavLogo";
+import { AccountMenu } from "@/components/AccountMenu";
+import { PrimaryMenu } from "@/components/PrimaryMenu";
 import { WalletConnectMark } from "@/components/WalletConnectMark";
 import {
   useAccount,
   useConnect,
-  useDisconnect,
   useSwitchChain,
   useChainId,
   useWriteContract,
@@ -55,6 +56,7 @@ import {
 } from "@/lib/wallet";
 import { TokenPfp } from "@/components/pfp/TokenPfp";
 import { copyToClipboard } from "@/lib/metaMaskDeepLink";
+import { asStatusText } from "@/lib/statusMsg";
 
 type Props = {
   initial: PublicSessionView;
@@ -71,7 +73,6 @@ export function SigningSessionClient({ initial }: Props) {
     connectors,
     isPending: isConnecting,
   } = useConnect();
-  const { disconnect } = useDisconnect();
   const { switchChain, isPending: isSwitching } = useSwitchChain();
   const onCorrectChain = chainId === XRPL_EVM_TESTNET_ID;
   const walletConnectConnector = connectors.find((c) => c.id === "walletConnect" || c.name.toLowerCase().includes("walletconnect"));
@@ -552,7 +553,6 @@ export function SigningSessionClient({ initial }: Props) {
     return `${payload.amount || "?"} ${sym}`;
   }, [payload, tokenSymbol]);
 
-  const avLetter = address ? address.slice(2, 3).toUpperCase() : "?";
 
   // Placeholder / malformed / unsigned session → clear help (never blank 404)
   const unusableId = isUnusableSessionId(view.id);
@@ -567,48 +567,14 @@ export function SigningSessionClient({ initial }: Props) {
   return (
     <div className="g-app">
       <header className="g-top">
-        <GraavLogo height={28} />
-        <span className="g-pill">TESTNET</span>
-        <div className="flex-1" />
-        {!isConnected ? (
-          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
-            {walletConnectConnector ? (
-              <button type="button" onClick={() => void handleWalletConnect()} disabled={isConnecting} className="g-btn g-wallet-pill">
-                <WalletConnectMark />
-                {isConnecting ? "Connecting…" : "WalletConnect"}
-              </button>
-            ) : (
-              <span className="g-micro" role="status" style={{ color: "var(--muted)" }}>
-                WalletConnect unavailable — configure NEXT_PUBLIC_WC_PROJECT_ID to connect.
-              </span>
-            )}
-            <button type="button" onClick={() => void handleCopyLink()} className="g-btn sm">Copy link</button>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2">
-            {!onCorrectChain && (
-              <button
-                type="button"
-                onClick={() => void handleSwitch()}
-                disabled={isSwitching}
-                className="g-btn sm"
-                style={{ borderColor: "var(--bad)", color: "var(--bad)" }}
-                title={`XRPL EVM Testnet ${XRPL_EVM_TESTNET_ID} (${XRPL_EVM_TESTNET_HEX})`}
-              >
-                Switch {XRPL_EVM_TESTNET_ID}
-              </button>
-            )}
-            <button
-              type="button"
-              onClick={() => disconnect()}
-              className="g-chip"
-              title="Disconnect"
-            >
-              <span className="g-av">{avLetter}</span>
-              {shortAddr(address)}
-            </button>
-          </div>
-        )}
+        <div className="g-top-brand">
+          <GraavLogo height={30} />
+          <span className="g-pill">TESTNET</span>
+        </div>
+        <div className="g-top-actions">
+          <AccountMenu onStatus={(msg) => setStatusMsg(asStatusText(msg))} />
+          <PrimaryMenu />
+        </div>
       </header>
 
       <p className="g-micro-warn px-4 pt-3">
