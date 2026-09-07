@@ -10,6 +10,7 @@ import { CONSOLE_PUBLIC_ORIGIN } from "@/lib/signingSession";
 
 export const PRODUCT_HANDLE = "graav_xyz";
 export const PRODUCT_HANDLE_AT = "@graav_xyz";
+export const PRODUCT_USER_ID = "2094147928965468160";
 
 const X_API = "https://api.twitter.com/2";
 
