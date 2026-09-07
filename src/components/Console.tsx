@@ -13,7 +13,6 @@ import { AccountMenu } from "@/components/AccountMenu";
 import { PrimaryMenu } from "@/components/PrimaryMenu";
 import { GraavLogo } from "@/components/GraavLogo";
 import { makeStatusSetter } from "@/lib/statusMsg";
-import { CoinHome } from "@/components/CoinHome";
 
 const TABS: AppTab[] = ["Trade", "Portfolio", "Cross-chain", "Chat", "X"];
 
@@ -29,7 +28,6 @@ export function Console() {
   const [statusMsg, setStatusMsgRaw] = useState<string | null>(null);
   const setStatusMsg = makeStatusSetter(setStatusMsgRaw);
   const [prefill, setPrefill] = useState<TradePrefill | null>(null);
-  const legacy = search.get("legacy") === "1";
 
   useEffect(() => {
     const fromUrl = parseTab(search.get("tab"));
@@ -46,7 +44,6 @@ export function Console() {
     setTab(nextTab);
   };
 
-  if (!legacy) return <CoinHome />;
 
   return (
     <div className="g-app">

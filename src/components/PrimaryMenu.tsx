@@ -4,7 +4,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import type { AppTab } from "@/lib/tradePrefill";
 
-const TABS: AppTab[] = ["Trade", "Portfolio", "Cross-chain", "Chat", "X"];
 
 type Props = { activeTab?: AppTab; onSelectTab?: (tab: AppTab) => void; };
 
@@ -13,12 +12,7 @@ export function PrimaryMenu({ activeTab, onSelectTab }: Props) {
   const rootRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname() || "/";
   const router = useRouter();
-  const [legacy, setLegacy] = useState(false);
-  const onHome = pathname === "/" && legacy;
-
-  useEffect(() => {
-    setLegacy(new URLSearchParams(window.location.search).get("legacy") === "1");
-  }, []);
+  const onHome = pathname === "/";
 
   useEffect(() => {
     if (!open) return;
@@ -31,17 +25,20 @@ export function PrimaryMenu({ activeTab, onSelectTab }: Props) {
   const goTab = (tab: AppTab) => {
     setOpen(false);
     if (onHome && onSelectTab) { onSelectTab(tab); return; }
-    router.push(`/?legacy=1&tab=${encodeURIComponent(tab)}`);
+    router.push(`/?tab=${encodeURIComponent(tab)}`);
   };
 
   return <div className="g-menu" ref={rootRef}>
     <button type="button" className="g-menu-trigger" aria-haspopup="menu" aria-expanded={open} aria-label="Menu" onClick={() => setOpen((v) => !v)}><span className="g-menu-bars" aria-hidden><span /><span /><span /></span><span className="g-menu-word">Menu</span></button>
     {open && <div className="g-menu-panel" role="menu">
-      <Link href="/launch" role="menuitem" className={`g-menu-item${pathname.startsWith("/launch") ? " on" : ""}`} onClick={() => setOpen(false)}>Launch Coin</Link>
-      <Link href="/m/demo-moment-2026" role="menuitem" className={`g-menu-item${pathname.startsWith("/m/") ? " on" : ""}`} onClick={() => setOpen(false)}>Moments / Markets</Link>
-      <Link href="/m/demo-moment-2026" role="menuitem" className={`g-menu-item${pathname.startsWith("/t/") ? " on" : ""}`} onClick={() => setOpen(false)}>Trade</Link>
-      <Link href="/you" role="menuitem" className={`g-menu-item${pathname.startsWith("/you") ? " on" : ""}`} onClick={() => setOpen(false)}>You</Link>
-      {legacy && <><div className="g-menu-divider" /><div className="g-menu-label">Legacy surfaces</div>{TABS.map((t) => <button key={t} type="button" role="menuitem" className={`g-menu-item${onHome && activeTab === t ? " on" : ""}`} onClick={() => goTab(t)}>{t}</button>)}</>}
+      <button type="button" role="menuitem" className={`g-menu-item${onHome && activeTab === "Trade" ? " on" : ""}`} onClick={() => goTab("Trade")}>Markets</button>
+      <Link href="/launch" role="menuitem" className={`g-menu-item${pathname.startsWith("/launch") ? " on" : ""}`} onClick={() => setOpen(false)}>Launch / create from X</Link>
+      <button type="button" role="menuitem" className={`g-menu-item${onHome && activeTab === "Trade" ? " on" : ""}`} onClick={() => goTab("Trade")}>Trade · buy / sell / swap</button>
+      <button type="button" role="menuitem" className={`g-menu-item${onHome && activeTab === "Portfolio" ? " on" : ""}`} onClick={() => goTab("Portfolio")}>Portfolio</button>
+      <button type="button" role="menuitem" className={`g-menu-item${onHome && activeTab === "Cross-chain" ? " on" : ""}`} onClick={() => goTab("Cross-chain")}>Cross-chain Aggregated*</button>
+      <button type="button" role="menuitem" className={`g-menu-item${onHome && activeTab === "Chat" ? " on" : ""}`} onClick={() => goTab("Chat")}>Chat → /s</button>
+      <button type="button" role="menuitem" className={`g-menu-item${onHome && activeTab === "X" ? " on" : ""}`} onClick={() => goTab("X")}>X · mention bot status</button>
+      <Link href="/you" role="menuitem" className={`g-menu-item${pathname.startsWith("/you") ? " on" : ""}`} onClick={() => setOpen(false)}>You · bind</Link>
     </div>}
   </div>;
 }
