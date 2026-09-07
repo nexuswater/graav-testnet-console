@@ -4,6 +4,7 @@
  */
 import type { AppTab, TradePrefill } from "@/lib/tradePrefill";
 import { RLUSD_V1 as RLUSD } from "@/lib/rlusd-v1/config";
+import { RLUSD_CLONE_FACTORY_ADDRESS } from "@/lib/sessionAllowlist";
 import {
   FACTORY_ADDRESS,
   M22_FACTORY_ADDRESS,
@@ -217,7 +218,7 @@ export function parseIntent(raw: string): IntentPlan {
     }
     return {
       kind: "launch",
-      reply: `Create-market intent: ${ticker}. Chat ≠ authorization. Minting create /s/{id} on M2 — wallet signs. X write fail-closed until Director green.`,
+      reply: `Create-market intent: ${ticker}. Chat ≠ authorization. Minting CREATE_MARKET /s/{id} on the Coin factory — wallet signs. X write fail-closed until Director green.`,
       handoff: {
         tab: "Trade",
         label: `Trade · create ${ticker}`,
@@ -229,7 +230,7 @@ export function parseIntent(raw: string): IntentPlan {
       },
       sessionBody: {
         chainId: 1449000,
-        factory: FACTORY_ADDRESS, // M2 — new memes; no new Factory
+        factory: RLUSD_CLONE_FACTORY_ADDRESS, // Coin V1 CREATE_MARKET rail
         action: "create",
         amount: "0",
         minOut: "0",

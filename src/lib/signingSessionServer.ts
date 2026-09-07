@@ -98,6 +98,7 @@ export type CreateSessionInput = {
   createName?: string;
   createSymbol?: string;
   metadataURI?: string;
+  originHash?: string;
   swapSide?: "xrpToToken" | "tokenToXrp";
   /** Reply-track attribution (all optional) */
   originTweetId?: string;
@@ -148,6 +149,9 @@ export function buildPayload(
     if (!sym || !name) {
       return { ok: false, error: "create requires createName and createSymbol" };
     }
+    if (input.originHash && !/^0x[0-9a-fA-F]{64}$/.test(input.originHash)) {
+      return { ok: false, error: "originHash must be a 32-byte hex value" };
+    }
   }
 
   const now = Math.floor(Date.now() / 1000);
@@ -186,6 +190,7 @@ export function buildPayload(
     createName: input.createName?.trim() || undefined,
     createSymbol: input.createSymbol?.trim() || undefined,
     metadataURI: input.metadataURI?.trim() || undefined,
+    originHash: input.originHash?.trim() as `0x${string}` | undefined,
     swapSide: input.swapSide,
     originTweetId: input.originTweetId?.trim() || undefined,
     replyTweetId: input.replyTweetId?.trim() || undefined,

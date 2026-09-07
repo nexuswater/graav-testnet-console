@@ -350,7 +350,7 @@ export function SigningSessionClient({ initial }: Props) {
               name,
               symbol,
               payload.metadataURI || "",
-              zeroHash as Hex,
+              (payload.originHash || zeroHash) as Hex,
             ],
           })
         );
@@ -710,6 +710,14 @@ export function SigningSessionClient({ initial }: Props) {
                   <div className="g-kv">
                     <span>Symbol</span>
                     <span>{payload.createSymbol || "—"}</span>
+                  </div>
+                  <div className="g-kv">
+                    <span>Source post</span>
+                    <span>{payload.originTweetId || "—"}</span>
+                  </div>
+                  <div className="g-kv">
+                    <span>Origin hash</span>
+                    <span className="g-mono">{payload.originHash || zeroHash}</span>
                   </div>
                 </>
               )}

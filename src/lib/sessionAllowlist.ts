@@ -121,6 +121,7 @@ export function isV2Dex(addr: string): boolean {
 export function factoryShortLabel(factory: string): string {
   if (isM22Factory(factory)) return "M2.2";
   if (isM2Factory(factory)) return "M2";
+  if (isRlusdCloneFactory(factory)) return "Coin";
   return "unknown";
 }
 

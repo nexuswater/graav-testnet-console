@@ -60,6 +60,8 @@ export async function POST(req: NextRequest) {
         body.createSymbol != null ? String(body.createSymbol) : undefined,
       metadataURI:
         body.metadataURI != null ? String(body.metadataURI) : undefined,
+      originHash:
+        body.originHash != null ? String(body.originHash) : undefined,
       swapSide:
         body.swapSide === "tokenToXrp" || body.swapSide === "xrpToToken"
           ? body.swapSide

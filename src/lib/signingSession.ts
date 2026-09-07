@@ -27,6 +27,8 @@ export type SigningSessionPayload = {
   createName?: string;
   createSymbol?: string;
   metadataURI?: string;
+  /** create only: keccak256(source-post id), bound into factory calldata */
+  originHash?: `0x${string}`;
   /** swapExactXrpForTokens vs swapExactTokensForXrp */
   swapSide?: "xrpToToken" | "tokenToXrp";
   /**
