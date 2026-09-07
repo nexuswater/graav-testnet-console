@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { GraavLogo } from "@/components/GraavLogo";
+import { WalletConnectMark } from "@/components/WalletConnectMark";
 import {
   useAccount,
   useConnect,
@@ -51,10 +52,9 @@ import {
 import {
   ensureXrplEvmTestnet,
   shortAddr,
-  waitForInjectedEth,
 } from "@/lib/wallet";
 import { TokenPfp } from "@/components/pfp/TokenPfp";
-import { copyToClipboard, metaMaskDappUrl } from "@/lib/metaMaskDeepLink";
+import { copyToClipboard } from "@/lib/metaMaskDeepLink";
 
 type Props = {
   initial: PublicSessionView;
@@ -270,28 +270,6 @@ export function SigningSessionClient({ initial }: Props) {
     !!payload &&
     !isWriting &&
     !isConfirming;
-
-  const handleConnect = async () => {
-    setStatusMsg(null);
-    const eth = await waitForInjectedEth(3000);
-    if (!eth) {
-      setStatusMsg(walletConnectConnector ? "MetaMask not found. Open in MetaMask or use WalletConnect." : "MetaMask not found. Open this URL in MetaMask in-app browser.");
-      return;
-    }
-    try {
-      await eth.request({ method: "eth_requestAccounts" });
-      const connector = connectors.find((c) => c.id === "io.metamask" || c.name.toLowerCase().includes("metamask")) || connectors.find((c) => c.id === "injected");
-      if (!connector) {
-        setStatusMsg("Injected wallet found, but no injected connector is configured.");
-        return;
-      }
-      await connectAsync({ connector });
-      const chainRes = await ensureXrplEvmTestnet();
-      if (!chainRes.ok) setStatusMsg(`Connected. Switch to XRPL EVM Testnet (${chainRes.error ?? "pending"}).`);
-    } catch (err: unknown) {
-      setStatusMsg(`Connect failed: ${err instanceof Error ? err.message : String(err)}`);
-    }
-  };
 
   const handleWalletConnect = async () => {
     setStatusMsg(null);
@@ -595,22 +573,16 @@ export function SigningSessionClient({ initial }: Props) {
         {!isConnected ? (
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
             {walletConnectConnector ? (
-              <>
-                <button type="button" onClick={() => void handleWalletConnect()} disabled={isConnecting} className="g-btn sm" style={{ background: "var(--x)", color: "#fff", border: 0, fontWeight: 650 }}>
-                  {isConnecting ? "Connecting…" : "Connect with WalletConnect"}
-                </button>
-                <a href={metaMaskDappUrl()} className="g-micro" style={{ color: "var(--muted)", textDecoration: "underline", padding: "4px 2px" }}>Open in MetaMask</a>
-                <button type="button" onClick={() => void handleConnect()} disabled={isConnecting} className="g-micro" style={{ border: 0, background: "transparent", color: "var(--muted)", padding: "4px 2px", cursor: "pointer" }}>Browser wallet</button>
-              </>
+              <button type="button" onClick={() => void handleWalletConnect()} disabled={isConnecting} className="g-btn sm" style={{ background: "var(--x)", color: "#fff", border: 0, fontWeight: 650, display: "inline-flex", alignItems: "center", gap: 7 }}>
+                <WalletConnectMark />
+                {isConnecting ? "Connecting…" : "Connect with WalletConnect"}
+              </button>
             ) : (
-              <>
-                <button type="button" onClick={() => void handleConnect()} disabled={isConnecting} className="g-btn sm" style={{ background: "var(--x)", color: "#fff", border: 0, fontWeight: 650 }}>
-                  {isConnecting ? "Connecting…" : "Connect wallet"}
-                </button>
-                <a href={metaMaskDappUrl()} className="g-btn sm" style={{ textDecoration: "none" }}>Open in MetaMask</a>
-                <button type="button" onClick={() => void handleCopyLink()} className="g-btn sm">Copy link</button>
-              </>
+              <span className="g-micro" role="status" style={{ color: "var(--muted)" }}>
+                WalletConnect unavailable — configure NEXT_PUBLIC_WC_PROJECT_ID to connect.
+              </span>
             )}
+            <button type="button" onClick={() => void handleCopyLink()} className="g-btn sm">Copy link</button>
           </div>
         ) : (
           <div className="flex items-center gap-2">
@@ -792,8 +764,7 @@ export function SigningSessionClient({ initial }: Props) {
 
           {!onCorrectChain && isConnected && (
             <div className="g-alert bad" style={{ marginTop: 16 }}>
-              <strong>Wrong network</strong> (wallet {chainId || "—"}). In MetaMask
-              (mobile in-app browser too) switch to{" "}
+              <strong>Wrong network</strong> (wallet {chainId || "—"}). In your wallet switch to{" "}
               <strong>XRPL EVM Testnet</strong>{" "}
               <span className="g-mono">
                 {XRPL_EVM_TESTNET_ID} ({XRPL_EVM_TESTNET_HEX})
@@ -805,25 +776,16 @@ export function SigningSessionClient({ initial }: Props) {
           {!isConnected ? (
             <div style={{ display: "grid", gap: 8 }}>
               {walletConnectConnector ? (
-                <>
-                  <button type="button" onClick={() => void handleWalletConnect()} disabled={isConnecting} className="g-cta">
-                    {isConnecting ? "Connecting…" : "Connect with WalletConnect"}
-                  </button>
-                  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                    <a href={metaMaskDappUrl()} className="g-micro" style={{ color: "var(--muted)", textDecoration: "underline" }}>Open in MetaMask</a>
-                    <button type="button" onClick={() => void handleConnect()} disabled={isConnecting} className="g-micro" style={{ border: 0, background: "transparent", color: "var(--muted)", padding: 0, cursor: "pointer" }}>Browser wallet</button>
-                    <button type="button" onClick={() => void handleCopyLink()} className="g-micro" style={{ border: 0, background: "transparent", color: "var(--muted)", padding: 0, cursor: "pointer" }}>Copy link</button>
-                  </div>
-                </>
+                <button type="button" onClick={() => void handleWalletConnect()} disabled={isConnecting} className="g-cta" style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  <WalletConnectMark />
+                  {isConnecting ? "Connecting…" : "Connect with WalletConnect"}
+                </button>
               ) : (
-                <>
-                  <button type="button" onClick={() => void handleConnect()} className="g-cta">Connect wallet</button>
-                  <div style={{ display: "grid", gap: 8 }}>
-                    <a href={metaMaskDappUrl()} className="g-cta" style={{ textAlign: "center", textDecoration: "none" }}>Open in MetaMask</a>
-                    <button type="button" onClick={() => void handleCopyLink()} className="g-cta ghost">Copy link</button>
-                  </div>
-                </>
+                <p className="g-micro" role="status" style={{ color: "var(--muted)", textAlign: "center" }}>
+                  WalletConnect unavailable — configure NEXT_PUBLIC_WC_PROJECT_ID to connect.
+                </p>
               )}
+              <button type="button" onClick={() => void handleCopyLink()} className="g-cta ghost">Copy link</button>
             </div>
           ) : !onCorrectChain ? (
             <button

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getClientXAuthHint } from "@/lib/xAuth";
+import { XMark } from "@/components/XMark";
 
 type Props = {
   compact?: boolean;
@@ -75,7 +76,7 @@ export function ConnectX({ compact }: Props) {
           aria-label={`@${me.username}, sign out of X`}
         >
           <span className="g-av" style={{ background: "var(--x)" }}>
-            X
+            <XMark />
           </span>
           <span className="g-x-handle">@{me.username}</span>
         </button>
@@ -112,6 +113,7 @@ export function ConnectX({ compact }: Props) {
         className="g-btn sm"
         style={compact ? undefined : { borderColor: "var(--x)", color: "var(--x)" }}
       >
+        <XMark />
         {hint.configured ? "Sign in with X" : "Connect X"}
       </button>
       {(notice || !hint.configured) && (

@@ -18,11 +18,11 @@ import { XRPL_EVM_TESTNET_ID } from "@/lib/chain";
 import {
   ensureXrplEvmTestnet,
   shortAddr,
-  waitForInjectedEth,
 } from "@/lib/wallet";
 import { getClientXAuthHint } from "@/lib/xAuth";
 import { asStatusText } from "@/lib/statusMsg";
-import { metaMaskDappUrl } from "@/lib/metaMaskDeepLink";
+import { WalletConnectMark } from "@/components/WalletConnectMark";
+import { XMark } from "@/components/XMark";
 
 type MeResponse = {
   bound: boolean;
@@ -53,7 +53,6 @@ export function AccountMenu({ onStatus }: Props) {
   const [loadingMe, setLoadingMe] = useState(false);
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [metaMaskUrl, setMetaMaskUrl] = useState<string | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
 
   const refreshMe = useCallback(async () => {
@@ -101,53 +100,6 @@ export function AccountMenu({ onStatus }: Props) {
     onStatus?.(asStatusText(msg));
   };
 
-  const handleConnect = async () => {
-    setMetaMaskUrl(null);
-    setStatus(null);
-    const eth = await waitForInjectedEth(3000);
-    if (!eth) {
-      const dappUrl = typeof window === "undefined" ? null : metaMaskDappUrl();
-      setMetaMaskUrl(dappUrl);
-      setStatus(
-        walletConnectConnector
-          ? "Browser wallet not found. Use WalletConnect, or open this page in MetaMask."
-          : "MetaMask not found in this browser. Open this page in the MetaMask browser to connect."
-      );
-      return;
-    }
-    try {
-      await eth.request({ method: "eth_requestAccounts" });
-      const connector =
-        connectors.find(
-          (c) =>
-            c.id === "io.metamask" ||
-            c.name.toLowerCase().includes("metamask")
-        ) ||
-        connectors.find((c) => c.id === "injected") ||
-        connectors[0];
-      if (connector) {
-        try {
-          await connectAsync({ connector });
-        } catch (wagmiErr: unknown) {
-          const msg =
-            wagmiErr instanceof Error ? wagmiErr.message : String(wagmiErr);
-          setStatus(`Wagmi connect failed: ${msg}`);
-          return;
-        }
-      }
-      setMetaMaskUrl(null);
-      const chainRes = await ensureXrplEvmTestnet();
-      if (!chainRes.ok) {
-        setStatus(
-          `Connected. Switch to XRPL EVM Testnet (${chainRes.error ?? "pending"}).`
-        );
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setStatus(`Connect failed: ${msg}`);
-    }
-  };
-
   const handleWalletConnect = async () => {
     setStatus(null);
     if (!walletConnectConnector) {
@@ -156,7 +108,6 @@ export function AccountMenu({ onStatus }: Props) {
     }
     try {
       await connectAsync({ connector: walletConnectConnector });
-      setMetaMaskUrl(null);
       setOpen(false);
     } catch (err: unknown) {
       setStatus(`WalletConnect failed: ${err instanceof Error ? err.message : String(err)}`);
@@ -214,13 +165,16 @@ export function AccountMenu({ onStatus }: Props) {
   return (
     <div className="g-account" ref={rootRef}>
       {!isConnected && (
-        <button type="button" className="g-btn g-connect-wallet" disabled={isConnecting} onClick={() => void (walletConnectConnector ? handleWalletConnect() : handleConnect())}>
-          {isConnecting
-            ? "Connecting…"
-            : walletConnectConnector
-              ? "Connect with WalletConnect"
-              : "Connect wallet"}
-        </button>
+        walletConnectConnector ? (
+          <button type="button" className="g-btn g-connect-wallet" disabled={isConnecting} onClick={() => void handleWalletConnect()}>
+            <WalletConnectMark />
+            {isConnecting ? "Connecting…" : "Connect with WalletConnect"}
+          </button>
+        ) : (
+          <span className="g-micro" role="status" style={{ color: "var(--muted)" }}>
+            WalletConnect unavailable — configure NEXT_PUBLIC_WC_PROJECT_ID to connect.
+          </span>
+        )
       )}
       <button
         type="button"
@@ -237,7 +191,7 @@ export function AccountMenu({ onStatus }: Props) {
         )}
         {xBound && (
           <span className="g-account-xmark" title={`@${me!.username}`}>
-            𝕏
+            <XMark />
           </span>
         )}
         {idle && <span className="g-account-label">Account</span>}
@@ -299,25 +253,11 @@ export function AccountMenu({ onStatus }: Props) {
 
           <div className="g-account-divider" />
 
-          {!isConnected && walletConnectConnector && (
-            <div className="g-account-section">
-              <button
-                type="button"
-                className="g-btn sm g-account-action"
-                style={{ border: 0, background: "transparent", color: "var(--muted)" }}
-                disabled={isConnecting}
-                onClick={() => void handleConnect()}
-              >
-                Browser wallet
-              </button>
-            </div>
-          )}
-
           {xBound ? (
             <div className="g-account-section">
               <div className="g-account-row">
                 <span className="g-av" style={{ background: "var(--x)" }}>
-                  𝕏
+                  <XMark />
                 </span>
                 <span style={{ color: "var(--text)", fontSize: 13 }}>
                   @{me!.username}
@@ -340,6 +280,7 @@ export function AccountMenu({ onStatus }: Props) {
                 disabled={loadingMe && hint.configured}
                 onClick={onSignInX}
               >
+                <XMark />
                 {hint.configured ? "Sign in with X" : "Connect X"}
               </button>
               {!hint.configured && (
@@ -349,17 +290,6 @@ export function AccountMenu({ onStatus }: Props) {
               )}
             </div>
           )}
-        </div>
-      )}
-      {metaMaskUrl && !isConnected && (
-        <div className="g-account-help" role="status">
-          <div>Browser wallet unavailable. Use WalletConnect, or open this page in MetaMask.</div>
-          {walletConnectConnector && (
-            <button type="button" className="g-btn sm g-account-action" onClick={() => void handleWalletConnect()} disabled={isConnecting}>
-              {isConnecting ? "Connecting…" : "WalletConnect"}
-            </button>
-          )}
-          <a href={metaMaskUrl}>Open this page in MetaMask</a>
         </div>
       )}
     </div>
