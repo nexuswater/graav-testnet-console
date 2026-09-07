@@ -2,8 +2,7 @@
 
 import { http, createConfig } from "wagmi";
 import { injected } from "@wagmi/core";
-// @ts-expect-error Use the installed connector entry to avoid unrelated connector barrels.
-import { walletConnect } from "../../node_modules/@wagmi/connectors/dist/esm/walletConnect.js";
+import { walletConnect } from "@wagmi/connectors";
 import { xrplEvmTestnet, RPC_URL } from "./chain";
 
 const walletConnectProjectId = process.env.NEXT_PUBLIC_WC_PROJECT_ID?.trim();

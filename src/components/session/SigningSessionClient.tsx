@@ -277,7 +277,7 @@ export function SigningSessionClient({ initial }: Props) {
     setShowMobileWalletHelp(false);
     const eth = await waitForInjectedEth(3000);
     if (!eth) {
-      setStatusMsg("MetaMask not found. Open this URL in MetaMask in-app browser or use WalletConnect below.");
+      setStatusMsg(walletConnectConnector ? "MetaMask not found. Open in MetaMask or use WalletConnect." : "MetaMask not found. Open this URL in MetaMask in-app browser.");
       setShowMobileWalletHelp(true);
       return;
     }
@@ -604,7 +604,7 @@ export function SigningSessionClient({ initial }: Props) {
             {walletConnectConnector && (
               <button type="button" onClick={() => void handleWalletConnect()} disabled={isConnecting} className="g-btn sm">WalletConnect</button>
             )}
-            {showMobileWalletHelp && (
+            {(!isConnected) && (
               <>
                 <a href={metaMaskDappUrl()} className="g-btn sm" style={{ textDecoration: "none" }}>Open in MetaMask</a>
                 <button type="button" onClick={() => void handleCopyLink()} className="g-btn sm">Copy link</button>
@@ -807,7 +807,7 @@ export function SigningSessionClient({ initial }: Props) {
               {walletConnectConnector && (
                 <button type="button" onClick={() => void handleWalletConnect()} disabled={isConnecting} className="g-cta ghost">WalletConnect</button>
               )}
-              {showMobileWalletHelp && (
+              {(!isConnected) && (
                 <div style={{ display: "grid", gap: 8 }}>
                   <a href={metaMaskDappUrl()} className="g-cta" style={{ textAlign: "center", textDecoration: "none" }}>Open in MetaMask</a>
                   <button type="button" onClick={() => void handleCopyLink()} className="g-cta ghost">Copy link</button>
