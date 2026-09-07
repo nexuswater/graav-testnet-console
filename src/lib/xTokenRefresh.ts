@@ -113,7 +113,7 @@ async function persistVercelProductionEnv(data: RefreshedProductToken, updatePro
         const response = await fetch(`${baseUrl}/v9/projects/${encodeURIComponent(projectId)}/env/${encodeURIComponent(existingEnv.id)}${query}`, {
           method: "PATCH",
           headers,
-          body: JSON.stringify({ key, value: values[key], type, target }),
+          body: JSON.stringify({ value: values[key], type, target }),
           cache: "no-store",
         });
         if (!response.ok) throw new Error(`Vercel env update failed for ${key} (${response.status})`);
