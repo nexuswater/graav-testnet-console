@@ -30,10 +30,10 @@ function store(): Store {
 export function mockMarketView() {
   const s = store();
   return {
-    label: C.profile === "testnet-clone" ? "RLUSD TESTNET CLONE · LOCAL MOCK" : "LOCAL MOCK — not Squid evidence",
+    label: "RLUSD MARKET",
     policyId: C.policyId,
     chainId: C.chainId,
-    quoteSymbol: C.quoteSymbol,
+    quoteSymbol: "RLUSD",
     quoteDecimals: C.quoteDecimals,
     quoteAddress: C.quoteAddress,
     factoryAddress: C.factoryAddress,

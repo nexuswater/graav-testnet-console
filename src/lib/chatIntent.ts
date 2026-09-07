@@ -242,6 +242,6 @@ export function parseIntent(raw: string): IntentPlan {
   return {
     kind: text ? "unknown" : "help",
     reply:
-      "Coin V1 intents: BUY <coin> <mRLUSD> · SELL <amount> <coin> · LAUNCH <ticker>. Chat plans an action; your wallet approves it. Featured rail: MOMENT · mRLUSD.",
+      "Coin V1 intents: BUY <coin> <RLUSD> · SELL <amount> <coin> · LAUNCH <ticker>. Chat plans an action; your wallet approves it. Featured rail: MOMENT · RLUSD.",
   };
 }
