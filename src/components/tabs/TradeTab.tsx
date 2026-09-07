@@ -50,6 +50,7 @@ import { Field } from "@/components/ui";
 import { TokenPfp } from "@/components/pfp/TokenPfp";
 import { RLUSD_V1 as RLUSD } from "@/lib/rlusd-v1/config";
 import { RLUSD_MARKET_REGISTRY } from "@/lib/rlusd-v1/marketRegistry";
+import { RlusdTradePanel } from "@/components/rlusd/RlusdTradePanel";
 
 function explorerAddress(addr: string) {
   return `${EXPLORER_URL}/address/${addr}`;
@@ -742,8 +743,10 @@ export function TradeTab({
             </Link>
           ))}
         </div>
-        <p className="g-hint" style={{ marginTop: 12 }}>Fixture rows are labeled; only a verified bind enables preview actions.</p>
+        <p className="g-hint" style={{ marginTop: 12 }}>Only the verified clone row enables wallet-signed actions.</p>
       </section>
+
+      <RlusdTradePanel />
 
       <details className="g-details" style={{ marginTop: 16 }}>
         <summary>Search existing XRP markets</summary>

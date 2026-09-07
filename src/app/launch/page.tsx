@@ -16,7 +16,7 @@ export default function LaunchPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const createDraft = async (event: FormEvent<HTMLFormElement>) => {
+  const prepareCoin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (busy) return;
     const post = sourcePostId.trim();
@@ -60,8 +60,8 @@ export default function LaunchPage() {
       <main className="g-main" style={{ maxWidth: 620, margin: "0 auto", width: "100%" }}>
         <div className="g-pill" style={{ display: "inline-block" }}>COIN V1</div>
         <h1 className="g-display" style={{ marginTop: 16 }}>Moment → Coin</h1>
-        <p className="g-sub" style={{ marginTop: 10 }}>Draft a coin from an X Moment, then review and sign the CREATE_MARKET request in your wallet.</p>
-        <form className="g-card" style={{ marginTop: 20 }} onSubmit={(event) => void createDraft(event)}>
+        <p className="g-sub" style={{ marginTop: 10 }}>Prepare a coin from an X Moment, then review and sign the CREATE_MARKET request in your wallet.</p>
+        <form className="g-card" style={{ marginTop: 20 }} onSubmit={(event) => void prepareCoin(event)}>
           <div className="g-field">
             <label htmlFor="source-post">Source X post ID</label>
             <input id="source-post" className="sm" value={sourcePostId} onChange={(event) => setSourcePostId(event.target.value)} placeholder="post id" required />
@@ -77,7 +77,7 @@ export default function LaunchPage() {
           <button type="submit" className="g-cta" style={{ marginTop: 20 }} disabled={busy}>{busy ? "Opening signing session…" : "Review CREATE_MARKET"}</button>
           {error && <div className="g-alert bad" style={{ marginTop: 12 }} role="alert">{error}</div>}
         </form>
-        <div className="g-alert" style={{ marginTop: 16 }}>Chat and this draft only prepare intent. The next screen is the signing session; only your wallet can approve and send the transaction.</div>
+        <div className="g-alert" style={{ marginTop: 16 }}>Chat and this form only prepare intent. The next screen is the signing session; only your wallet can approve and send the transaction.</div>
       </main>
     </AppChrome>
   );

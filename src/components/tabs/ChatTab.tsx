@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import type { AppTab, TradePrefill } from "@/lib/tradePrefill";
 import { parseIntent } from "@/lib/chatIntent";
+import { RLUSD_V1 as RLUSD } from "@/lib/rlusd-v1/config";
 
 type Msg = {
   id: string;
@@ -41,7 +42,9 @@ export function ChatTab({ onHandoff }: Props) {
     setBusy(true);
     let sessionUrl: string | undefined;
     let reply = parsed.reply;
-    if (parsed.sessionBody) {
+    if ((parsed.kind === "buy" || parsed.kind === "sell") && parsed.sessionBody && String(parsed.sessionBody.factory || "").toLowerCase() === String(RLUSD.factoryAddress || "").toLowerCase()) {
+      reply += "\n\nUse the Markets RLUSD wallet rail to review and sign. Chat never creates a trade session.";
+    } else if (parsed.sessionBody) {
       try {
         const res = await fetch("/api/s", {
           method: "POST",
