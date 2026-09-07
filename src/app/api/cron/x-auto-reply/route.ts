@@ -1,9 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { parseIntent } from "@/lib/chatIntent";
-import { fetchProductMentions, PRODUCT_USER_ID } from "@/lib/xProductServer";
-import { processReplySession } from "@/lib/xReplySessionServer";
-import { claimMention, markMentionFailed, markMentionPosted } from "@/lib/xAutoReplyStore";
-import { maybeRefreshProductToken } from "@/lib/xTokenRefresh";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,6 +20,10 @@ function originFrom(req: NextRequest): string {
 
 async function run(req: NextRequest) {
   if (!authorized(req)) return NextResponse.json({ error: "cron authorization required" }, { status: 401 });
+  try {
+    const [{ parseIntent }, { fetchProductMentions, PRODUCT_USER_ID }, { processReplySession }, { claimMention, markMentionFailed, markMentionPosted }, { maybeRefreshProductToken }] = await Promise.all([
+      import("@/lib/chatIntent"), import("@/lib/xProductServer"), import("@/lib/xReplySessionServer"), import("@/lib/xAutoReplyStore"), import("@/lib/xTokenRefresh"),
+    ]);
   if ((process.env.X_PRODUCT_USER_ID?.trim() || "") !== PRODUCT_USER_ID) {
     return NextResponse.json({ error: "X_PRODUCT_USER_ID must be the @graav_xyz id", expected: PRODUCT_USER_ID }, { status: 503 });
   }
@@ -72,6 +71,9 @@ async function run(req: NextRequest) {
     }
   }
   return NextResponse.json({ ok: true, product: "@graav_xyz", refresh, refreshError, summary, errors }, { headers: { "Cache-Control": "no-store" } });
+  } catch (error) {
+    return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : String(error) }, { status: 500, headers: { "Cache-Control": "no-store" } });
+  }
 }
 
 export async function GET(req: NextRequest) { return run(req); }
