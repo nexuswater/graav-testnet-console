@@ -15,13 +15,16 @@ Required on Vercel Production:
 - `X_BOT_USER_ACCESS_TOKEN` (or existing alias `X_PRODUCT_ACCESS_TOKEN`) — product user-context token with `tweet.write`.
 - `X_BOT_USER_REFRESH_TOKEN` — OAuth2 offline refresh token for the product user.
 - `X_PRODUCT_CLIENT_ID` (or existing `X_CLIENT_ID`) and `X_PRODUCT_CLIENT_SECRET` — the product X OAuth app credentials. The refresh path deliberately does not use the Connect-X `X_CLIENT_SECRET`.
+- `VERCEL_TOKEN` (or `VERCEL_ACCESS_TOKEN`) — a Vercel API token allowed to edit this project's environment variables.
+- `VERCEL_PROJECT_ID` — the Vercel project id (for example, `prj_...`).
+- `VERCEL_TEAM_ID` — optional for personal projects; set it when the project belongs to a team.
 - Existing `X_BEARER_TOKEN`, `FEATURE_PUBLIC_X_WRITE=true`, and session/origin variables as already configured.
 
 The client secret and refresh token must be set by Exec before refresh can work. Do not use a Josh_XRPL token.
 
 ## Refresh behavior
 
-`POST /api/x/refresh-token` refreshes at most when explicitly called and returns the new `access_token` plus a rotated `refresh_token` when X returns one. A warm instance updates its in-memory process environment. A local `.secrets` directory, when present, is updated best-effort; Vercel runtime files are not durable. Exec must apply the returned values to Vercel Production env, especially after refresh-token rotation. The auto-reply cron attempts refresh after roughly 90 minutes and retries once after a mentions 401.
+`POST /api/x/refresh-token` refreshes at most when explicitly called and returns the new `access_token` plus a rotated `refresh_token` when X returns one. A warm instance updates its in-memory process environment. A local `.secrets` directory, when present, is updated best-effort; Vercel runtime files are not durable. When `VERCEL_TOKEN` (or `VERCEL_ACCESS_TOKEN`) and `VERCEL_PROJECT_ID` are set, the refresh path best-effort PATCHes or POSTs the Production values for `X_BOT_USER_ACCESS_TOKEN`, `X_PRODUCT_ACCESS_TOKEN` when that alias is in use, and the rotated `X_BOT_USER_REFRESH_TOKEN` through the official Vercel REST API. The response includes `vercelPersist: { ok, updated, error? }`; a Vercel failure never invalidates an otherwise successful X refresh. The auto-reply cron attempts refresh after roughly 90 minutes and retries once after a mentions 401.
 
 Example (does not post a tweet):
 

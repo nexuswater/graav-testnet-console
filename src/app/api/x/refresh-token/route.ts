@@ -23,7 +23,8 @@ export async function POST(req: NextRequest) {
       token_type: token.token_type,
       scope: token.scope,
       expires_in: token.expires_in,
-      note: "Applied in-memory for this instance. Exec must update Vercel Production env; rotated refresh_token replaces the old value.",
+      vercelPersist: token.vercelPersist,
+      note: "Applied in-memory and persisted to local .secrets when available; Vercel Production persistence is best-effort.",
     }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     return NextResponse.json({ ok: false, error: error instanceof Error ? error.message : String(error), note: "Set X_PRODUCT_CLIENT_SECRET and X_BOT_USER_REFRESH_TOKEN on Vercel before retrying." }, { status: 502 });
