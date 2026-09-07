@@ -57,7 +57,7 @@ export type PublicSessionView = {
 export const SESSION_DEFAULT_TTL_SEC = 15 * 60;
 export const SESSION_MAX_TTL_SEC = 60 * 60;
 export const CONSOLE_PUBLIC_ORIGIN =
-  "https://graav-testnet-console.vercel.app";
+  "https://graav.xyz";
 
 export function sessionPublicUrl(id: string, origin?: string): string {
   const base = (origin || CONSOLE_PUBLIC_ORIGIN).replace(/\/$/, "");

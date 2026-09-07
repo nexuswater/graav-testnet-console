@@ -14,7 +14,7 @@ function originFrom(req: NextRequest): string {
   const configured = process.env.CONSOLE_PUBLIC_ORIGIN?.trim() || process.env.NEXT_PUBLIC_APP_URL?.trim();
   if (configured) return configured.replace(/\/$/, "");
   const proto = req.headers.get("x-forwarded-proto") ?? "https";
-  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? "graav-testnet-console.vercel.app";
+  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? "graav.xyz";
   return `${proto}://${host}`;
 }
 
