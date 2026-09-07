@@ -594,14 +594,19 @@ export function SigningSessionClient({ initial }: Props) {
         <div className="flex-1" />
         {!isConnected ? (
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", justifyContent: "flex-end" }}>
-            <button type="button" onClick={() => void handleConnect()} disabled={isConnecting} className="g-btn sm" style={{ background: "var(--x)", color: "#fff", border: 0, fontWeight: 650 }}>
-              {isConnecting ? "Connecting…" : "Connect wallet"}
-            </button>
-            {walletConnectConnector && (
-              <button type="button" onClick={() => void handleWalletConnect()} disabled={isConnecting} className="g-btn sm">WalletConnect</button>
-            )}
-            {(!isConnected) && (
+            {walletConnectConnector ? (
               <>
+                <button type="button" onClick={() => void handleWalletConnect()} disabled={isConnecting} className="g-btn sm" style={{ background: "var(--x)", color: "#fff", border: 0, fontWeight: 650 }}>
+                  {isConnecting ? "Connecting…" : "Connect with WalletConnect"}
+                </button>
+                <a href={metaMaskDappUrl()} className="g-micro" style={{ color: "var(--muted)", textDecoration: "underline", padding: "4px 2px" }}>Open in MetaMask</a>
+                <button type="button" onClick={() => void handleConnect()} disabled={isConnecting} className="g-micro" style={{ border: 0, background: "transparent", color: "var(--muted)", padding: "4px 2px", cursor: "pointer" }}>Browser wallet</button>
+              </>
+            ) : (
+              <>
+                <button type="button" onClick={() => void handleConnect()} disabled={isConnecting} className="g-btn sm" style={{ background: "var(--x)", color: "#fff", border: 0, fontWeight: 650 }}>
+                  {isConnecting ? "Connecting…" : "Connect wallet"}
+                </button>
                 <a href={metaMaskDappUrl()} className="g-btn sm" style={{ textDecoration: "none" }}>Open in MetaMask</a>
                 <button type="button" onClick={() => void handleCopyLink()} className="g-btn sm">Copy link</button>
               </>
@@ -799,15 +804,25 @@ export function SigningSessionClient({ initial }: Props) {
 
           {!isConnected ? (
             <div style={{ display: "grid", gap: 8 }}>
-              <button type="button" onClick={() => void handleConnect()} className="g-cta">Connect wallet</button>
-              {walletConnectConnector && (
-                <button type="button" onClick={() => void handleWalletConnect()} disabled={isConnecting} className="g-cta ghost">WalletConnect</button>
-              )}
-              {(!isConnected) && (
-                <div style={{ display: "grid", gap: 8 }}>
-                  <a href={metaMaskDappUrl()} className="g-cta" style={{ textAlign: "center", textDecoration: "none" }}>Open in MetaMask</a>
-                  <button type="button" onClick={() => void handleCopyLink()} className="g-cta ghost">Copy link</button>
-                </div>
+              {walletConnectConnector ? (
+                <>
+                  <button type="button" onClick={() => void handleWalletConnect()} disabled={isConnecting} className="g-cta">
+                    {isConnecting ? "Connecting…" : "Connect with WalletConnect"}
+                  </button>
+                  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                    <a href={metaMaskDappUrl()} className="g-micro" style={{ color: "var(--muted)", textDecoration: "underline" }}>Open in MetaMask</a>
+                    <button type="button" onClick={() => void handleConnect()} disabled={isConnecting} className="g-micro" style={{ border: 0, background: "transparent", color: "var(--muted)", padding: 0, cursor: "pointer" }}>Browser wallet</button>
+                    <button type="button" onClick={() => void handleCopyLink()} className="g-micro" style={{ border: 0, background: "transparent", color: "var(--muted)", padding: 0, cursor: "pointer" }}>Copy link</button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <button type="button" onClick={() => void handleConnect()} className="g-cta">Connect wallet</button>
+                  <div style={{ display: "grid", gap: 8 }}>
+                    <a href={metaMaskDappUrl()} className="g-cta" style={{ textAlign: "center", textDecoration: "none" }}>Open in MetaMask</a>
+                    <button type="button" onClick={() => void handleCopyLink()} className="g-cta ghost">Copy link</button>
+                  </div>
+                </>
               )}
             </div>
           ) : !onCorrectChain ? (

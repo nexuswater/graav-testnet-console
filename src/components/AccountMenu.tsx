@@ -109,7 +109,9 @@ export function AccountMenu({ onStatus }: Props) {
       const dappUrl = typeof window === "undefined" ? null : metaMaskDappUrl();
       setMetaMaskUrl(dappUrl);
       setStatus(
-        "MetaMask not found in this browser. Open this page in the MetaMask browser to connect."
+        walletConnectConnector
+          ? "Browser wallet not found. Use WalletConnect, or open this page in MetaMask."
+          : "MetaMask not found in this browser. Open this page in the MetaMask browser to connect."
       );
       return;
     }
@@ -212,8 +214,12 @@ export function AccountMenu({ onStatus }: Props) {
   return (
     <div className="g-account" ref={rootRef}>
       {!isConnected && (
-        <button type="button" className="g-btn g-connect-wallet" disabled={isConnecting} onClick={() => void handleConnect()}>
-          {isConnecting ? "Connecting…" : "Connect wallet"}
+        <button type="button" className="g-btn g-connect-wallet" disabled={isConnecting} onClick={() => void (walletConnectConnector ? handleWalletConnect() : handleConnect())}>
+          {isConnecting
+            ? "Connecting…"
+            : walletConnectConnector
+              ? "Connect with WalletConnect"
+              : "Connect wallet"}
         </button>
       )}
       <button
@@ -293,6 +299,20 @@ export function AccountMenu({ onStatus }: Props) {
 
           <div className="g-account-divider" />
 
+          {!isConnected && walletConnectConnector && (
+            <div className="g-account-section">
+              <button
+                type="button"
+                className="g-btn sm g-account-action"
+                style={{ border: 0, background: "transparent", color: "var(--muted)" }}
+                disabled={isConnecting}
+                onClick={() => void handleConnect()}
+              >
+                Browser wallet
+              </button>
+            </div>
+          )}
+
           {xBound ? (
             <div className="g-account-section">
               <div className="g-account-row">
@@ -333,13 +353,13 @@ export function AccountMenu({ onStatus }: Props) {
       )}
       {metaMaskUrl && !isConnected && (
         <div className="g-account-help" role="status">
-          <div>MetaMask browser required for wallet injection.</div>
-          <a href={metaMaskUrl}>Open this page in MetaMask</a>
+          <div>Browser wallet unavailable. Use WalletConnect, or open this page in MetaMask.</div>
           {walletConnectConnector && (
             <button type="button" className="g-btn sm g-account-action" onClick={() => void handleWalletConnect()} disabled={isConnecting}>
               {isConnecting ? "Connecting…" : "WalletConnect"}
             </button>
           )}
+          <a href={metaMaskUrl}>Open this page in MetaMask</a>
         </div>
       )}
     </div>
