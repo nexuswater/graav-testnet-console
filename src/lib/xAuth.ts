@@ -15,6 +15,8 @@ export type XIdentity = {
   id: string;
   username: string;
   name: string;
+  /** Public X avatar URL returned by users/me when available. */
+  profileImageUrl?: string;
 };
 
 /** Scopes: identity only. tweet.read required by X for GET /2/users/me; no write/DM. */

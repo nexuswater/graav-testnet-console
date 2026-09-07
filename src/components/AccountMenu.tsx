@@ -23,12 +23,14 @@ import { getClientXAuthHint } from "@/lib/xAuth";
 import { asStatusText } from "@/lib/statusMsg";
 import { WalletConnectMark } from "@/components/WalletConnectMark";
 import { XMark } from "@/components/XMark";
+import { XrplMark } from "@/components/XrplMark";
 
 type MeResponse = {
   bound: boolean;
   id?: string;
   username?: string;
   name?: string;
+  profileImageUrl?: string;
 };
 
 type Props = {
@@ -53,6 +55,9 @@ export function AccountMenu({ onStatus }: Props) {
   const [loadingMe, setLoadingMe] = useState(false);
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [walletDetailsOpen, setWalletDetailsOpen] = useState(false);
+  const [xDetailsOpen, setXDetailsOpen] = useState(false);
+  const [xAvatarFailed, setXAvatarFailed] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
   const refreshMe = useCallback(async () => {
@@ -159,8 +164,10 @@ export function AccountMenu({ onStatus }: Props) {
   };
 
   const xBound = Boolean(me?.bound && me.username);
+  const walletReady = Boolean(isConnected && address);
   const avLetter = address ? address.slice(2, 3).toUpperCase() : "?";
-  const idle = !isConnected && !xBound;
+  const xLetter = (me?.username ?? "X").slice(0, 1).toUpperCase();
+  const idle = !walletReady && !xBound;
 
   return (
     <div className="g-account" ref={rootRef}>
@@ -172,7 +179,7 @@ export function AccountMenu({ onStatus }: Props) {
         aria-label="Account menu"
         onClick={() => setOpen((v) => !v)}
       >
-        {isConnected ? <span className="g-av">{avLetter}</span> : <span className="g-av g-av-idle">·</span>}
+        {walletReady ? <span className="g-av">{avLetter}</span> : <span className="g-av g-av-idle">·</span>}
         {xBound && <span className="g-account-xmark" title={`@${me!.username}`}><XMark /></span>}
         {idle && <span className="g-account-label">Account</span>}
         {!idle && !xBound && isConnected && <span className="g-account-label g-account-label-short">{shortAddr(address)}</span>}
@@ -180,6 +187,20 @@ export function AccountMenu({ onStatus }: Props) {
       </button>
       {open && (
         <div className="g-account-panel" role="menu">
+      {isConnected && address && (
+        <button
+          type="button"
+          className="g-btn g-wallet-pill g-account-provider g-account-identity"
+          onClick={() => { setWalletDetailsOpen(true); void copyAddress(); }}
+          title="Copy wallet address"
+        >
+          <XrplMark size={30} />
+          <span className="g-account-provider-label">{shortAddr(address)}</span>
+          <span className="g-account-chevron" aria-hidden="true">›</span>
+        </button>
+      )}
+
+      {!walletReady && (
       <button
         type="button"
         className={`g-btn g-wallet-pill g-account-provider${walletConnectConnector ? "" : " is-muted"}`}
@@ -193,7 +214,24 @@ export function AccountMenu({ onStatus }: Props) {
         </span>
         <span className="g-account-chevron" aria-hidden="true">›</span>
       </button>
+      )}
 
+      {xBound ? (
+        <button
+          type="button"
+          className="g-btn g-wallet-pill g-account-provider g-account-identity"
+          onClick={() => setXDetailsOpen(true)}
+          title={"profile details"}
+        >
+          {me?.profileImageUrl && !xAvatarFailed ? (
+            <img className="g-account-avatar" src={me.profileImageUrl} alt="" onError={() => setXAvatarFailed(true)} />
+          ) : (
+            <span className="g-account-avatar g-account-avatar-fallback">{xLetter}</span>
+          )}
+          <span className="g-account-provider-label">@{me!.username}</span>
+          <span className="g-account-chevron" aria-hidden="true">›</span>
+        </button>
+      ) : (
       <button
         type="button"
         className="g-btn g-wallet-pill g-account-provider"
@@ -203,14 +241,15 @@ export function AccountMenu({ onStatus }: Props) {
         <XMark size={24} />
         <span className="g-account-provider-label">Login to X</span>
         <span className="g-account-chevron" aria-hidden="true">›</span>
-      </button>
+        </button>
+      )}
 
-      {!walletConnectConnector && (
+      {!walletReady && !walletConnectConnector && (
         <p className="g-micro g-account-provider-hint" role="status">
           WalletConnect unavailable — configure NEXT_PUBLIC_WC_PROJECT_ID to connect.
         </p>
       )}
-      {!hint.configured && (
+      {!xBound && !hint.configured && (
         <p className="g-micro g-account-provider-hint">
           {hint.message}
         </p>
@@ -218,7 +257,7 @@ export function AccountMenu({ onStatus }: Props) {
 
       {(isConnected || xBound) && <div className="g-account-divider" />}
 
-      {isConnected && address ? (
+      {walletReady && walletDetailsOpen ? (
         <div className="g-account-section">
           <div className="g-account-row">
             <div className="min-w-0 flex-1">
@@ -262,7 +301,7 @@ export function AccountMenu({ onStatus }: Props) {
         </div>
       ) : null}
 
-      {xBound && (
+      {xBound && xDetailsOpen && (
         <div className="g-account-section" style={{ marginTop: isConnected ? 10 : 0 }}>
           <div className="g-account-row">
             <span className="g-av" style={{ background: "var(--x)" }}>

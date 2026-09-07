@@ -118,6 +118,9 @@ export function verifyIdentityCookie(
       id: String(json.id),
       username: String(json.username),
       name: String(json.name ?? ""),
+      ...(typeof json.profileImageUrl === "string" && json.profileImageUrl
+        ? { profileImageUrl: json.profileImageUrl }
+        : {}),
     };
   } catch {
     return null;
@@ -191,11 +194,11 @@ export async function exchangeCodeForTokens(params: {
 }
 
 export async function fetchXUserMe(accessToken: string): Promise<XIdentity> {
-  const res = await fetch(`${X_USERS_ME_URL}?user.fields=id,name,username`, {
+  const res = await fetch(`${X_USERS_ME_URL}?user.fields=id,name,username,profile_image_url`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
   const data = (await res.json()) as {
-    data?: { id?: string; username?: string; name?: string };
+    data?: { id?: string; username?: string; name?: string; profile_image_url?: string };
     detail?: string;
     title?: string;
   };
@@ -208,6 +211,9 @@ export async function fetchXUserMe(accessToken: string): Promise<XIdentity> {
     id: data.data.id,
     username: data.data.username,
     name: data.data.name ?? data.data.username,
+    ...(data.data.profile_image_url
+      ? { profileImageUrl: data.data.profile_image_url }
+      : {}),
   };
 }
 

@@ -12,5 +12,6 @@ export async function GET(req: NextRequest) {
     id: identity.id,
     username: identity.username,
     name: identity.name,
+    profileImageUrl: identity.profileImageUrl,
   });
 }
