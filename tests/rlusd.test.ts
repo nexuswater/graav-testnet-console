@@ -1,12 +1,21 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {RLUSD_V1 as C} from '../src/lib/rlusd-v1/config.js';
-import {supplyAllocation,splitFees,initializeCurve,buy,sell,graduationPlan,grossForExactNet,referralReason,createFee,type ReferralEvidence} from '../src/lib/rlusd-v1/model.js';
+import {supplyAllocation,splitFees,initializeCurve,buy,sell,graduationPlan,grossForExactNet,previewBuyOut,previewSellOut,referralReason,createFee,type ReferralEvidence} from '../src/lib/rlusd-v1/model.js';
 import {transition,mayCreateReferralCredit,verifyDestinationBuy} from '../src/lib/rlusd-v1/crosschain.js';
 const X1 = {chainId: 1449000};
 const baseFee={grossQuote:100_000_000n,action:'BUY' as const,referrerEligible:true,midwifeDistinct:true,lifetimeFeesBefore:0n,referrerCreditsBefore:0n};
-test('RLUSD module cannot silently reuse testnet chain or economics',()=>{
-  assert.equal(C.chainId,1440000);assert.equal(X1.chainId,1449000);assert.equal(C.bindVerifyingContract,null);assert.equal(C.liveExecutionEnabled,false);
+test('RLUSD clone tip identity is explicit on 1449000',()=>{
+  assert.equal(C.chainId,1449000);
+  assert.equal(C.factoryAddress,'0xd2b7C9D3df75b081c4CB01F711D31D06263EbA20');
+  assert.equal(C.quoteAddress,'0x04B9eF8Fa40E6336e8404a18cC4F6a5a852e913F');
+  assert.equal(C.quoteSymbol,'RLUSD');
+  assert.equal(C.liveExecutionEnabled,true);
+  assert.equal(C.protocolBps,40);
+  assert.equal(C.creatorBps,35);
+  assert.equal(C.referrerBps,20);
+  assert.equal(C.midwifeBps,5);
+  assert.equal(X1.chainId,1449000);
 });
 test('creator vault fits inside the fixed billion-token supply',()=>{
   const a=supplyAllocation(1500);assert.equal(a.total,a.curve+a.vault+a.lp);assert.equal(a.curve,650_000_000n*10n**18n);assert.equal(a.maxFirstBuyTokens,a.curve/50n);
@@ -46,13 +55,21 @@ test('graduation cannot occur early or with insufficient reserved LP tokens',()=
   const s=initializeCurve(6);assert.throws(()=>graduationPlan(s,10n),/NOT_READY/);
   const b=buy(s,grossForExactNet(s.threshold));assert.throws(()=>graduationPlan(b.state,1n),/LP_INVENTORY/);
 });
+test('preview helpers match Solidity-style ceil + 1% fee without inventing inventory',()=>{
+  const s=initializeCurve(18);const input=5n*10n**18n;const b=buy(s,input);
+  assert.equal(previewBuyOut(s.x,s.y,input),b.tokensOut);
+  const out=previewSellOut(b.state.x,b.state.y,b.tokensOut);
+  assert.equal(out,sell(b.state,b.tokensOut).quoteOut);
+  assert.equal(previewBuyOut(0n,s.y,input),null);
+});
+
 test('create-fee waiver uses a funded first BUY at the exact boundary',()=>{
   assert.equal(createFee(6,19_999_999n),2_000_000n);assert.equal(createFee(6,20_000_000n),0n);
 });
-function eligible():ReferralEvidence{return {action:'BUY',viaXUserId:'10001',buyerXUserIds:[],buyerWallet:'0x02',creatorWallet:'0x03',binding:{id:'bind',xUserId:'10001',wallet:'0x01',chainId:1440000,active:true},touchBindingId:'bind',clickedAt:40*86400,executedAt:40*86400+1,accountCreatedAt:0,automatedAccount:false,sourcePostStatus:'EXISTS'};}
+function eligible():ReferralEvidence{return {action:'BUY',viaXUserId:'10001',buyerXUserIds:[],buyerWallet:'0x02',creatorWallet:'0x03',binding:{id:'bind',xUserId:'10001',wallet:'0x01',chainId:C.chainId,active:true},touchBindingId:'bind',clickedAt:40*86400,executedAt:40*86400+1,accountCreatedAt:0,automatedAccount:false,sourcePostStatus:'EXISTS'};}
 test('RLUSD referral requires verified mainnet bind and account/post evidence',()=>{
   assert.equal(referralReason(eligible()),'ELIGIBLE');
-  const e=eligible();e.binding!.chainId=1449000;assert.equal(referralReason(e),'WRONG_BIND_CHAIN');
+  const e=eligible();e.binding!.chainId=1440000;assert.equal(referralReason(e),'WRONG_BIND_CHAIN');
   assert.equal(referralReason({...eligible(),automatedAccount:null}),'ACCOUNT_CLASSIFICATION');
   assert.equal(referralReason({...eligible(),sourcePostStatus:'DELETED'}),'POST_UNVERIFIED_OR_DELETED');
   assert.equal(referralReason({...eligible(),accountCreatedAt:39*86400}),'ACCOUNT_AGE');
@@ -77,8 +94,8 @@ test('atomic destination hook can finish a route; refunded route cannot be credi
   const s=transition(transition('BRIDGING','REFUND_STARTED'),'REFUND_VERIFIED');assert.equal(s,'REFUNDED');assert.equal(mayCreateReferralCredit(s),false);
 });
 test('destination proof uses beneficiary and measured RLUSD spend, not source tx sender/value',()=>{
-  const p={chainId:1440000,market:'0xaa',quoteToken:C.quoteAddress,beneficiary:'0xbb',orderId:'order',quoteSpent:25_000_000n,tokensOut:500n,canonical:true,successful:true,verifiedHookCaller:true};
-  const expected={chainId:1440000,market:'0xaa',quoteToken:C.quoteAddress,beneficiary:'0xbb',orderId:'order',maxQuoteSpent:25_000_000n,minTokensOut:400n};
+  const p={chainId:C.chainId,market:'0xaa',quoteToken:C.quoteAddress,beneficiary:'0xbb',orderId:'order',quoteSpent:25_000_000n,tokensOut:500n,canonical:true,successful:true,verifiedHookCaller:true};
+  const expected={chainId:C.chainId,market:'0xaa',quoteToken:C.quoteAddress,beneficiary:'0xbb',orderId:'order',maxQuoteSpent:25_000_000n,minTokensOut:400n};
   assert.equal(verifyDestinationBuy(p,expected),true);
   assert.throws(()=>verifyDestinationBuy({...p,beneficiary:'0xcc'},expected),/MISMATCH/);
   assert.throws(()=>verifyDestinationBuy({...p,quoteSpent:25_000_001n},expected),/AMOUNTS/);

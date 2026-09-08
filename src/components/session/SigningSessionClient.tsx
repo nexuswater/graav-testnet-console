@@ -40,6 +40,7 @@ import {
   factoryShortLabel,
   isGswapMarket,
   isM22Factory,
+  isRlusdCloneFactory,
   isV1Dex,
   swapDexAddress,
   validateAllowlist,
@@ -345,6 +346,10 @@ export function SigningSessionClient({ initial }: Props) {
           return;
         }
         const fac = (factoryAddr || FACTORY_ADDRESS) as Address;
+        if (isRlusdCloneFactory(fac)) {
+          setStatusMsg("Coin V1 createCoin requires Launch review and a real LaunchAuthorizer signature. This session will not call createMarket or fabricate auth.");
+          return;
+        }
         await safeWrite("Create market", () =>
           writeContractAsync({
             address: fac,

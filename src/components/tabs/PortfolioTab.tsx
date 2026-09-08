@@ -32,7 +32,7 @@ type Holding = {
   name: string;
   token: Address;
   market: Address;
-  balance: bigint;
+  balance: bigint | null;
   graduated: boolean;
 };
 
@@ -92,7 +92,7 @@ export function PortfolioTab({ setStatusMsg }: Props) {
         }
         if (!info?.token || info.token === ZERO_ADDRESS) continue;
 
-        let bal = BigInt(0);
+        let bal: bigint | null = null;
         if (address) {
           try {
             bal = (await publicClient.readContract({
@@ -102,7 +102,7 @@ export function PortfolioTab({ setStatusMsg }: Props) {
               args: [address],
             })) as bigint;
           } catch {
-            bal = BigInt(0);
+            bal = null;
           }
         }
 
@@ -182,7 +182,8 @@ export function PortfolioTab({ setStatusMsg }: Props) {
       );
   };
 
-  const withBalance = markets.filter((m) => m.balance > BigInt(0));
+  const withBalance = markets.filter((m) => m.balance !== null && m.balance > BigInt(0));
+  const unknownBalances = markets.filter((m) => m.balance === null);
 
   return (
     <div className="space-y-5">
@@ -237,7 +238,7 @@ export function PortfolioTab({ setStatusMsg }: Props) {
                 ? `${formatEther(nativeBal.value)} XRP`
                 : nativeFetching
                   ? "…"
-                  : "0 XRP"}
+                  : "—"}
           </span>
         </div>
         <div className="g-kv">
@@ -280,6 +281,11 @@ export function PortfolioTab({ setStatusMsg }: Props) {
       {error && <div className="g-alert bad">{error}</div>}
 
       <section>
+        {unknownBalances.length > 0 && (
+          <div className="g-alert warn">
+            {unknownBalances.length} holding {unknownBalances.length === 1 ? "read" : "reads"} unknown — not treated as zero.
+          </div>
+        )}
         <h2 className="g-sub" style={{ marginBottom: 8 }}>
           Open positions
         </h2>
@@ -341,9 +347,9 @@ export function PortfolioTab({ setStatusMsg }: Props) {
                     {" · "}
                     {!address
                       ? "—"
-                      : h.balance > BigInt(0)
-                        ? formatEther(h.balance)
-                        : "0"}
+                      : h.balance === null
+                        ? "Unknown"
+                        : formatEther(h.balance)}
                   </div>
                 </Link>
                 <div className="flex items-center gap-2" style={{ flexShrink: 0 }}>

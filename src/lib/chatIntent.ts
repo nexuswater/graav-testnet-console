@@ -4,7 +4,6 @@
  */
 import type { AppTab, TradePrefill } from "@/lib/tradePrefill";
 import { RLUSD_V1 as RLUSD } from "@/lib/rlusd-v1/config";
-import { RLUSD_CLONE_FACTORY_ADDRESS } from "@/lib/sessionAllowlist";
 import {
   FACTORY_ADDRESS,
   M22_FACTORY_ADDRESS,
@@ -132,8 +131,8 @@ export function parseIntent(raw: string): IntentPlan {
     const known = resolveKnown(symbol);
     const action = known?.graduated ? "swap" : "buy";
     const reply = known
-      ? `${action === "swap" ? "Swap" : "Buy"} intent for ${xrp} XRP of ${known.symbol}. Chat ≠ authorization. Minting a signing session URL — wallet signs on /s/{id}.`
-      : `Buy intent parsed: ${xrp} XRP of ${symbol}. Unknown symbol for session mint — hand off to Trade search. Chat ≠ authorization.`;
+      ? `${action === "swap" ? "Swap" : "Buy"} ${known.symbol}. Preview only — wallet signing stays on Trade.`
+      : `Buy ${symbol} parsed. Market not configured for a session. Open Trade to review.`;
     const plan: IntentPlan = {
       kind: "buy",
       reply,
@@ -175,8 +174,8 @@ export function parseIntent(raw: string): IntentPlan {
     const plan: IntentPlan = {
       kind: "sell",
       reply: isPct
-        ? `Sell intent parsed: ${amtOrPct} of ${symbol}. Percent sells need a concrete token amount on Trade.`
-        : `Sell intent parsed: ${sellAmount} ${symbol}. Chat ≠ authorization. ${known ? "Minting signing session." : "Hand off to Trade."}`,
+        ? `Sell ${amtOrPct} of ${symbol}. Enter a concrete amount on Trade before signing.`
+        : `Sell ${sellAmount} ${symbol}. Preview only — wallet signing stays on Trade.`,
       handoff: {
         tab: "Trade",
         label: "Open Trade",
@@ -218,31 +217,21 @@ export function parseIntent(raw: string): IntentPlan {
     }
     return {
       kind: "launch",
-      reply: `Create-market intent: ${ticker}. Chat ≠ authorization. Minting CREATE_MARKET /s/{id} on the Coin factory — wallet signs. X write fail-closed until Director green.`,
+      reply: `Launch ${ticker}. Open Launch to review details. Chat never authorizes createCoin.`,
       handoff: {
-        tab: "Trade",
-        label: `Trade · create ${ticker}`,
+        tab: "Markets",
+        label: `Open Launch · ${ticker}`,
         prefill: {
           action: "launch",
           createName: ticker,
           createSymbol: ticker,
         },
       },
-      sessionBody: {
-        chainId: 1449000,
-        factory: RLUSD_CLONE_FACTORY_ADDRESS, // Coin V1 CREATE_MARKET rail
-        action: "create",
-        amount: "0",
-        minOut: "0",
-        createName: ticker,
-        createSymbol: ticker,
-        metadataURI: "",
-      },
     };
   }
   return {
     kind: text ? "unknown" : "help",
     reply:
-      "Coin V1 intents: BUY <coin> <RLUSD> · SELL <amount> <coin> · LAUNCH <ticker>. Chat plans an action; your wallet approves it. Featured rail: MOMENT · RLUSD.",
+      "Intents: BUY <coin> <amount> · SELL <amount> <coin> · LAUNCH <ticker>. Chat previews only. Your wallet signs.",
   };
 }

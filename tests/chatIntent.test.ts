@@ -19,7 +19,7 @@ for (const text of [
     const plan = parseIntent(text);
     assert.equal(plan.kind, "buy");
     assert.equal(plan.sessionBody, undefined);
-    assert.match(plan.reply, /Unknown symbol for session mint/);
+    assert.match(plan.reply, /not configured/i);
   });
 }
 
