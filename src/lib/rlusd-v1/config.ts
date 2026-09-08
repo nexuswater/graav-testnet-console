@@ -2,10 +2,22 @@
  * testnet clone is opt-in and never inherits the X1 bind domain. */
 // Coin V1 is the public console default; mainnet is opt-in only.
 const CLONE = process.env.NEXT_PUBLIC_RLUSD_TESTNET_CLONE !== '0' && process.env.RLUSD_TESTNET_CLONE !== '0';
-const CLONE_FACTORY = "0x2E393cfabeC866a38632b8C486B942089644dE93";
-const CLONE_QUOTE = "0x9BCd84a6DbBE53FD5ACbC77b065c58F2eF753F6e";
-const CLONE_COIN = "0xe6A44F18A8375A3a1F3d01904C6e3001D7958A8e";
-const CLONE_CURVE = "0x376D4e428E25A403A3fA5cC122D1910f97B2B712";
+const CLONE_FACTORY = "0xd2b7C9D3df75b081c4CB01F711D31D06263EbA20";
+const CLONE_QUOTE = "0x04B9eF8Fa40E6336e8404a18cC4F6a5a852e913F";
+// The new factory has not created its first Moment yet. Keep market addresses
+// null so reads, trades, and mention sessions fail closed until then.
+const CLONE_COIN: string | null = null;
+const CLONE_CURVE: string | null = null;
+
+/** CODE READY infrastructure addresses for the 1449000 clone tip. */
+export const RLUSD_CLONE_INFRA = {
+  factory: CLONE_FACTORY,
+  mockRlusd: CLONE_QUOTE,
+  attributionGuard: "0x3d1aACAcfFff6B96Adf732E0bd2D5c19B4F7e951",
+  feeEscrow: "0x4811a4a325Fa87D61DAE8272a3a3e8F014e93771",
+  creatorVault: "0xdd1B9Fb597FbE2F684850145d3C717EcAaa89F42",
+  launchAuthorizer: "0xBA100b11adF478B3B96Ce2F2BebFBd8Cf2E4E336",
+} as const;
 
 export const RLUSD_V1 = {
   profile: CLONE ? 'testnet-clone' : 'mainnet-target',

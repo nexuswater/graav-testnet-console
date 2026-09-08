@@ -18,21 +18,15 @@ for (const text of [
   test(`parses prose-wrapped buy: ${text}`, () => {
     const plan = parseIntent(text);
     assert.equal(plan.kind, "buy");
-    assert.ok(plan.sessionBody);
-    assert.equal(plan.sessionBody?.action, "buy");
-    assert.equal(plan.sessionBody?.factory, "0x2E393cfabeC866a38632b8C486B942089644dE93");
-    assert.equal(plan.sessionBody?.market, "0x376D4e428E25A403A3fA5cC122D1910f97B2B712");
-    assert.equal(plan.sessionBody?.token, "0xe6A44F18A8375A3a1F3d01904C6e3001D7958A8e");
+    assert.equal(plan.sessionBody, undefined);
+    assert.match(plan.reply, /Unknown symbol for session mint/);
   });
 }
 
-test("Coin aliases resolve to the RLUSD clone, not X1/M22", () => {
+test("Coin aliases stay unavailable until the new clone has a Moment market", () => {
   for (const alias of ["MOMENT", "MRLUSD", "COIN"]) {
     const known = resolveKnown(alias);
-    assert.ok(known);
-    assert.equal(known?.symbol, "MOMENT");
-    assert.equal(known?.graduated, false);
-    assert.equal(known?.factory, "0x2E393cfabeC866a38632b8C486B942089644dE93");
+    assert.equal(known, null);
   }
 });
 

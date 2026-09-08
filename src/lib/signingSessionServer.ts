@@ -67,7 +67,7 @@ function safeEqual(a: string, b: string): boolean {
 }
 
 function isKnownRlusdCloneAddress(addr: string): boolean {
-  const known = [RLUSD_CLONE_FACTORY_ADDRESS, RLUSD_CLONE_CURVE_ADDRESS, RLUSD_CLONE_COIN_ADDRESS];
+  const known = [RLUSD_CLONE_FACTORY_ADDRESS, RLUSD_CLONE_CURVE_ADDRESS, RLUSD_CLONE_COIN_ADDRESS].filter((candidate): candidate is string => Boolean(candidate));
   return known.some((candidate) => normAddr(candidate) === normAddr(addr));
 }
 

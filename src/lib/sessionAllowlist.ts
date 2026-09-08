@@ -19,11 +19,14 @@ import {
 } from "@/lib/chain";
 
 /** Coin V1 / mRLUSD testnet clone registry (chain 1449000). */
-export const RLUSD_CLONE_FACTORY_ADDRESS = "0x2E393cfabeC866a38632b8C486B942089644dE93";
-export const RLUSD_CLONE_CURVE_ADDRESS = "0x376D4e428E25A403A3fA5cC122D1910f97B2B712";
-export const RLUSD_CLONE_COIN_ADDRESS = "0xe6A44F18A8375A3a1F3d01904C6e3001D7958A8e";
+export const RLUSD_CLONE_FACTORY_ADDRESS = "0xd2b7C9D3df75b081c4CB01F711D31D06263EbA20";
+// The new factory has no first Moment market yet; keep these optional and fail closed.
+export const RLUSD_CLONE_CURVE_ADDRESS: string | null = null;
+export const RLUSD_CLONE_COIN_ADDRESS: string | null = null;
 
 export const SESSION_CHAIN_ID = XRPL_EVM_TESTNET_ID;
+
+type HexAddress = `0x${string}`;
 
 export const ALLOWED_FACTORIES = [
   FACTORY_ADDRESS,
@@ -47,14 +50,14 @@ export const ALLOWED_MARKETS = [
   G589_MARKET_ADDRESS,
   T589_MARKET_ADDRESS,
   ...MEME_TESTNET_MARKETS.map((m) => m.market),
-] as const;
+].filter((address): address is HexAddress => Boolean(address));
 
 export const ALLOWED_TOKENS = [
   RLUSD_CLONE_COIN_ADDRESS,
   GSWAP_TOKEN_ADDRESS,
   G589_TOKEN_ADDRESS,
   ...MEME_TESTNET_MARKETS.map((m) => m.token),
-] as const;
+].filter((address): address is HexAddress => Boolean(address));
 
 export type SessionAction = "buy" | "sell" | "swap" | "create";
 
@@ -94,7 +97,7 @@ export function isRlusdCloneFactory(addr: string): boolean {
 }
 
 export function isRlusdCloneMarket(addr: string): boolean {
-  return normAddr(addr) === normAddr(RLUSD_CLONE_CURVE_ADDRESS);
+  return !!RLUSD_CLONE_CURVE_ADDRESS && normAddr(addr) === normAddr(RLUSD_CLONE_CURVE_ADDRESS);
 }
 
 export function isT589Market(addr: string): boolean {

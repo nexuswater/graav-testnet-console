@@ -14,15 +14,15 @@ export type RlusdMarket = {
   coinAddress: string | null;
 };
 
-/** RLUSD Coin V1 registry; only MOMENT has signed testnet clone addresses. */
+/** RLUSD Coin V1 registry; the new clone awaits its first signed Moment market. */
 export const RLUSD_MARKET_REGISTRY: readonly RlusdMarket[] = [
   {
     id: "demo-moment-2026",
     symbol: "MOMENT",
     name: "Demo Moment",
     sourcePostId: "demo-moment-2026",
-    description: "Bonding-curve preview from the demo Moment",
-    status: "fixture",
+    description: "Moment awaiting the first signed market bind on the new clone",
+    status: "not-wired",
     factoryAddress: C.factoryAddress,
     marketAddress: C.curveAddress,
     coinAddress: C.coinAddress,
