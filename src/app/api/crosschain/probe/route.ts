@@ -4,7 +4,8 @@ import { XRPL_EVM_TESTNET_ID, FAUCET_URL } from "@/lib/chain";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const DEST = XRPL_EVM_TESTNET_ID; // 1449000
+const DEST = XRPL_EVM_TESTNET_ID; // 1449000 — local testnet Buy gate
+const MAINNET_DEST = 1440000; // Squid-first Aggregated* policy target
 const SQUID_CHAINS = "https://v2.api.squidrouter.com/v2/chains";
 const SQUID_TOKENS = "https://v2.api.squidrouter.com/v2/tokens";
 const AXELAR_CHAINS = "https://testnet.api.axelarscan.io/api/getChains";
@@ -164,16 +165,18 @@ export type HopFamily = {
   detail: string;
 };
 
-/** Locked product path: USDC source → aggregated settle 1449000 → swap market token via /s */
+/** Locked policy path: source USDC → Squid quote → RLUSD on mainnet 1440000; testnet Buy remains fail-closed. */
 export type AggregatedPath = {
-  kind: "aggregated-usdc-to-graav";
+  kind: "aggregated-usdc-to-rlusd";
   hops: AggregatedHop[];
   hopFamilies: HopFamily[];
   buyEnabled: boolean;
   settleReady: boolean;
   swapReady: boolean;
-  /** Prefer native XRP land (kernel Trade is XRP-denominated). Advise only — not Buy enable. */
-  preferredSettleAsset: "native-xrp";
+  /** Preferred RLUSD destination asset for the Squid mainnet policy lane. */
+  preferredSettleAsset: "rlusd";
+  squidQuoteLive: boolean;
+  mainnetTargetChainId: number;
   axelarItsOnDest: {
     xrp: boolean;
     rlusd: boolean;
@@ -488,7 +491,7 @@ function buildProviderMatrix(p: {
       detail: squid.error
         ? `Probe error: ${squid.error}`
         : squid.hasDest
-          ? `Lists ${DEST} but GRAAV requires proven USDC quote+tx — not wired.`
+          ? `Lists mainnet policy metadata, but no live USDC→RLUSD quote+tx is wired.`
           : `/v2/chains does not list ${DEST} (${squid.chainCount} chains).`,
     },
     {
@@ -734,19 +737,16 @@ async function buildProbe(): Promise<ProbeResponse> {
   }
 
   const buyEnabledCount = sources.filter((r) => r.ok && r.result === "PASS").length;
-  // settleReady = live provider PASS that lands native XRP (or convert→XRP PASS). Never invent; Axelar PARTIAL ≠ PASS.
-  // Today: no provider PASS → settleReady false. buyEnabled requires settleReady + source PASS. swapReady ≠ buyEnabled.
-  const settleReady = providers.some((p) => p.result === "PASS");
-  const swapReady = true; // dual-factory Trade / /s on 1449000 with faucet XRP — independent of Buy/settle
-  const buyEnabled = settleReady && buyEnabledCount > 0;
-
-  // Kernel: tradeable land asset = native XRP only (msg.value). Never call Market/V2 with USDC/RLUSD.
-  // Hop A blocked (RLUSD corridor cannot feed Trade). Hop B must end as native XRP on 1449000.
+  // Buy remains fail-closed until a live Squid USDC→RLUSD quote and depth smoke pass.
+  const squidQuoteLive = false;
+  const settleReady = false; // catalog PASS != Squid quote; Aggregated* settle fail-closed
+  const swapReady = true; // local rail is independent; it never enables Aggregated* Buy
+  const buyEnabled = false;
   // settleReady / buyEnabled only on live PASS that lands XRP (or proven convert→XRP). swapReady ≠ buyEnabled.
   const hopFamilies: HopFamily[] = [
     {
       id: "A",
-      label: "A — RLUSD corridor",
+      label: "A — Squid Intents USDC→RLUSD",
       status: "blocked",
       legs: [
         "USDC",
@@ -760,7 +760,7 @@ async function buildProbe(): Promise<ProbeResponse> {
     },
     {
       id: "B",
-      label: "B — XRP corridor",
+      label: "B — Native RLUSD peers",
       status: axelar.hasXrpOnDest ? "partial" : "blocked",
       legs: ["USDC", "XRP other chains", "native XRP 1449000", "market /s"],
       detail: axelar.hasXrpOnDest
@@ -770,7 +770,7 @@ async function buildProbe(): Promise<ProbeResponse> {
   ];
 
   const path: AggregatedPath = {
-    kind: "aggregated-usdc-to-graav",
+    kind: "aggregated-usdc-to-rlusd",
     hops: [
       {
         id: "source-usdc",
@@ -781,25 +781,27 @@ async function buildProbe(): Promise<ProbeResponse> {
       },
       {
         id: "aggregator-settle",
-        label: "Aggregated settle → 1449000",
+        label: "Squid quote: USDC → RLUSD (mainnet 1440000 policy)",
         status: settleReady ? "ready" : "blocked",
         detail: settleReady
-          ? "Provider PASS lands native XRP on 1449000 (or convert→XRP PASS) — Trade msg.value ready."
-          : "No live PASS landing native XRP on 1449000. Hop A blocked (no USDC/RLUSD into Market/V2). Hop B catalog-only. Buy disabled. swapReady still true via faucet.",
+          ? "Live Squid quote lands RLUSD on mainnet 1440000."
+          : "No live Squid quote/depth smoke; mainnet 1440000 remains policy-only and testnet 1449000 Buy is fail-closed.",
       },
       {
         id: "swap-market",
-        label: "Swap to market token via /s",
-        status: "ready",
+        label: "RLUSD destination policy (1440000)",
+        status: "blocked",
         detail:
-          "Dual-factory: M2 curve (g589/memes) vs M2.2+V2 (gSWAP); T589 scar no V2 swap. /s/[id] signs with native XRP msg.value only — never USDC/RLUSD.",
+          "Preferred Aggregated* destination; testnet 1449000 is not a substitute for mainnet 1440000.",
       },
     ],
     hopFamilies,
     buyEnabled,
     settleReady,
     swapReady,
-    preferredSettleAsset: "native-xrp",
+    preferredSettleAsset: "rlusd",
+    squidQuoteLive,
+    mainnetTargetChainId: MAINNET_DEST,
     axelarItsOnDest: {
       xrp: axelar.hasXrpOnDest,
       rlusd: axelar.hasRlusdOnDest,
@@ -813,7 +815,7 @@ async function buildProbe(): Promise<ProbeResponse> {
     destLabel: "XRPL EVM Testnet",
     faucet: FAUCET_URL,
     note:
-      "Aggregated (*): USDC→settle native XRP on 1449000→Trade /s. Kernel: msg.value XRP only; never Market/V2 with USDC/RLUSD. Hop A blocked; Hop B must end XRP. swapReady≠buyEnabled. SoT AGGREGATED_USDC_SETTLE_SOT · PATH_AB_HOP_PROBE_2026-09-04. buyEnabled=0 until land-XRP PASS.",
+      "Aggregated*: Squid-first USDC→RLUSD on XRPL EVM 1440000. Live quote + depth smoke is required before Buy. Testnet 1449000 is fail-closed; display RLUSD only.",
     anyPass: buyEnabledCount > 0,
     buyEnabledCount,
     path,
@@ -824,7 +826,7 @@ async function buildProbe(): Promise<ProbeResponse> {
       chainCount: squid.ok ? squid.chainCount : undefined,
       hasDest: squid.hasDest,
       notedMainnetXrplEvm:
-        "Squid docs mention xrpl-evm 1440000 (not in live /v2/chains). GRAAV settles on testnet 1449000. Axelar testnet lists xrpl-evm 1449000; mainnet lists 1440000 — cite only, do not enable mainnet dest.",
+        "Squid-first policy target is XRPL EVM 1440000 for USDC→RLUSD. Testnet 1449000 remains fail-closed until a live quote is proven.",
     },
     sources,
     base: byKey.base,

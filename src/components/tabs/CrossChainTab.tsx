@@ -61,13 +61,16 @@ type HopFamily = {
 };
 
 type AggregatedPath = {
-  kind: "aggregated-usdc-to-graav";
+  kind: "aggregated-usdc-to-rlusd";
   hops: AggregatedHop[];
   hopFamilies?: HopFamily[];
   buyEnabled: boolean;
   settleReady: boolean;
   swapReady: boolean;
   preferredSettleAsset?: string;
+  preferredDestinationAsset?: string;
+  squidQuoteLive?: boolean;
+  mainnetTargetChainId?: number;
   axelarItsOnDest?: {
     xrp: boolean;
     rlusd: boolean;
@@ -159,7 +162,6 @@ export function CrossChainTab({ onGoTrade }: Props) {
   const path = probe?.path;
   const anyPass = !!(probe?.anyPass && path?.buyEnabled);
   const selected = sources.find((s) => s.key === selectedKey) ?? null;
-  const settleBlocked = !path?.settleReady;
   const featured = homeMarkets();
 
   const handoffTrade = (sym: string) => {
@@ -174,15 +176,14 @@ export function CrossChainTab({ onGoTrade }: Props) {
   return (
     <div className="space-y-5">
       <section>
-        <h1 className="g-title">Aggregated (*) Pay-with-USDC → market token</h1>
+        <h1 className="g-title">Aggregated* USDC → RLUSD</h1>
         <p className="g-sub" style={{ marginTop: 8 }}>
-          Source USDC → multi-provider settle onto XRPL EVM{" "}
-          {XRPL_EVM_TESTNET_ID} → swap market token via /s. Not hold-USDC-on-dest.
-          Not single-bridge. Prefer native XRP land.
+          Squid-first: source USDC → live Squid quote → RLUSD on XRPL EVM mainnet 1440000.
+          Testnet 1449000 remains fail-closed; no fake Buy and no hold-USDC-on-dest.
         </p>
         <p className="g-hint" style={{ marginTop: 8 }}>
-          SoT: AGGREGATED_USDC_SETTLE_SOT · fail-closed · Buy only on live E2E
-          PASS · never invent.
+          Accepted Aggregation RLUSD brief · Buy only after live Squid quote + depth smoke.
+          Testnet 1449000 remains fail-closed; never invent a route.
         </p>
       </section>
 
@@ -208,15 +209,15 @@ export function CrossChainTab({ onGoTrade }: Props) {
               detail: "",
             },
             {
-              id: "aggregator-settle",
-              label: "Settle 1449000",
+              id: "squid-quote",
+              label: "Squid quote: USDC → RLUSD",
               status: "blocked" as const,
               detail: "",
             },
             {
-              id: "swap-market",
-              label: "Swap via /s",
-              status: "ready" as const,
+              id: "rlusd-mainnet",
+              label: "RLUSD on XRPL EVM 1440000",
+              status: "blocked" as const,
               detail: "",
             },
           ]).map((h, i) => (
@@ -262,20 +263,23 @@ export function CrossChainTab({ onGoTrade }: Props) {
           <span>{path?.swapReady ? "yes" : "no"}</span>
         </div>
         <div className="g-kv">
-          <span>preferred settle</span>
-          <span>native XRP only (msg.value) — never USDC/RLUSD into Market/V2</span>
+          <span>policy target</span>
+          <span>USDC → RLUSD · XRPL EVM 1440000</span>
         </div>
         <div className="g-kv">
-          <span>swapReady ≠ buyEnabled</span>
-          <span>
-            swap {path?.swapReady ? "ready" : "no"} · buy{" "}
-            {path?.buyEnabled ? "ON" : "OFF"}
-          </span>
+          <span>Squid live quote</span>
+          <span>{path?.squidQuoteLive ? "yes" : "no — Buy fail-closed"}</span>
+        </div>
+        <div className="g-kv">
+          <span>testnet Buy (1449000)</span>
+          <span>OFF — fail-closed</span>
+        </div>
+        <div className="g-kv">
+          <span>display asset</span>
+          <span>RLUSD only</span>
         </div>
         <p className="g-hint" style={{ marginTop: 8 }}>
-          Kernel: Hop A blocked · Hop B must land native XRP on 1449000 ·
-          dual-factory M2 vs M2.2 · T589 scar · buyEnabled only on settleReady +
-          live XRP-land PASS.
+          Squid is the preferred USDC→RLUSD lane for mainnet 1440000. Buy stays off until a live quote + depth smoke proves the corridor.
         </p>
         {path?.axelarItsOnDest && (
           <div className="g-kv">
@@ -302,22 +306,22 @@ export function CrossChainTab({ onGoTrade }: Props) {
       {/* Hop families A / B */}
       <div className="g-card">
         <div style={{ fontWeight: 650, marginBottom: 8 }}>
-          Josh hop families (candidates)
+          Aggregated* routing policy lanes
         </div>
         <div className="space-y-2">
           {(path?.hopFamilies ?? [
             {
               id: "A" as const,
-              label: "A — RLUSD corridor",
+              label: "A — Squid Intents USDC→RLUSD",
               status: "blocked" as const,
-              legs: ["USDC", "RLUSD ETH", "RLUSD xrpl-evm", "XRP EVM", "market /s"],
+              legs: ["USDC source", "live Squid quote", "RLUSD XRPL EVM 1440000"],
               detail: "Probe loading…",
             },
             {
               id: "B" as const,
-              label: "B — XRP corridor",
-              status: "partial" as const,
-              legs: ["USDC", "XRP other chains", "XRP xrpl-evm", "market /s"],
+              label: "B — Native RLUSD peers",
+              status: "candidate" as const,
+              legs: ["RLUSD", "Wormhole NTT / Axelar ITS", "RLUSD peer"],
               detail: "Probe loading…",
             },
           ]).map((f) => (
@@ -354,7 +358,7 @@ export function CrossChainTab({ onGoTrade }: Props) {
           ))}
         </div>
         <p className="g-hint" style={{ marginTop: 8 }}>
-          Catalog ≠ E2E PASS. buyEnabled stays 0 until live quote+tx.
+          Catalog presence ≠ live quote. Buy stays OFF until Squid proves USDC→RLUSD.
         </p>
       </div>
 
@@ -372,9 +376,9 @@ export function CrossChainTab({ onGoTrade }: Props) {
 
       {/* Source select + honest handoff */}
       <div className="g-card">
-        <div style={{ fontWeight: 650 }}>Source → then swap $TICKER via /s</div>
+        <div style={{ fontWeight: 650 }}>Source USDC → RLUSD (policy preview)</div>
         <p className="g-micro" style={{ marginTop: 4, color: "var(--muted)" }}>
-          Select a source to plan hop 3 even if settle is blocked.
+          Select a source to inspect the Squid-first lane; testnet Buy is fail-closed.
         </p>
         <div className="flex flex-wrap gap-2" style={{ marginTop: 10 }}>
           {sources.map((s) => (
@@ -395,17 +399,9 @@ export function CrossChainTab({ onGoTrade }: Props) {
         </div>
         {selected && (
           <div style={{ marginTop: 12 }}>
-            {settleBlocked ? (
-              <div className="g-alert warn">
-                Path planned, settle blocked — {selected.label} → 1449000 has no
-                live E2E PASS. You can still open Trade /s for ${ticker} (faucet
-                gas).
-              </div>
-            ) : (
-              <div className="g-alert" style={{ borderColor: "var(--good)" }}>
-                Settle ready for {selected.label}. Continue to Trade /s.
-              </div>
-            )}
+            <div className="g-alert warn">
+              No live Squid USDC→RLUSD quote is available. Testnet Buy on 1449000 stays disabled.
+            </div>
             <div className="flex flex-wrap gap-2 items-center" style={{ marginTop: 10 }}>
               <label className="g-micro">
                 Ticker{" "}
@@ -434,25 +430,7 @@ export function CrossChainTab({ onGoTrade }: Props) {
                 style={{ marginTop: 0, width: "auto", padding: "8px 14px" }}
                 onClick={() => handoffTrade(ticker)}
               >
-                Then swap to ${ticker} via /s
-              </button>
-              <button
-                type="button"
-                className="g-cta"
-                style={{
-                  marginTop: 0,
-                  width: "auto",
-                  padding: "8px 14px",
-                  opacity: anyPass && selected.ok ? 1 : 0.45,
-                }}
-                disabled={!anyPass || !selected.ok}
-                title={
-                  anyPass && selected.ok
-                    ? `Buy with USDC from ${selected.label}`
-                    : "Buy disabled until settle PASS"
-                }
-              >
-                Buy from {selected.label}
+                Local Trade rail ${ticker} (not Aggregated* Buy)
               </button>
             </div>
           </div>
