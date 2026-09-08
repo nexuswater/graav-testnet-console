@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSession } from "@/lib/signingSessionServer";
+import { COOKIE_IDENTITY, verifyIdentitySession } from "@/lib/xAuthServer";
 import type { SessionAction } from "@/lib/sessionAllowlist";
 import { getX1Handler } from "@/lib/graav-x1/runtime";
 
@@ -30,6 +31,9 @@ export async function POST(req: NextRequest) {
   }
 
   const action = String(body.action || "") as SessionAction;
+  const xIdentity = action === "create"
+    ? verifyIdentitySession(req.cookies.get(COOKIE_IDENTITY)?.value)
+    : null;
   const result = createSession(
     {
       chainId:
@@ -62,6 +66,8 @@ export async function POST(req: NextRequest) {
         body.metadataURI != null ? String(body.metadataURI) : undefined,
       originHash:
         body.originHash != null ? String(body.originHash) : undefined,
+      creatorXUsername: xIdentity?.username,
+      creatorProfileImageUrl: xIdentity?.profileImageUrl,
       swapSide:
         body.swapSide === "tokenToXrp" || body.swapSide === "xrpToToken"
           ? body.swapSide

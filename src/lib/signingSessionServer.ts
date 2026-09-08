@@ -102,6 +102,9 @@ export type CreateSessionInput = {
   swapSide?: "xrpToToken" | "tokenToXrp";
   /** Reply-track attribution (all optional) */
   originTweetId?: string;
+  /** create only: public X identity details captured by the API route */
+  creatorXUsername?: string;
+  creatorProfileImageUrl?: string;
   replyTweetId?: string;
   dmConversationId?: string;
   buyerXUserId?: string;
@@ -191,6 +194,8 @@ export function buildPayload(
     createSymbol: input.createSymbol?.trim() || undefined,
     metadataURI: input.metadataURI?.trim() || undefined,
     originHash: input.originHash?.trim() as `0x${string}` | undefined,
+    creatorXUsername: input.creatorXUsername?.trim() || undefined,
+    creatorProfileImageUrl: input.creatorProfileImageUrl?.trim() || undefined,
     swapSide: input.swapSide,
     originTweetId: input.originTweetId?.trim() || undefined,
     replyTweetId: input.replyTweetId?.trim() || undefined,

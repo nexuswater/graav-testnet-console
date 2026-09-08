@@ -699,10 +699,10 @@ export function TradeTab({
 
       {RLUSD.profile === "testnet-clone" && (
         <div className="g-alert good" style={{ marginBottom: 16 }}>
-          <strong>RLUSD markets live</strong> — launch a coin or open the demo Moment.
+          <strong>RLUSD markets live</strong> — launch a community coin or browse the market list.
           <span className="flex flex-wrap gap-2" style={{ marginTop: 10 }}>
             <Link href="/launch" className="g-btn sm" style={{ textDecoration: "none" }}>Launch Coin</Link>
-            <Link href="/m/demo-moment-2026" className="g-btn sm" style={{ textDecoration: "none" }}>Open demo Moment</Link>
+            <Link href="/launch" className="g-btn sm" style={{ textDecoration: "none" }}>Create a coin</Link>
           </span>
         </div>
       )}

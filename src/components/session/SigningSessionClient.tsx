@@ -97,6 +97,10 @@ export function SigningSessionClient({ initial }: Props) {
 
   const marketAddr = (payload?.market as Address) || undefined;
   const factoryAddr = (payload?.factory as Address) || undefined;
+  const originPostId = payload?.originTweetId?.trim();
+  const originPostUrl = originPostId && /^\d+$/.test(originPostId)
+    ? "https://x.com/i/web/status/" + encodeURIComponent(originPostId)
+    : undefined;
 
   const refreshStatus = useCallback(async () => {
     try {
@@ -617,13 +621,18 @@ export function SigningSessionClient({ initial }: Props) {
             (payload.createSymbol ||
               (typeof tokenSymbol === "string" && tokenSymbol)) && (
               <div style={{ marginBottom: 12 }}>
-                <TokenPfp
-                  ticker={
-                    payload.createSymbol ||
-                    (typeof tokenSymbol === "string" ? tokenSymbol : "TOKEN")
-                  }
-                  size="md"
-                />
+                {payload.action === "create" && payload.metadataURI ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={payload.metadataURI} alt={`$${payload.createSymbol || "TOKEN"}`} width={72} height={72} className="g-pfp md" />
+                ) : (
+                  <TokenPfp
+                    ticker={
+                      payload.createSymbol ||
+                      (typeof tokenSymbol === "string" ? tokenSymbol : "TOKEN")
+                    }
+                    size="md"
+                  />
+                )}
               </div>
             )}
           <h1 className="g-display" style={{ fontSize: 32 }}>
@@ -703,6 +712,24 @@ export function SigningSessionClient({ initial }: Props) {
               )}
               {payload.action === "create" && (
                 <>
+                  {(payload.creatorProfileImageUrl || payload.creatorXUsername || payload.originTweetId) && (
+                    <div className="g-alert" style={{ margin: "16px 0 4px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        {payload.creatorProfileImageUrl ? (
+                          <img src={payload.creatorProfileImageUrl} alt="" width={42} height={42} style={{ borderRadius: "50%", objectFit: "cover" }} />
+                        ) : (
+                          <span className="g-av" aria-hidden>{payload.creatorXUsername?.slice(0, 1).toUpperCase() || "X"}</span>
+                        )}
+                        <div>
+                          <div className="g-micro">CREATE ORIGIN</div>
+                          <div style={{ fontWeight: 650 }}>{payload.creatorXUsername ? "@" + payload.creatorXUsername : "X identity not bound"}</div>
+                          <div className="g-hint" style={{ marginTop: 2 }}>
+                            Origin post {originPostUrl ? <a href={originPostUrl} target="_blank" rel="noreferrer" className="link-x">{originPostId}</a> : <span className="g-mono">{originPostId || "—"}</span>}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <div className="g-kv">
                     <span>Name</span>
                     <span>{payload.createName || "—"}</span>
@@ -713,11 +740,15 @@ export function SigningSessionClient({ initial }: Props) {
                   </div>
                   <div className="g-kv">
                     <span>Source post</span>
-                    <span>{payload.originTweetId || "—"}</span>
+                    <span>{originPostUrl ? <a href={originPostUrl} target="_blank" rel="noreferrer" className="link-x">{payload.originTweetId}</a> : payload.originTweetId || "—"}</span>
                   </div>
                   <div className="g-kv">
                     <span>Origin hash</span>
                     <span className="g-mono">{payload.originHash || zeroHash}</span>
+                  </div>
+                  <div className="g-kv">
+                    <span>Token image</span>
+                    <span className="g-mono" style={{ maxWidth: "65%", overflowWrap: "anywhere", textAlign: "right" }}>{payload.metadataURI || "—"}</span>
                   </div>
                 </>
               )}
