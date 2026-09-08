@@ -141,11 +141,11 @@ export function RlusdTradePanel({ coinAddress, curveAddress, symbol = "MOMENT" }
       {stateReason && <div className="g-alert warn" style={{ marginTop: 12 }}>{stateReason}</div>}
       {graduated === true && <div className="g-alert" style={{ marginTop: 12 }}>Graduated: only the verified RLUSD pair swap path is enabled.</div>}
       <div className="g-seg" role="tablist" aria-label="RLUSD trade action" style={{ marginTop: 14 }}>
-        <button type="button" className={side === "buy" ? "on" : undefined} disabled={graduated === true} onClick={() => setSide("buy")}>Buy</button>
-        <button type="button" className={side === "sell" ? "on" : undefined} disabled={graduated === true} onClick={() => setSide("sell")}>Sell</button>
-        <button type="button" className={side === "swap" ? "on" : undefined} disabled={graduated !== true} onClick={() => setSide("swap")}>Swap</button>
+        <button type="button" className={side === "buy" ? "on" : undefined} onClick={() => setSide("buy")}>Buy</button>
+        <button type="button" className={side === "sell" ? "on" : undefined} onClick={() => setSide("sell")}>Sell</button>
+        <button type="button" className={side === "swap" ? "on" : undefined} onClick={() => setSide("swap")}>Swap</button>
       </div>
-      {side === "swap" && graduated === true && <div className="g-seg" role="tablist" aria-label="RLUSD swap direction" style={{ marginTop: 8 }}>
+      {side === "swap" && <div className="g-seg" role="tablist" aria-label="RLUSD swap direction" style={{ marginTop: 8 }}>
         <button type="button" className={swapDirection === "quoteToCoin" ? "on" : undefined} onClick={() => setSwapDirection("quoteToCoin")}>RLUSD → ${symbol}</button>
         <button type="button" className={swapDirection === "coinToQuote" ? "on" : undefined} onClick={() => setSwapDirection("coinToQuote")}>${symbol} → RLUSD</button>
       </div>}

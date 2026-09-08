@@ -685,13 +685,8 @@ export function TradeTab({
     }
   }, [v2Allowance, swapAmount, swapSide]);
 
-  // Prefer swap UI when graduated, buy on curve otherwise
-  const activeSide =
-    isGraduated && tradeSide !== "swap"
-      ? "swap"
-      : !isGraduated && tradeSide === "swap"
-        ? "buy"
-        : tradeSide;
+  // The selected mode controls the visible form; availability only gates actions.
+  const activeSide = tradeSide;
 
   return (
     <div className="space-y-5">
@@ -798,7 +793,6 @@ export function TradeTab({
             <button
               type="button"
               className={activeSide === "buy" ? "on" : undefined}
-              disabled={isGraduated}
               onClick={() => setTradeSide("buy")}
             >
               Buy
@@ -806,7 +800,6 @@ export function TradeTab({
             <button
               type="button"
               className={activeSide === "sell" ? "on" : undefined}
-              disabled={isGraduated}
               onClick={() => setTradeSide("sell")}
             >
               Sell
@@ -814,14 +807,13 @@ export function TradeTab({
             <button
               type="button"
               className={activeSide === "swap" ? "on" : undefined}
-              disabled={!isGraduated}
               onClick={() => setTradeSide("swap")}
             >
               Swap
             </button>
           </div>
 
-          {activeSide === "buy" && !isGraduated && (
+          {activeSide === "buy" && (
             <>
               <div className="g-field">
                 <label>You pay</label>
@@ -851,7 +843,7 @@ export function TradeTab({
             </>
           )}
 
-          {activeSide === "sell" && !isGraduated && (
+          {activeSide === "sell" && (
             <>
               <div className="g-field">
                 <label>You sell</label>
@@ -888,7 +880,7 @@ export function TradeTab({
             </>
           )}
 
-          {activeSide === "swap" && isGraduated && (
+          {activeSide === "swap" && (
             <>
               {swapScarReason ? (
                 <div className="g-alert warn">
