@@ -23,6 +23,6 @@ export const rlusdCurveAbi = parseAbi([
 export const rlusdPairAbi = parseAbi([
   "function reserveToken() view returns (uint256)",
   "function reserveQuote() view returns (uint256)",
-  "function swapQuoteForToken(uint256 gross, uint256 minOut, address recipient, bytes32 orderId) returns (uint256 out)",
+  "function swapQuoteForToken(uint256 gross, uint256 minOut, address recipient, address referrer, address midwife, bytes32 orderId) returns (uint256 out)",
   "function swapTokenForQuote(uint256 amount, uint256 minOut, address recipient, bytes32 orderId) returns (uint256 out)",
 ]);

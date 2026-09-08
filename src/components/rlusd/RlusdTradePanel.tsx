@@ -29,11 +29,19 @@ export function RlusdTradePanel({ coinAddress, curveAddress, symbol = "MOMENT" }
   const [side, setSide] = useState<Side>("buy");
   const [swapDirection, setSwapDirection] = useState<SwapDirection>("quoteToCoin");
   const [amount, setAmount] = useState("5");
+  const [referrerInput, setReferrerInput] = useState("");
+  const [midwifeInput, setMidwifeInput] = useState("");
   const [status, setStatus] = useState<string | null>(null);
 
   const quote = asAddress(C.quoteAddress);
   const coin = asAddress(coinAddress ?? C.coinAddress);
   const curve = asAddress(curveAddress ?? C.curveAddress);
+  const referrerAddress = referrerInput.trim() ? asAddress(referrerInput.trim()) : undefined;
+  const referrer = referrerAddress ?? ZERO;
+  const midwifeAddress = midwifeInput.trim() ? asAddress(midwifeInput.trim()) : undefined;
+  const midwife = midwifeAddress ?? ZERO;
+  const attributionInputError =
+    (referrerInput.trim() && !referrerAddress) || (midwifeInput.trim() && !midwifeAddress);
   const onCorrectChain = chainId === XRPL_EVM_TESTNET_ID;
   const cloneConfigured = C.profile === "testnet-clone" && C.liveExecutionEnabled && !!C.factoryAddress && !!quote && !!coin && !!curve;
 
@@ -90,7 +98,7 @@ export function RlusdTradePanel({ coinAddress, curveAddress, symbol = "MOMENT" }
   const minOut = quoteOut ? (quoteOut * SLIPPAGE_BPS) / 1000n : null;
   const readReady = cloneConfigured && !curveReadError && graduated !== undefined && (graduated === false || (!!pairAddress && reserveToken !== undefined && reserveQuote !== undefined));
   const actionModeReady = (graduated === false && (side === "buy" || side === "sell")) || (graduated === true && side === "swap" && !!pairAddress);
-  const isReady = readReady && isConnected && onCorrectChain && !!address && !!parsedAmount && !!minOut && !isWriting && !isConfirming && actionModeReady;
+  const isReady = readReady && isConnected && onCorrectChain && !!address && !!parsedAmount && !!minOut && !isWriting && !isConfirming && actionModeReady && !attributionInputError;
   const quoteNeedsApproval = (side === "buy" || (side === "swap" && swapDirection === "quoteToCoin")) && (quoteAllowance === undefined || !parsedAmount || quoteAllowance < parsedAmount);
   const coinNeedsApproval = (side === "sell" || (side === "swap" && swapDirection === "coinToQuote")) && (coinAllowance === undefined || !parsedAmount || coinAllowance < parsedAmount);
   const needsApproval = quoteNeedsApproval || coinNeedsApproval;
@@ -117,11 +125,11 @@ export function RlusdTradePanel({ coinAddress, curveAddress, symbol = "MOMENT" }
     try {
       setStatus(`${side === "buy" ? "Buy" : side === "sell" ? "Sell" : "Swap"} ${symbol}… sign in wallet.`);
       const hash = side === "buy"
-        ? await writeContractAsync({ address: curve, abi: rlusdCurveAbi, functionName: "buy", args: [parsedAmount, minOut, address, ZERO, ZERO, zeroHash] })
+        ? await writeContractAsync({ address: curve, abi: rlusdCurveAbi, functionName: "buy", args: [parsedAmount, minOut, address, referrer, midwife, zeroHash] })
         : side === "sell"
           ? await writeContractAsync({ address: curve, abi: rlusdCurveAbi, functionName: "sell", args: [parsedAmount, minOut, address, zeroHash] })
           : swapDirection === "quoteToCoin"
-            ? await writeContractAsync({ address: pairAddress as Address, abi: rlusdPairAbi, functionName: "swapQuoteForToken", args: [parsedAmount, minOut, address, zeroHash] })
+            ? await writeContractAsync({ address: pairAddress as Address, abi: rlusdPairAbi, functionName: "swapQuoteForToken", args: [parsedAmount, minOut, address, referrer, midwife, zeroHash] })
             : await writeContractAsync({ address: pairAddress as Address, abi: rlusdPairAbi, functionName: "swapTokenForQuote", args: [parsedAmount, minOut, address, zeroHash] });
       setStatus(`Submitted: ${hash}`);
     } catch (error) {
@@ -129,7 +137,9 @@ export function RlusdTradePanel({ coinAddress, curveAddress, symbol = "MOMENT" }
     }
   };
 
-  const stateReason = !C.liveExecutionEnabled || C.profile !== "testnet-clone" ? "RLUSD clone execution is not configured." : !isConnected ? "Connect wallet to sign RLUSD transactions." : !onCorrectChain ? `Switch to XRPL EVM Testnet (${XRPL_EVM_TESTNET_ID}).` : curveReadError ? "Live clone market read failed; trading is disabled." : graduated === true && !pairAddress ? "Graduated market has no verified pair; swap is disabled." : graduated === undefined ? "Reading the live clone market…" : null;
+  const stateReason = attributionInputError
+    ? "Referrer and midwife must be valid wallet addresses."
+    : !C.liveExecutionEnabled || C.profile !== "testnet-clone" ? "RLUSD clone execution is not configured." : !isConnected ? "Connect wallet to sign RLUSD transactions." : !onCorrectChain ? `Switch to XRPL EVM Testnet (${XRPL_EVM_TESTNET_ID}).` : curveReadError ? "Live clone market read failed; trading is disabled." : graduated === true && !pairAddress ? "Graduated market has no verified pair; swap is disabled." : graduated === undefined ? "Reading the live clone market…" : null;
   const displayIn = side === "sell" || (side === "swap" && swapDirection === "coinToQuote") ? symbol : "RLUSD";
   const displayOut = displayIn === symbol ? "RLUSD" : symbol;
 
@@ -153,6 +163,20 @@ export function RlusdTradePanel({ coinAddress, curveAddress, symbol = "MOMENT" }
         <label>{displayIn} in</label>
         <input value={amount} onChange={(event) => setAmount(event.target.value)} inputMode="decimal" placeholder="5" />
       </div>
+      {(side === "buy" || (side === "swap" && swapDirection === "quoteToCoin")) && (
+        <details className="g-details" style={{ marginTop: 12 }}>
+          <summary>Share &amp; Earn attribution (optional)</summary>
+          <p className="g-hint" style={{ marginTop: 8 }}>Use the wallets from a signed Touch. The console never mints Touch records; invalid or expired attribution fails closed on-chain.</p>
+          <div className="g-field" style={{ marginTop: 10 }}>
+            <label>Referrer wallet</label>
+            <input value={referrerInput} onChange={(event) => setReferrerInput(event.target.value)} inputMode="text" placeholder="0x…" autoComplete="off" spellCheck={false} />
+          </div>
+          <div className="g-field" style={{ marginTop: 10 }}>
+            <label>Midwife wallet</label>
+            <input value={midwifeInput} onChange={(event) => setMidwifeInput(event.target.value)} inputMode="text" placeholder="0x…" autoComplete="off" spellCheck={false} />
+          </div>
+        </details>
+      )}
       <p className="g-hint">Estimated out: {quoteOut ? amountLabel(quoteOut) : "—"} {displayOut}</p>
       {needsApproval && <button type="button" className="g-cta ghost" disabled={!isReady || !spender} onClick={() => void approve(coinNeedsApproval ? coin : quote, coinNeedsApproval ? symbol : "RLUSD")}>Approve {coinNeedsApproval ? symbol : "RLUSD"}</button>}
       <button type="button" className="g-cta" disabled={!actionEnabled} onClick={() => void execute()}>{side === "buy" ? `Buy ${symbol} with RLUSD` : side === "sell" ? `Sell ${symbol} for RLUSD` : `Swap ${displayIn} → ${displayOut}`}</button>

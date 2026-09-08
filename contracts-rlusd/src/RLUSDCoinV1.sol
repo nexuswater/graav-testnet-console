@@ -154,6 +154,7 @@ contract ProtocolPair is ReentrancyGuard {
     FeeEscrow public immutable escrow;
     address public immutable admin;
     address public curve;
+    address public creator;
     bool public initialized;
     uint256 public reserveToken;
     uint256 public reserveQuote;
@@ -172,11 +173,23 @@ contract ProtocolPair is ReentrancyGuard {
         curve = c;
     }
 
+    function setCreator(address c) external {
+        require(msg.sender == admin && creator == address(0) && c != address(0), "CREATOR_LOCKED");
+        creator = c;
+    }
+
     function initialize(uint256 tokenAmount, uint256 quoteAmount) external {
         require(msg.sender == curve && !initialized, "INIT");
         require(token.balanceOf(address(this)) >= tokenAmount && quote.balanceOf(address(this)) >= quoteAmount, "SEED");
         reserveToken = tokenAmount;
         reserveQuote = quoteAmount;
+        if (creator == address(0) && curve.code.length > 0) {
+            (bool ok, bytes memory data) = curve.staticcall(abi.encodeWithSignature("creator()"));
+            if (ok && data.length >= 32) {
+                address c = abi.decode(data, (address));
+                if (c != address(0)) creator = c;
+            }
+        }
         initialized = true;
         emit Initialized(tokenAmount, quoteAmount);
     }
@@ -186,6 +199,29 @@ contract ProtocolPair is ReentrancyGuard {
         nonReentrant
         returns (uint256 out)
     {
+        return _swapQuoteForToken(gross, minOut, recipient, address(0), address(0), orderId);
+    }
+
+    function swapQuoteForToken(
+        uint256 gross,
+        uint256 minOut,
+        address recipient,
+        address referrer,
+        address midwife,
+        bytes32 orderId
+    ) external nonReentrant returns (uint256 out) {
+        _requireAttribution(referrer, midwife);
+        return _swapQuoteForToken(gross, minOut, recipient, referrer, midwife, orderId);
+    }
+
+    function _swapQuoteForToken(
+        uint256 gross,
+        uint256 minOut,
+        address recipient,
+        address referrer,
+        address midwife,
+        bytes32 orderId
+    ) private returns (uint256 out) {
         require(initialized && gross > 0, "SWAP");
         uint256 got = quote.balanceOf(address(this));
         quote.pull(msg.sender, address(this), gross);
@@ -196,7 +232,7 @@ contract ProtocolPair is ReentrancyGuard {
         require(out >= minOut && out < reserveToken, "SLIPPAGE");
         reserveQuote += net;
         reserveToken -= out;
-        _fees(got, fee, orderId);
+        _fees(got, fee, referrer, midwife, orderId);
         token.push(recipient, out);
         emit Swap(msg.sender, true, got, net, out);
     }
@@ -215,20 +251,38 @@ contract ProtocolPair is ReentrancyGuard {
         require(out >= minOut && gross <= reserveQuote, "SLIPPAGE");
         reserveToken += amount;
         reserveQuote = nextQuote;
-        _fees(gross, fee, orderId);
+        _fees(gross, fee, address(0), address(0), orderId);
         quote.push(recipient, out);
         emit Swap(msg.sender, false, gross, gross - fee, out);
     }
 
-    function _fees(uint256 gross, uint256 fee, bytes32 orderId) private {
+    function _requireAttribution(address referrer, address midwife) private view {
+        if (referrer == address(0) && midwife == address(0)) return;
+        require(curve.code.length > 0, "ATTRIBUTION_UNAVAILABLE");
+        address guard;
+        (bool ok, bytes memory data) = curve.staticcall(abi.encodeWithSignature("attributionGuard()"));
+        if (ok && data.length >= 32) guard = abi.decode(data, (address));
+        require(guard != address(0), "ATTRIBUTION_UNAVAILABLE");
+        // Touch is coin-scoped to the curve address (pre-grad market id).
+        if (referrer != address(0)) {
+            require(IAttributionGuard(guard).eligible(curve, msg.sender, referrer), "REFERRER_INELIGIBLE");
+        }
+        if (midwife != address(0)) {
+            require(IAttributionGuard(guard).eligibleMidwife(curve, msg.sender, midwife), "MIDWIFE_INELIGIBLE");
+        }
+    }
+
+    function _fees(uint256 gross, uint256 fee, address referrer, address midwife, bytes32 orderId) private {
         quote.push(address(escrow), fee);
-        uint256 creator = gross * 35 / 10000;
-        uint256 midwife = 0;
-        uint256 referrer = 0;
-        escrow.credit(FeeEscrow.Role.PROTOCOL, admin, fee - creator, orderId);
-        escrow.credit(FeeEscrow.Role.CREATOR, admin, creator, orderId);
-        escrow.credit(FeeEscrow.Role.REFERRER, admin, referrer, orderId);
-        escrow.credit(FeeEscrow.Role.MIDWIFE, admin, midwife, orderId);
+        uint256 creatorFee = gross * 35 / 10000;
+        uint256 ref = referrer == address(0) ? 0 : gross * 20 / 10000;
+        uint256 mid = midwife == address(0) ? 0 : gross * 5 / 10000;
+        uint256 protocol = fee - creatorFee - ref - mid;
+        address creatorBeneficiary = creator == address(0) ? admin : creator;
+        escrow.credit(FeeEscrow.Role.PROTOCOL, admin, protocol, orderId);
+        escrow.credit(FeeEscrow.Role.CREATOR, creatorBeneficiary, creatorFee, orderId);
+        escrow.credit(FeeEscrow.Role.REFERRER, referrer, ref, orderId);
+        escrow.credit(FeeEscrow.Role.MIDWIFE, midwife, mid, orderId);
     }
 }
 
@@ -245,6 +299,7 @@ contract RlusdCurve is ReentrancyGuard {
     uint256 public curveInventory;
     bool public graduated;
     address public immutable admin;
+    address public creator;
     ProtocolPair public pair;
     IAttributionGuard public attributionGuard;
     event Buy(
@@ -294,6 +349,11 @@ contract RlusdCurve is ReentrancyGuard {
         attributionGuard = g;
     }
 
+    function setCreator(address c) external {
+        require(msg.sender == admin && creator == address(0) && c != address(0), "CREATOR_LOCKED");
+        creator = c;
+    }
+
     function buy(uint256 gross, uint256 minOut, address recipient, address referrer, address midwife, bytes32 orderId)
         external
         nonReentrant
@@ -310,7 +370,7 @@ contract RlusdCurve is ReentrancyGuard {
         if (midwife != address(0)) {
             require(
                 address(attributionGuard) != address(0)
-                    && attributionGuard.eligible(address(this), msg.sender, midwife),
+                    && attributionGuard.eligibleMidwife(address(this), msg.sender, midwife),
                 "MIDWIFE_INELIGIBLE"
             );
         }
@@ -368,12 +428,13 @@ contract RlusdCurve is ReentrancyGuard {
 
     function _fees(uint256 gross, uint256 fee, address referrer, address midwife, bytes32 orderId) private {
         quote.push(address(escrow), fee);
-        uint256 creator = gross * 35 / 10000;
+        uint256 creatorFee = gross * 35 / 10000;
         uint256 ref = (referrer != address(0) ? gross * 20 / 10000 : 0);
-        uint256 mid = (midwife != address(0) && midwife != admin ? gross * 5 / 10000 : 0);
-        uint256 protocol = fee - creator - ref - mid;
+        uint256 mid = (midwife != address(0) ? gross * 5 / 10000 : 0);
+        uint256 protocol = fee - creatorFee - ref - mid;
+        address creatorBeneficiary = creator == address(0) ? admin : creator;
         escrow.credit(FeeEscrow.Role.PROTOCOL, admin, protocol, orderId);
-        escrow.credit(FeeEscrow.Role.CREATOR, admin, creator, orderId);
+        escrow.credit(FeeEscrow.Role.CREATOR, creatorBeneficiary, creatorFee, orderId);
         escrow.credit(FeeEscrow.Role.REFERRER, referrer, ref, orderId);
         escrow.credit(FeeEscrow.Role.MIDWIFE, midwife, mid, orderId);
     }
@@ -463,6 +524,7 @@ contract TokenFactory {
         MomentToken t = new MomentToken(p.name_, p.symbol_, address(this), p.curveTokens + p.lpTokens);
         RlusdCurve c =
             new RlusdCurve(t, quote, e, address(this), p.curveTokens, p.lpTokens, p.threshold, p.virtualX, p.virtualY);
+        c.setCreator(p.issuer);
         t.transfer(address(c), p.curveTokens + p.lpTokens);
         e.authorizeMarket(address(c), true);
         c.setAttributionGuard(IAttributionGuard(address(attributionGuard)));

@@ -91,7 +91,7 @@ contract LaunchAuthorizer {
 
 contract AttributionGuard {
     bytes32 public constant TYPEHASH = keccak256(
-        "Touch(bytes32 sourcePostId,address coin,address buyer,address referrer,uint256 nonce,uint256 deadline)"
+        "Touch(bytes32 sourcePostId,address coin,address buyer,address referrer,address midwife,uint256 nonce,uint256 deadline)"
     );
     uint256 public immutable chainId;
     address public immutable signer;
@@ -99,12 +99,18 @@ contract AttributionGuard {
     struct Touch {
         bytes32 sourcePostId;
         address referrer;
+        address midwife;
         uint256 expiresAt;
     }
     mapping(address => mapping(address => Touch)) public lastTouch;
     mapping(bytes32 => bool) public usedDigest;
     event TouchRecorded(
-        bytes32 indexed sourcePostId, address indexed coin, address indexed buyer, address referrer, uint256 expiresAt
+        bytes32 indexed sourcePostId,
+        address indexed coin,
+        address indexed buyer,
+        address referrer,
+        address midwife,
+        uint256 expiresAt
     );
 
     constructor(uint256 c, address s) {
@@ -118,11 +124,14 @@ contract AttributionGuard {
         address coin,
         address buyer,
         address referrer,
+        address midwife,
         uint256 nonce,
         uint256 deadline
     ) public view returns (bytes32) {
         return keccak256(
-            abi.encode(TYPEHASH, block.chainid, address(this), sourcePostId, coin, buyer, referrer, nonce, deadline)
+            abi.encode(
+                TYPEHASH, block.chainid, address(this), sourcePostId, coin, buyer, referrer, midwife, nonce, deadline
+            )
         );
     }
 
@@ -131,6 +140,7 @@ contract AttributionGuard {
         address coin,
         address buyer,
         address referrer,
+        address midwife,
         uint256 nonce,
         uint256 deadline,
         bytes calldata signature
@@ -140,19 +150,25 @@ contract AttributionGuard {
             "TOUCH_INPUT"
         );
         require(deadline >= block.timestamp, "TOUCH_EXPIRED");
-        bytes32 d = digest(sourcePostId, coin, buyer, referrer, nonce, deadline);
+        bytes32 d = digest(sourcePostId, coin, buyer, referrer, midwife, nonce, deadline);
         require(!usedDigest[d] && SignatureOps.recover(SignatureOps.ethSigned(d), signature) == signer, "TOUCH_SIGNER");
         usedDigest[d] = true;
-        lastTouch[coin][buyer] = Touch(sourcePostId, referrer, deadline);
-        emit TouchRecorded(sourcePostId, coin, buyer, referrer, deadline);
+        lastTouch[coin][buyer] = Touch(sourcePostId, referrer, midwife, deadline);
+        emit TouchRecorded(sourcePostId, coin, buyer, referrer, midwife, deadline);
     }
 
     function eligible(address coin, address buyer, address referrer) external view returns (bool) {
         Touch memory t = lastTouch[coin][buyer];
         return referrer != address(0) && t.referrer == referrer && t.expiresAt >= block.timestamp;
     }
+
+    function eligibleMidwife(address coin, address buyer, address midwife) external view returns (bool) {
+        Touch memory t = lastTouch[coin][buyer];
+        return midwife != address(0) && t.midwife == midwife && t.expiresAt >= block.timestamp;
+    }
 }
 
 interface IAttributionGuard {
     function eligible(address coin, address buyer, address referrer) external view returns (bool);
+    function eligibleMidwife(address coin, address buyer, address midwife) external view returns (bool);
 }
