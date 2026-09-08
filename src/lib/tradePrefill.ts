@@ -11,4 +11,4 @@ export type TradePrefill = {
   loadQuery?: string;
 };
 
-export type AppTab = "Trade" | "Portfolio" | "Cross-chain" | "Chat" | "X";
+export type AppTab = "Markets" | "Trade" | "Portfolio" | "Cross-chain" | "Chat" | "X";

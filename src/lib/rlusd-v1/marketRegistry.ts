@@ -1,6 +1,6 @@
 import { RLUSD_V1 as C } from "./config";
 
-export type RlusdMarketStatus = "fixture" | "not-wired";
+export type RlusdMarketStatus = "not-launched" | "unconfigured";
 
 export type RlusdMarket = {
   id: string;
@@ -22,7 +22,7 @@ export const RLUSD_MARKET_REGISTRY: readonly RlusdMarket[] = [
     name: "Demo Moment",
     sourcePostId: "demo-moment-2026",
     description: "Moment awaiting the first signed market bind on the new clone",
-    status: "not-wired",
+    status: "not-launched",
     factoryAddress: C.factoryAddress,
     marketAddress: C.curveAddress,
     coinAddress: C.coinAddress,
@@ -32,8 +32,8 @@ export const RLUSD_MARKET_REGISTRY: readonly RlusdMarket[] = [
     symbol: "ORBIT",
     name: "Orbit",
     sourcePostId: "demo-orbit-2026",
-    description: "Registry fixture awaiting a verified market bind",
-    status: "not-wired",
+    description: "Listed for discovery. No verified market bind yet.",
+    status: "unconfigured",
     factoryAddress: null,
     marketAddress: null,
     coinAddress: null,
@@ -43,8 +43,8 @@ export const RLUSD_MARKET_REGISTRY: readonly RlusdMarket[] = [
     symbol: "SIGNAL",
     name: "Signal",
     sourcePostId: "demo-signal-2026",
-    description: "Registry fixture awaiting a verified market bind",
-    status: "not-wired",
+    description: "Listed for discovery. No verified market bind yet.",
+    status: "unconfigured",
     factoryAddress: null,
     marketAddress: null,
     coinAddress: null,

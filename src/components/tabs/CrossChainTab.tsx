@@ -176,16 +176,21 @@ export function CrossChainTab({ onGoTrade }: Props) {
   return (
     <div className="space-y-5">
       <section>
-        <h1 className="g-title">Aggregated* USDC → RLUSD</h1>
+        <h1 className="g-title">Funding</h1>
         <p className="g-sub" style={{ marginTop: 8 }}>
-          Squid-first: source USDC → live Squid quote → RLUSD on XRPL EVM mainnet 1440000.
-          Testnet 1449000 remains fail-closed; no fake Buy and no hold-USDC-on-dest.
+          Testnet funding stays fail-closed. Display quote is RLUSD. Mainnet Buy is closed.
         </p>
         <p className="g-hint" style={{ marginTop: 8 }}>
-          Accepted Aggregation RLUSD brief · Buy only after live Squid quote + depth smoke.
-          Testnet 1449000 remains fail-closed; never invent a route.
+          Availability is shown below. Probe diagnostics stay behind Details.
         </p>
       </section>
+
+      <div className="g-alert">
+        Availability: testnet Buy is disabled. A live Squid USDC→RLUSD quote is required before any Buy.
+      </div>
+
+      <details className="g-details">
+        <summary>Details</summary>
 
       {/* Primary story: step strip */}
       <div className="g-card">
@@ -521,6 +526,7 @@ export function CrossChainTab({ onGoTrade }: Props) {
           destination.
         </p>
       )}
+      </details>
 
       <div className="g-card">
         <p className="g-sub">Get testnet XRP on XRPL EVM, then trade locally.</p>

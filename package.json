@@ -9,7 +9,9 @@
     "lint": "eslint",
     "check": "tsc --noEmit",
     "test:chat-intent": "node --import tsx --test --test-concurrency=1 tests/chatIntent.test.ts",
-    "test:rlusd": "node --import tsx --test --test-concurrency=1 tests/rlusd.test.ts tests/rlusd-ingress.test.ts"
+    "test:rlusd": "node --import tsx --test --test-concurrency=1 tests/rlusd.test.ts tests/rlusd-ingress.test.ts",
+    "test:rc": "node --import tsx --test --test-concurrency=1 tests/rc-honesty.test.ts",
+    "test": "npm run test:chat-intent && npm run test:rlusd && npm run test:rc"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.8",

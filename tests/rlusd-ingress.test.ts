@@ -12,8 +12,8 @@ test("Squid metadata adapter uses exact RLUSD destination identity", async () =>
   const metadata = await fetchSquidMetadata({ integratorId: "fixture-integrator", fetchImpl: async (input, init) => {
     seen.push(`${String(input)}:${String((init?.headers as Record<string, string>)["x-integrator-id"])}`);
     return String(input).endsWith("/chains")
-      ? response({ chains: [{ chainId: "1440000", chainName: "XRPL EVM" }, { chainId: "1" }] })
-      : response({ tokens: [{ chainId: "1", address: MOCK_SOURCE, symbol: "USDC", decimals: 6 }, { chainId: "1440000", address: C.quoteAddress, symbol: "RLUSD", decimals: 18 }] });
+      ? response({ chains: [{ chainId: String(C.chainId), chainName: "XRPL EVM" }, { chainId: "1" }] })
+      : response({ tokens: [{ chainId: "1", address: MOCK_SOURCE, symbol: "USDC", decimals: 6 }, { chainId: String(C.chainId), address: C.quoteAddress, symbol: "RLUSD", decimals: 18 }] });
   } });
   assert.equal(metadata.status, "ready");
   assert.equal(metadata.destination.chainListed, true);
@@ -32,19 +32,19 @@ test("missing integrator is a provider gap, not a mock route", async () => {
 test("quote request is exact-destination and quote-only", () => {
   const metadata: SquidMetadata = {
     provider: "squid-v2", fetchedAt: new Date(0).toISOString(), status: "ready", chainCount: 2, tokenCount: 2,
-    chains: [{ chainId: "1" }, { chainId: "1440000" }],
-    tokens: [{ chainId: "1", address: MOCK_SOURCE, symbol: "USDC", decimals: 6 }, { chainId: "1440000", address: C.quoteAddress, symbol: "RLUSD", decimals: 18 }],
+    chains: [{ chainId: "1" }, { chainId: String(C.chainId) }],
+    tokens: [{ chainId: "1", address: MOCK_SOURCE, symbol: "USDC", decimals: 6 }, { chainId: String(C.chainId), address: C.quoteAddress, symbol: "RLUSD", decimals: 18 }],
     destination: { chainId: C.chainId, chainListed: true, quote: { address: C.quoteAddress, symbol: "RLUSD", decimals: 18, listed: true } },
   };
   assert.deepEqual(buildRlusdQuoteRequest(metadata, { fromAddress: MOCK_WALLET, toAddress: MOCK_WALLET, fromChain: "1", fromToken: MOCK_SOURCE, fromAmount: "1000000" }), {
-    fromAddress: MOCK_WALLET, toAddress: MOCK_WALLET, fromChain: "1", fromToken: MOCK_SOURCE, fromAmount: "1000000", toChain: "1440000", toToken: C.quoteAddress, quoteOnly: true,
+    fromAddress: MOCK_WALLET, toAddress: MOCK_WALLET, fromChain: "1", fromToken: MOCK_SOURCE, fromAmount: "1000000", toChain: String(C.chainId), toToken: C.quoteAddress, quoteOnly: true,
   });
   assert.throws(() => buildRlusdQuoteRequest({ ...metadata, destination: { ...metadata.destination, quote: { ...metadata.destination.quote, listed: false } }, status: "provider_gap", reason: "gap" }, { fromAddress: MOCK_WALLET, toAddress: MOCK_WALLET, fromChain: "1", fromToken: MOCK_SOURCE, fromAmount: "1" }), /DESTINATION_UNAVAILABLE/);
 });
 
 test("BUY adapter remains disabled until market hook and authorizer are deployed", () => {
   const adapter = allowlistedBuyAdapter("0x3333333333333333333333333333333333333333", MOCK_WALLET);
-  assert.equal(adapter.destinationChainId, 1440000);
+  assert.equal(adapter.destinationChainId, C.chainId);
   assert.equal(adapter.quoteToken, C.quoteAddress);
   assert.equal(adapter.enabled, false);
   assert.equal(adapter.reason, "BUY_ADAPTER_NOT_CONFIGURED");

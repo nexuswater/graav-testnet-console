@@ -10,6 +10,7 @@ type Msg = {
   role: "user" | "bot";
   text: string;
   handoff?: { tab: AppTab; prefill?: TradePrefill; label: string };
+  href?: string;
   sessionUrl?: string;
 };
 
@@ -24,7 +25,7 @@ export function ChatTab({ onHandoff }: Props) {
     {
       id: "welcome",
       role: "bot",
-      text: "GRAAV chat · Coin V1 intents. Try: BUY MOMENT 0.1 · SELL 1 MOMENT · LAUNCH MYCOIN. Wallet approval is required; chat never signs or sends a transaction.",
+      text: "Preview intents only. Try BUY gSWAP 0.1 · SELL 1 g589 · LAUNCH MYCOIN. Wallet signing stays separate.",
     },
   ]);
 
@@ -71,6 +72,7 @@ export function ChatTab({ onHandoff }: Props) {
       role: "bot",
       text: reply,
       handoff: parsed.handoff,
+      href: parsed.kind === "launch" ? "/launch" : undefined,
       sessionUrl,
     };
     setMsgs((m) => [...m, userMsg, botMsg]);
@@ -105,13 +107,13 @@ export function ChatTab({ onHandoff }: Props) {
               style={
                 m.role === "user"
                   ? {
-                      background: "var(--x)",
-                      color: "#fff",
+                      background: "var(--cta-bg)",
+                      color: "var(--cta-fg)",
                     }
                   : {
-                      background: "#111113",
+                      background: "var(--surface)",
                       color: "var(--text)",
-                      border: "1px solid var(--line)",
+                      border: "1px solid var(--border)",
                     }
               }
             >
@@ -129,10 +131,26 @@ export function ChatTab({ onHandoff }: Props) {
                     textDecoration: "none",
                   }}
                 >
-                  Open signing session
+                  Open wallet signing
                 </a>
               )}
-              {m.handoff && (
+              {m.href && (
+                <a
+                  href={m.href}
+                  className="g-cta"
+                  style={{
+                    marginTop: 10,
+                    padding: "10px",
+                    fontSize: 13,
+                    display: "block",
+                    textAlign: "center",
+                    textDecoration: "none",
+                  }}
+                >
+                  {m.handoff?.label || "Open Launch"}
+                </a>
+              )}
+              {m.handoff && !m.href && (
                 <button
                   type="button"
                   onClick={() => onHandoff(m.handoff!.tab, m.handoff!.prefill)}

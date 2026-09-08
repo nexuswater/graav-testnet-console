@@ -60,6 +60,21 @@ export function sell(s:CurveState,tokensIn:bigint,minQuoteOut=1n){
   return {state:{...s,x:s.x+tokensIn,y:nextY,realQuote:s.realQuote-gross,curveTokens:s.curveTokens+tokensIn},gross,fee,quoteOut};
 }
 
+/** Display/sim preview. Matches curve integer math + 1% fee; does not mutate inventory. */
+export function previewBuyOut(x:bigint,y:bigint,grossQuote:bigint){
+  if(x<=0n||y<=0n||grossQuote<=0n)return null;
+  const net=grossQuote-grossQuote/100n;
+  if(net<=0n)return null;
+  const nextX=ceilDiv(x*y,y+net);
+  return x>nextX?x-nextX:0n;
+}
+export function previewSellOut(x:bigint,y:bigint,tokensIn:bigint){
+  if(x<=0n||y<=0n||tokensIn<=0n)return null;
+  const nextY=ceilDiv(x*y,x+tokensIn);
+  const gross=y>nextY?y-nextY:0n;
+  return gross>0n?gross-gross/100n:0n;
+}
+
 export function grossForExactNet(net:bigint){
   requireModel(net>0n,'NET_AMOUNT');
   let gross=net*100n/99n;

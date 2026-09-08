@@ -698,11 +698,11 @@ export function TradeTab({
       )}
 
       {RLUSD.profile === "testnet-clone" && (
-        <div className="g-alert good" style={{ marginBottom: 16 }}>
-          <strong>RLUSD markets live</strong> — launch a community coin or browse the market list.
+        <div className="g-alert" style={{ marginBottom: 16 }}>
+          RLUSD Coin V1 factory is pinned. New launches stay unavailable until a signed createCoin binds a coin and curve.
           <span className="flex flex-wrap gap-2" style={{ marginTop: 10 }}>
-            <Link href="/launch" className="g-btn sm" style={{ textDecoration: "none" }}>Launch Coin</Link>
-            <Link href="/launch" className="g-btn sm" style={{ textDecoration: "none" }}>Create a coin</Link>
+            <Link href="/launch" className="g-btn sm" style={{ textDecoration: "none" }}>Launch coin</Link>
+            <Link href="/" className="g-btn sm" style={{ textDecoration: "none" }}>Markets</Link>
           </span>
         </div>
       )}
@@ -730,8 +730,8 @@ export function TradeTab({
               <div>
                 <div className="g-tick">{market.symbol}</div>
                 <div className="g-sub">
-                  <span className={`g-dot${market.status === "fixture" ? " grad" : ""}`} />
-                  {market.status === "fixture" ? "Fixture · preview" : "Registry only · not wired"} · RLUSD
+                  <span className="g-dot" />
+                  {market.status === "not-launched" ? "Not launched" : "Not launched"} · RLUSD
                 </div>
               </div>
               <div className="g-sub">Open →</div>

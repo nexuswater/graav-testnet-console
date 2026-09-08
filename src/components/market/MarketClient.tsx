@@ -211,8 +211,9 @@ export function MarketClient({ ticker }: Props) {
             : `Swap ${amount} XRP · Sign in wallet`;
 
   return (
-    <AppChrome>
+    <AppChrome active="trade">
       <main className="g-main" style={{ maxWidth: 560, margin: "0 auto", width: "100%" }}>
+        <Link href="/" className="g-back">← Markets</Link>
         <div className="flex items-center gap-4">
           <TokenPfp ticker={ticker} size="md" />
           <div>
