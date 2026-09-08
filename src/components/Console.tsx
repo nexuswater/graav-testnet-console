@@ -57,7 +57,7 @@ export function Console() {
       activeTab={tab}
       onSelectTab={setTab}
       statusMsg={statusMsg}
-      onStatus={setStatusMsg}
+      onStatus={(msg) => setStatusMsg(msg == null ? null : String(msg))}
     >
       <div className="g-main-pad">
         {tab === "Markets" && <MarketsView />}

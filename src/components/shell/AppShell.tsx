@@ -25,7 +25,7 @@ type Props = {
   activeTab?: AppTab;
   onSelectTab?: (tab: AppTab) => void;
   statusMsg?: string | null;
-  onStatus?: (msg: string | null) => void;
+  onStatus?: (msg: unknown) => void;
 };
 
 export function AppShell({

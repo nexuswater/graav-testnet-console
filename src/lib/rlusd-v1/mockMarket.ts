@@ -74,19 +74,23 @@ export function quoteMock(grossQuote: bigint) {
   };
 }
 
-export function createMockBuy(_xPostId: string, _grossQuote: bigint, _referralXId: string | null): never {
+export function createMockBuy(..._args: unknown[]): never {
+  void _args;
   throw new Error(CLOSED);
 }
 
-export function getMockSession(_id: string) {
+export function getMockSession(..._args: unknown[]) {
+  void _args;
   return null;
 }
 
-export function executeMockBuy(_id: string): never {
+export function executeMockBuy(..._args: unknown[]): never {
+  void _args;
   throw new Error(CLOSED);
 }
 
-export function executeMockSell(_id: string): never {
+export function executeMockSell(..._args: unknown[]): never {
+  void _args;
   throw new Error(CLOSED);
 }
 
