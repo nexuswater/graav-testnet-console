@@ -293,13 +293,18 @@ a.link-x:hover {
   border-radius: 8px;
   padding: 16px;
   margin-top: 12px;
+  min-width: 0;
 }
 
-.g-field label {
+.g-field label:not(.g-upload),
+.g-field-label {
   display: block;
+  position: static;
   color: var(--muted);
   font-size: 12px;
-  margin-bottom: 8px;
+  line-height: 16px;
+  margin: 0 0 8px;
+  transform: none;
 }
 
 .g-field input {
@@ -1501,15 +1506,71 @@ details.g-details summary {
   align-items: center;
   gap: 8px;
   color: var(--secondary);
+  width: 100%;
+  min-width: 0;
 }
 .g-input-icon input {
   flex: 1;
+  min-width: 0;
 }
 .g-upload-cta {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   min-height: 44px;
+}
+
+/* Launch Step 1: captions stay above controls on ~360–430px phones */
+.g-launch-form {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.g-launch .g-field {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.g-launch .g-field .g-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 20px;
+  margin: 0;
+}
+.g-launch .g-upload .g-hint {
+  display: block;
+  margin-top: 8px;
+  max-width: 100%;
+}
+.g-launch .g-field input,
+.g-launch .g-field input.sm {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  position: static;
+}
+
+@media (max-width: 430px) {
+  .g-launch .g-field {
+    padding: 12px 14px;
+    gap: 6px;
+  }
+  .g-launch .g-field label:not(.g-upload),
+  .g-launch .g-field-label {
+    margin-bottom: 0;
+  }
+  .g-launch .g-field input.sm {
+    font-size: 16px;
+    line-height: 22px;
+    letter-spacing: 0;
+  }
+  .g-launch .g-stepper {
+    flex-wrap: wrap;
+    gap: 8px 12px;
+  }
 }
 .g-sr-only {
   position: absolute;

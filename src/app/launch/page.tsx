@@ -215,37 +215,50 @@ export default function LaunchPage() {
         </ol>
 
         {step === "details" && (
-          <form onSubmit={(event) => void goReview(event)}>
-            <label className="g-field">
-              <span>X post</span>
+          <form onSubmit={(event) => void goReview(event)} className="g-launch-form">
+            <div className="g-field">
+              <label className="g-field-label" htmlFor="launch-x-post">X post</label>
               <span className="g-input-icon">
                 <LinkIcon />
                 <input
+                  id="launch-x-post"
                   className="sm"
                   value={sourcePostId}
                   onChange={(event) => setSourcePostId(event.target.value)}
                   placeholder="Paste a link or post ID"
+                  autoComplete="off"
                   required
                 />
               </span>
-            </label>
-            <label className="g-field">
-              <span>Name</span>
-              <input className="sm" value={name} onChange={(event) => setName(event.target.value)} placeholder="Coin name" required />
-            </label>
-            <label className="g-field">
-              <span>Ticker</span>
+            </div>
+            <div className="g-field">
+              <label className="g-field-label" htmlFor="launch-name">Name</label>
               <input
+                id="launch-name"
+                className="sm"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="Coin name"
+                autoComplete="off"
+                required
+              />
+            </div>
+            <div className="g-field">
+              <label className="g-field-label" htmlFor="launch-ticker">Ticker</label>
+              <input
+                id="launch-ticker"
                 className="sm"
                 value={ticker}
                 onChange={(event) => setTicker(event.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, "").slice(0, 15))}
                 placeholder="TICKER"
+                autoComplete="off"
+                spellCheck={false}
                 required
               />
-            </label>
+            </div>
             <div className="g-field">
-              <span>Image</span>
-              <label className="g-upload">
+              <span className="g-field-label" id="launch-image-label">Image</span>
+              <label className="g-upload" aria-labelledby="launch-image-label">
                 <input
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
@@ -264,8 +277,8 @@ export default function LaunchPage() {
               </label>
             </div>
             <div className="g-field">
-              <span>Quoted in</span>
-              <input className="sm" value="Test RLUSD" readOnly />
+              <label className="g-field-label" htmlFor="launch-quote">Quoted in</label>
+              <input id="launch-quote" className="sm" value="Test RLUSD" readOnly />
             </div>
             <button type="submit" className="g-cta" disabled={reviewDisabled}>
               {busy ? "Preparing…" : "Review launch"}
