@@ -1532,11 +1532,18 @@ details.g-details summary {
   align-items: stretch;
 }
 .g-launch .g-field .g-upload {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   color: var(--text);
   font-size: 14px;
   line-height: 20px;
   margin: 0;
+}
+.g-launch .g-upload .g-hint {
+  display: block;
+  margin-top: 8px;
+  max-width: 100%;
 }
 .g-launch .g-field input,
 .g-launch .g-field input.sm {
