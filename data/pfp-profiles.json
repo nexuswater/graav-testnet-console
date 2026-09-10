@@ -1,12 +1,12 @@
 {
   "gSWAP": {
     "ticker": "gSWAP",
-    "pfpURI": "/pfps/gswap.5b579f7b9ab8.png",
+    "pfpURI": "/pfps/gswap.ee62c55491e6.png",
     "contentType": "image/png",
-    "sha256": "5b579f7b9ab8",
+    "sha256": "ee62c55491e6",
     "generated": false,
     "source": "official-simple",
-    "updatedAt": "2026-09-05T01:18:07Z"
+    "updatedAt": "2026-09-10T23:10:00Z"
   },
   "gswap": {
     "ticker": "gSWAP",
@@ -28,12 +28,12 @@
   },
   "g589": {
     "ticker": "g589",
-    "pfpURI": "/pfps/g589.9d7023eb1f49.png",
+    "pfpURI": "/pfps/g589.69d56f3526ce.png",
     "contentType": "image/png",
-    "sha256": "9d7023eb1f49",
+    "sha256": "69d56f3526ce",
     "generated": false,
     "source": "official-simple",
-    "updatedAt": "2026-09-05T01:18:07Z"
+    "updatedAt": "2026-09-10T23:10:00Z"
   },
   "G589": {
     "ticker": "g589",
@@ -43,5 +43,59 @@
     "generated": false,
     "source": "official-simple",
     "updatedAt": "2026-09-05T01:18:07Z"
+  },
+  "gPEPE": {
+    "ticker": "gPEPE",
+    "pfpURI": "/pfps/gpepe.28669a579fa2.png",
+    "contentType": "image/png",
+    "sha256": "28669a579fa2",
+    "generated": false,
+    "source": "official-simple",
+    "updatedAt": "2026-09-10T23:10:00Z"
+  },
+  "gDOGE": {
+    "ticker": "gDOGE",
+    "pfpURI": "/pfps/gdoge.a42902236b69.png",
+    "contentType": "image/png",
+    "sha256": "a42902236b69",
+    "generated": false,
+    "source": "official-simple",
+    "updatedAt": "2026-09-10T23:10:00Z"
+  },
+  "gFUZZY": {
+    "ticker": "gFUZZY",
+    "pfpURI": "/pfps/gfuzzy.efc252cfb64d.png",
+    "contentType": "image/png",
+    "sha256": "efc252cfb64d",
+    "generated": false,
+    "source": "official-simple",
+    "updatedAt": "2026-09-10T23:10:00Z"
+  },
+  "SIGNAL": {
+    "ticker": "SIGNAL",
+    "pfpURI": "/pfps/signal.2debde1a6780.png",
+    "contentType": "image/png",
+    "sha256": "2debde1a6780",
+    "generated": false,
+    "source": "official-simple",
+    "updatedAt": "2026-09-10T23:10:00Z"
+  },
+  "ORBIT": {
+    "ticker": "ORBIT",
+    "pfpURI": "/pfps/orbit.bee1b47d2939.png",
+    "contentType": "image/png",
+    "sha256": "bee1b47d2939",
+    "generated": false,
+    "source": "official-simple",
+    "updatedAt": "2026-09-10T23:10:00Z"
+  },
+  "MOMENT": {
+    "ticker": "MOMENT",
+    "pfpURI": "/pfps/moment.1af459f27cfe.png",
+    "contentType": "image/png",
+    "sha256": "1af459f27cfe",
+    "generated": false,
+    "source": "official-simple",
+    "updatedAt": "2026-09-10T23:10:00Z"
   }
 }
