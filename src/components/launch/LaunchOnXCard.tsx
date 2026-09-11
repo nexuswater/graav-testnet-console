@@ -51,7 +51,7 @@ export function LaunchOnXCard({ ticker, onTicker, onPostedReview }: Props) {
           className="sm"
           value={ticker}
           onChange={(event) => onTicker(sanitizeLaunchTicker(event.target.value))}
-          placeholder="HORMUZ"
+          placeholder="TICKER"
           autoComplete="off"
           spellCheck={false}
           aria-describedby="launch-x-ticker-hint"

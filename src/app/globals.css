@@ -424,11 +424,12 @@ a.g-cta[aria-disabled="true"] {
 }
 
 .g-sheet {
-  background: #111113;
-  border: 1px solid color-mix(in srgb, var(--nebula) 18%, var(--line-2));
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius-l);
   padding: 24px;
   margin-top: 12px;
+  color: var(--text);
 }
 
 .g-card {
