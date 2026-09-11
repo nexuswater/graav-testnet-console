@@ -1,0 +1,141 @@
+/**
+ * Base Sepolia is the FIRST inbound cross-chain corridor:
+ * USDC (Base Sepolia 84532) → RLUSD → XRPL EVM Testnet 1449000.
+ * Fail-closed: no proven route = no Buy. Arb / RH / HL are deferred until Base PASS.
+ * Pure helpers — safe for client and server. No routes are invented here.
+ */
+
+export const XRPL_EVM_TESTNET_DEST = 1449000;
+
+export const BASE_SEPOLIA_CORRIDOR = {
+  key: "base",
+  label: "Base Sepolia",
+  chainId: 84532,
+  axelarId: "base-sepolia",
+  sourceAsset: "USDC",
+  settleAsset: "RLUSD",
+  destChainId: XRPL_EVM_TESTNET_DEST,
+  path: "USDC → RLUSD → XRPL EVM 1449000",
+} as const;
+
+/** Only Base is wired / probed this slice. */
+export const ACTIVE_CORRIDOR_KEYS: readonly string[] = [BASE_SEPOLIA_CORRIDOR.key];
+
+export const DEFERRED_CORRIDORS = [
+  { key: "arbitrumSepolia", label: "Arbitrum Sepolia" },
+  { key: "robinhood", label: "Robinhood Chain Testnet" },
+  { key: "hyperliquid", label: "HyperEVM Testnet" },
+] as const;
+
+export const DEFERRED_REASON = "Out of scope until Base Sepolia PASS — not probed this slice.";
+
+export function isActiveCorridor(key: string): boolean {
+  return ACTIVE_CORRIDOR_KEYS.includes(key);
+}
+
+export type CorridorCheckId =
+  | "dest-listed"
+  | "source-listed"
+  | "usdc-on-source"
+  | "rlusd-on-dest"
+  | "live-quote"
+  | "signed-tx-wired";
+
+export type CorridorCheck = {
+  id: CorridorCheckId;
+  label: string;
+  ok: boolean;
+  detail: string;
+};
+
+export type CorridorSignals = {
+  /** Squid /v2/chains lists 1449000 */
+  squidHasDest: boolean;
+  /** Squid /v2/chains lists Base Sepolia 84532 */
+  squidHasSource: boolean;
+  /** USDC token on Base Sepolia in Squid catalog */
+  usdcOnSource: boolean;
+  /** Axelar ITS lists RLUSD on xrpl-evm */
+  rlusdOnDest: boolean;
+  /** Axelar catalog lists Base Sepolia as a source */
+  axelarHasSource: boolean;
+  /** Live USDC→RLUSD quote with depth smoke — never true this slice */
+  liveQuote: boolean;
+  /** Signed quote + tx rail wired — never true this slice */
+  signedTxWired: boolean;
+};
+
+export type CorridorGate = {
+  corridor: typeof BASE_SEPOLIA_CORRIDOR;
+  checks: CorridorCheck[];
+  /** Catalog-only presence (source + dest + USDC + RLUSD). Not a route. */
+  catalogReady: boolean;
+  /** Buy gate. Requires every check including live quote and wired tx. */
+  pass: boolean;
+  status: "PASS" | "FAIL-CLOSED";
+  reason: string;
+  deferred: { key: string; label: string; reason: string }[];
+};
+
+/** Fail-closed gate for the Base Sepolia corridor. Pure; no network. */
+export function baseCorridorGate(s: CorridorSignals): CorridorGate {
+  const c = BASE_SEPOLIA_CORRIDOR;
+  const checks: CorridorCheck[] = [
+    {
+      id: "dest-listed",
+      label: `Dest XRPL EVM ${c.destChainId} listed`,
+      ok: s.squidHasDest,
+      detail: s.squidHasDest ? "Squid lists 1449000." : "Squid /v2/chains missing 1449000.",
+    },
+    {
+      id: "source-listed",
+      label: `Source ${c.label} ${c.chainId} listed`,
+      ok: s.squidHasSource || s.axelarHasSource,
+      detail: s.squidHasSource
+        ? "Squid lists Base Sepolia."
+        : s.axelarHasSource
+          ? "Axelar lists base-sepolia; Squid does not."
+          : "Base Sepolia absent from Squid and Axelar catalogs.",
+    },
+    {
+      id: "usdc-on-source",
+      label: "USDC on Base Sepolia",
+      ok: s.usdcOnSource,
+      detail: s.usdcOnSource ? "USDC in Squid Base Sepolia tokens." : "USDC not cataloged on Base Sepolia.",
+    },
+    {
+      id: "rlusd-on-dest",
+      label: "RLUSD on XRPL EVM (ITS)",
+      ok: s.rlusdOnDest,
+      detail: s.rlusdOnDest ? "Axelar ITS lists RLUSD on xrpl-evm." : "Axelar ITS has no RLUSD on xrpl-evm.",
+    },
+    {
+      id: "live-quote",
+      label: "Live USDC → RLUSD quote + depth smoke",
+      ok: s.liveQuote,
+      detail: s.liveQuote ? "Live quote proven." : "No live quote. Catalog presence ≠ route.",
+    },
+    {
+      id: "signed-tx-wired",
+      label: "Signed quote + tx rail wired",
+      ok: s.signedTxWired,
+      detail: s.signedTxWired ? "Rail wired." : "Not wired this slice — no new write rails.",
+    },
+  ];
+  const catalogReady = checks
+    .filter((k) => k.id !== "live-quote" && k.id !== "signed-tx-wired")
+    .every((k) => k.ok);
+  const pass = checks.every((k) => k.ok);
+  const missing = checks.filter((k) => !k.ok).map((k) => k.label);
+  return {
+    corridor: c,
+    checks,
+    catalogReady,
+    pass,
+    status: pass ? "PASS" : "FAIL-CLOSED",
+    reason: pass
+      ? `Base Sepolia corridor PASS: ${c.path}.`
+      : `FAIL-CLOSED: ${c.path} — missing ${missing.join("; ")}. No Buy.`,
+    deferred: DEFERRED_CORRIDORS.map((d) => ({ ...d, reason: DEFERRED_REASON })),
+  };
+}

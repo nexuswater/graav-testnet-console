@@ -28,12 +28,14 @@ test("attribution V1 copy sums and locks", () => {
   assert.equal(KERNEL_LAB_REF.forge, "20/20");
 });
 
-test("cross-chain testnet order is home first and fail-closed", () => {
+test("cross-chain testnet order is home first, Base only wired, rest deferred", () => {
   assert.equal(CROSS_CHAIN_TESTNET_ORDER[0]?.stage, "home");
   assert.match(CROSS_CHAIN_TESTNET_ORDER[0]?.label ?? "", /1449000/);
+  assert.equal(CROSS_CHAIN_TESTNET_ORDER[1]?.stage, "first");
   assert.match(CROSS_CHAIN_TESTNET_ORDER[1]?.label ?? "", /Base Sepolia/);
   assert.match(CROSS_CHAIN_TESTNET_ORDER[2]?.label ?? "", /Arbitrum/);
-  assert.equal(CROSS_CHAIN_TESTNET_ORDER[3]?.stage, "later");
+  assert.equal(CROSS_CHAIN_TESTNET_ORDER[2]?.stage, "deferred");
+  assert.equal(CROSS_CHAIN_TESTNET_ORDER[3]?.stage, "deferred");
 });
 
 test("Launch composer is X-first and never promotes g589 or MOMENT", () => {

@@ -35,13 +35,14 @@ export const KERNEL_LAB_REF = {
 
 export const KERNEL_LAB_LINE = `Kernel lab ${KERNEL_LAB_REF.status}: ${KERNEL_LAB_REF.fn} ${KERNEL_LAB_REF.selector} · forge ${KERNEL_LAB_REF.forge} · no tip redeploy in this PR.`;
 
-export type CrossChainStage = "home" | "first" | "next" | "later";
+export type CrossChainStage = "home" | "first" | "deferred";
 
+/** Base Sepolia is the only wired inbound corridor this slice. Arb / RH / HL deferred until Base PASS. */
 export const CROSS_CHAIN_TESTNET_ORDER: readonly { id: string; stage: CrossChainStage; label: string }[] = [
   { id: "home", stage: "home", label: "XRPL EVM Testnet 1449000 · Test RLUSD" },
-  { id: "base", stage: "first", label: "Base Sepolia inbound" },
-  { id: "arb", stage: "next", label: "Arbitrum Sepolia" },
-  { id: "rh-hl", stage: "later", label: "Robinhood · Hyperliquid" },
+  { id: "base", stage: "first", label: "Base Sepolia inbound · USDC → RLUSD → XRPL EVM" },
+  { id: "arb", stage: "deferred", label: "Arbitrum Sepolia" },
+  { id: "rh-hl", stage: "deferred", label: "Robinhood · Hyperliquid" },
 ] as const;
 
 export const CROSS_CHAIN_FAIL_CLOSED_LINE = "Fail-closed: no proven route = no Buy.";

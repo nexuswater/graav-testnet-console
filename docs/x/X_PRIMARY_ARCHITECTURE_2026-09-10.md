@@ -51,13 +51,15 @@ RT / share rewards are X-native. Bind on graav.xyz (account) is identity for tho
 
 RLUSD **quote display** on Coin V1 remains Test RLUSD. Do not mix the 60/25/15 attribution SoT with the Coin V1 `40/35/20/5` quote-fee policy.
 
-### 5. Cross-chain testnet order (Funding)
+### 5. Cross-chain testnet corridor (Funding)
 
-Home is **XRPL EVM Testnet `1449000` + Test RLUSD**. Inbound order:
+Home is **XRPL EVM Testnet `1449000` + Test RLUSD**.
 
-1. **Base Sepolia** inbound first
-2. **Arbitrum Sepolia** next
-3. **Robinhood / Hyperliquid** later
+**Base Sepolia is the FIRST inbound corridor: USDC (84532) → RLUSD → XRPL EVM testnet.** It is the only corridor wired for route checks this slice.
+
+Route checks (all must be OK before any Buy): dest listed · source listed · USDC on Base Sepolia · RLUSD on xrpl-evm (ITS) · live USDC→RLUSD quote + depth smoke · signed quote + tx rail wired. Live quote and tx rail are **not** wired this slice, so the gate reads **FAIL-CLOSED**.
+
+**Deferred until Base PASS (not probed):** Arbitrum Sepolia · Robinhood · Hyperliquid.
 
 **Fail-closed:** no proven route = no Buy. Catalog presence ≠ live quote. Funding is the only cross-chain story; daily ops stay on X.
 

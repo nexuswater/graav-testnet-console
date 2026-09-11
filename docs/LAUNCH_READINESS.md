@@ -20,7 +20,7 @@ Reviewable RC only. Mainnet CLOSED. M4 HOLD. Do not deploy, Production-push, bro
 - **Trade** — pay / receive, fee, slippage, min received, distinct review → approve → sign. Review disabled until inputs and integration prerequisites pass.
 - **Launch** — Post, repost, or DM on X creates the Moment; GRAAV hands off a `/s` link to review (optional Test RLUSD seed) and wallet-sign. Paste-link is a testnet fallback, not the lead. `createCoin(CreateParams, bytes)` only on the fallback rail. Authorization is never fabricated. No public X write. SoT: `docs/x/X_PRIMARY_ARCHITECTURE_2026-09-10.md`.
 - **Attribution V1 (copy)** — 60 creator / 25 protocol / 15 distributor; the 15 decays depth-4 as 40/25/20/15; missing hop → protocol; creator = original poster; paid once. Kernel lab CODE READY `buyWithAttribution` `0xada7290b` (forge 20/20) is referenced only — no tip redeploy, no invented tip addresses.
-- **Funding order** — XRPL EVM `1449000` + Test RLUSD home → Base Sepolia inbound first → Arbitrum Sepolia → Robinhood / Hyperliquid later. Fail-closed: no route = no Buy.
+- **Funding corridor** — XRPL EVM `1449000` + Test RLUSD home. **Base Sepolia is the first inbound corridor (USDC → RLUSD → XRPL EVM)** and the only one wired for route checks; `/api/crosschain/probe` returns a `corridor` gate (dest, source, USDC on Base, RLUSD ITS on dest, live quote, tx rail) that reads FAIL-CLOSED until every check is OK. Arbitrum Sepolia · Robinhood · Hyperliquid are deferred and not probed until Base PASS. No route = no Buy.
 - **Portfolio** — readable holdings. Unknown reads stay unknown (not zero).
 - **Chat** — concise intent previews. Wallet signing is a separate step.
 - **Funding** — simple unavailability. Probe diagnostics behind Details.
