@@ -7,7 +7,7 @@ import { api,ensureChain,requireWallet,short,userFacingError,type WalletProps } 
 import { address,need,safeAddress } from './web-validation';
 import { XMark } from '@/components/XMark';
 import { XrplMark } from '@/components/XrplMark';
-import { ATTRIBUTION_V1_LINE, KERNEL_LAB_LINE } from '@/lib/xPrimary';
+import { ATTRIBUTION_V1_RULE, KERNEL_LAB_LINE } from '@/lib/xPrimary';
 
 type Status={x:{xUserId:string;handle:string|null};binding:{id:string;wallet:string;boundAt:number}|null};
 type XMe={bound:boolean;id?:string;username?:string};
@@ -63,7 +63,7 @@ export function YouPanel(props:WalletProps & {onXLogin():void}) {
     </div>
     <p role="alert">{error}</p>
     <section className="x1-card"><h2>RT / share attribution V1</h2>
-      <p>{ATTRIBUTION_V1_LINE}</p>
+      <p>{ATTRIBUTION_V1_RULE}</p>
       <p className="muted">Rewards are earned on X — posts, reposts, and DMs. This bind is identity only and never signs a trade. {KERNEL_LAB_LINE}</p>
     </section>
     {rewards && <section className="x1-card"><h2>Share rewards</h2><strong>{formatEther(BigInt(rewards.balanceWei))} XRP</strong>

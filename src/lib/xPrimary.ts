@@ -20,8 +20,10 @@ export const ATTRIBUTION_V1 = {
   payOnce: true,
 } as const;
 
-export const ATTRIBUTION_V1_LINE =
-  "RT/share attribution V1: 60 creator / 25 protocol / 15 distributor. The 15 decays over 4 hops 40/25/20/15. Missing hop → protocol. Creator = original poster. Paid once.";
+export const ATTRIBUTION_V1_RULE =
+  "60 creator / 25 protocol / 15 distributor. The 15 decays over 4 hops 40/25/20/15. Missing hop → protocol. Creator = original poster. Paid once.";
+
+export const ATTRIBUTION_V1_LINE = `RT/share attribution V1: ${ATTRIBUTION_V1_RULE}`;
 
 /** Reference only. No tip redeploy in this PR; no tip addresses invented here. */
 export const KERNEL_LAB_REF = {
