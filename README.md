@@ -39,7 +39,7 @@ See `docs/TESTNET_REGISTRY.md` and Protocol SoT `S_SESSION_BIND_ABI.md`:
 | Coin Soft Factory (RLUSD lane, separate) | `0xd2b7C9D3df75b081c4CB01F711D31D06263EbA20` |
 
 - Dual-factory: reject gSWAP bound to M2 factory.
-- Attribution V1 tip (stack2): Guardian `0x8c78Ff4462dBDDEeB4eEDdc92e739101e82217e0` · AttributionVerifier `0xE04763CdC4779deBc2293bacd4F98d5D7B82f322` · GraduationManager `0x5eD78c0ac98aEA25dd3f123a5654Ac5531220211` · Vault `0xF9E6E3D238a7AA4304229aB527a3e4c2d131bc49`. `buyWithAttribution` `0xada7290b`, depth-4 hops. No market pinned yet → buy/sell fail closed. Retired stack1 `0xc5D6…` is never pinned. See `docs/x/ATTRIBUTION_V1_TIP_PIN_STACK2_1449000.md`.
+- Attribution V1 tip (stack2): Guardian `0x8c78Ff4462dBDDEeB4eEDdc92e739101e82217e0` · AttributionVerifier `0xE04763CdC4779deBc2293bacd4F98d5D7B82f322` · GraduationManager `0x5eD78c0ac98aEA25dd3f123a5654Ac5531220211` · LiquidityVault `0xF9E6E3D238a7AA4304229aB527a3e4c2d131bc49`. `buyWithAttribution` `0xada7290b`, depth-4 hops. No market pinned yet → buy/sell fail closed. Retired stack1 `0xc5D6…` is never pinned. See `docs/x/ATTRIBUTION_V1_TIP_PIN_STACK2_1449000.md`.
 - Gate post-grad on `market.graduated()` (not Factory flag).
 - Swap requires `graduated()==true` and `tokenToLpId(token)!=0` on V2 only.
 

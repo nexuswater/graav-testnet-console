@@ -82,7 +82,7 @@ export const ATTRIBUTION_V1_VERIFIER_ADDRESS =
   "0xE04763CdC4779deBc2293bacd4F98d5D7B82f322" as Address;
 export const ATTRIBUTION_V1_GRADUATION_MANAGER_ADDRESS =
   "0x5eD78c0ac98aEA25dd3f123a5654Ac5531220211" as Address;
-export const ATTRIBUTION_V1_VAULT_ADDRESS =
+export const ATTRIBUTION_V1_LIQUIDITY_VAULT_ADDRESS =
   "0xF9E6E3D238a7AA4304229aB527a3e4c2d131bc49" as Address;
 export const ATTRIBUTION_V1_TEMPLATE_VERSION = 2;
 /** Distributor share decays over four hops (40/25/20/15). Matches address[4] hops on-chain. */
@@ -98,7 +98,7 @@ export const ATTRIBUTION_V1_STACK = {
   guardian: ATTRIBUTION_V1_GUARDIAN_ADDRESS,
   attributionVerifier: ATTRIBUTION_V1_VERIFIER_ADDRESS,
   graduationManager: ATTRIBUTION_V1_GRADUATION_MANAGER_ADDRESS,
-  vault: ATTRIBUTION_V1_VAULT_ADDRESS,
+  liquidityVault: ATTRIBUTION_V1_LIQUIDITY_VAULT_ADDRESS,
 } as const;
 
 export const FAUCET_URL = "https://faucet.xrplevm.org";

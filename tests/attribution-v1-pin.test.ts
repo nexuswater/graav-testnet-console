@@ -37,8 +37,11 @@ const STACK2 = {
   guardian: "0x8c78Ff4462dBDDEeB4eEDdc92e739101e82217e0",
   attributionVerifier: "0xE04763CdC4779deBc2293bacd4F98d5D7B82f322",
   graduationManager: "0x5eD78c0ac98aEA25dd3f123a5654Ac5531220211",
-  vault: "0xF9E6E3D238a7AA4304229aB527a3e4c2d131bc49",
+  liquidityVault: "0xF9E6E3D238a7AA4304229aB527a3e4c2d131bc49",
 } as const;
+
+/** Coin Soft lane quote — Mock RLUSD, displayed as RLUSD (never mRLUSD). */
+const MOCK_RLUSD = "0x04B9eF8Fa40E6336e8404a18cC4F6a5a852e913F";
 
 /** Separate lane — must stay exactly as pinned before this change. */
 const COIN_SOFT_FACTORY = "0xd2b7C9D3df75b081c4CB01F711D31D06263EbA20";
@@ -118,8 +121,10 @@ test("Coin Soft Factory 0xd2b7… lane is untouched and still displays RLUSD", (
   assert.equal(RLUSD_CLONE_INFRA.factory, COIN_SOFT_FACTORY);
   assert.equal(RLUSD_CLONE_INFRA.attributionGuard, "0x3d1aACAcfFff6B96Adf732E0bd2D5c19B4F7e951");
   assert.equal(RLUSD_CLONE_INFRA.launchAuthorizer, "0xBA100b11adF478B3B96Ce2F2BebFBd8Cf2E4E336");
-  assert.equal(RLUSD_V1.quoteAddress, "0x04B9eF8Fa40E6336e8404a18cC4F6a5a852e913F");
+  assert.equal(RLUSD_V1.quoteAddress, MOCK_RLUSD);
+  assert.equal(RLUSD_CLONE_INFRA.mockRlusd, MOCK_RLUSD);
   assert.equal(RLUSD_V1.quoteSymbol, "RLUSD");
+  assert.doesNotMatch(RLUSD_V1.quoteSymbol, /^m/i);
   assert.equal(RLUSD_V1.policyId, "GRAAV_RLUSD_V1_40_35_20_5");
   assert.equal(RLUSD_V1.coinAddress, null);
   assert.equal(RLUSD_V1.curveAddress, null);
@@ -167,7 +172,7 @@ test("Attribution V1 factory is allowlisted fail-closed beside M2 / M2.2 / Coin"
     /must bind M2/,
   );
   // other roles in the stack are not factories
-  for (const role of ["guardian", "attributionVerifier", "graduationManager", "vault"] as const) {
+  for (const role of ["guardian", "attributionVerifier", "graduationManager", "liquidityVault"] as const) {
     assert.match(validateAllowlist({ chainId: 1449000, factory: STACK2[role], action: "create" }) ?? "", /not on allowlist/);
   }
 });

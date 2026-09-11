@@ -10,18 +10,22 @@
 | Guardian | `0x8c78Ff4462dBDDEeB4eEDdc92e739101e82217e0` |
 | AttributionVerifier | `0xE04763CdC4779deBc2293bacd4F98d5D7B82f322` |
 | GraduationManager | `0x5eD78c0ac98aEA25dd3f123a5654Ac5531220211` |
-| Vault | `0xF9E6E3D238a7AA4304229aB527a3e4c2d131bc49` |
+| LiquidityVault | `0xF9E6E3D238a7AA4304229aB527a3e4c2d131bc49` |
 
 Code pin: `src/lib/chain.ts` (`ATTRIBUTION_V1_STACK`). Machine-readable record: [`ATTRIBUTION_V1_TIP_PIN_STACK2_1449000.json`](./ATTRIBUTION_V1_TIP_PIN_STACK2_1449000.json).
+
+The stack was already live when pinned. This PR reads it over public RPC only — **no remint, no deploy, no spend.**
 
 ## Wiring (public RPC reads)
 
 - `Factory.TEMPLATE_VERSION()` → `2`
 - `Factory.guardian()` → Guardian · `Factory.attributionVerifier()` → AttributionVerifier · `Factory.graduationManager()` → GraduationManager
 - `GraduationManager.factory()` → Factory
-- `Vault.factory()` → Factory · `Vault.graduationManager()` → GraduationManager
+- `LiquidityVault.factory()` → Factory · `LiquidityVault.graduationManager()` → GraduationManager
 
 ## Exec smoke — PASS
+
+Exec evidence file: `attribution-v1-tip-remint-smoke.json` (Exec box, not in this repo). The transactions below were re-verified from the public RPC.
 
 | Step | Tx | Result |
 | --- | --- | --- |
@@ -47,7 +51,8 @@ The smoke market is Exec's test market only. It is **not** a product market and 
 
 - Coin Soft Factory `0xd2b7C9D3df75b081c4CB01F711D31D06263EbA20` **UNTOUCHED** (separate RLUSD lane).
 - Orphan / retired stack1 Factory `0xc5D6eb56A0776C6215589Be49DD100763C4346EF` **not pinned** (audit context only).
-- Display **RLUSD**, never mRLUSD.
+- Display **RLUSD**, never mRLUSD (Coin Soft quote Mock RLUSD `0x04B9eF8Fa40E6336e8404a18cC4F6a5a852e913F`; Attribution V1 markets are XRP-quoted).
+- No g589 / `$MOMENT` primary promote.
 - Base Sepolia corridor stays **FAIL-CLOSED**.
 - No Production. Reviewable PR only.
 - X-primary Launch framing preserved: Launch on X → `/s` handoff → wallet signs. Chat ≠ authorization.
