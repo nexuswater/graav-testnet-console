@@ -106,7 +106,8 @@ export function ConnectX({ compact }: Props) {
       <button
         type="button"
         onClick={onClick}
-        disabled={loadingMe && hint.configured}
+        disabled={!hint.configured || loadingMe}
+        title={hint.configured ? undefined : "Sign in with X isn't available on this deployment yet"}
         className={compact ? "g-btn g-wallet-pill" : "g-btn sm"}
         style={compact ? undefined : { display: "inline-flex", alignItems: "center", gap: 8 }}
       >

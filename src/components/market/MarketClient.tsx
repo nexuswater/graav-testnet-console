@@ -41,7 +41,8 @@ export function MarketClient({ ticker }: Props) {
   const publicClient = usePublicClient();
   const router = useRouter();
   const onCorrectChain = chainId === XRPL_EVM_TESTNET_ID;
-  const { connect, switchToXrplEvm, isConnecting, isSwitching } = useWalletActions();
+  const { connect, switchToXrplEvm, walletConnectConnector, isConnecting, isSwitching } = useWalletActions();
+  const connectUnavailable = !isConnected && !walletConnectConnector;
 
   const marketAddr = known?.market as Address | undefined;
   const factoryAddr = known?.factory;
@@ -289,6 +290,8 @@ export function MarketClient({ ticker }: Props) {
         <div className="g-seg" role="tablist" aria-label="Trade side">
           <button
             type="button"
+            role="tab"
+            aria-selected={side === "buy"}
             className={side === "buy" ? "on" : undefined}
             disabled={!buyEnabled}
             title={!buyEnabled ? (graduated ? "Graduated — use Swap" : "Unavailable") : "Buy on the curve"}
@@ -298,6 +301,8 @@ export function MarketClient({ ticker }: Props) {
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={side === "sell"}
             className={side === "sell" ? "on" : undefined}
             disabled={!sellEnabled}
             title={!sellEnabled ? (graduated ? "Graduated — use Swap" : "Unavailable") : "Sell on the curve"}
@@ -307,6 +312,8 @@ export function MarketClient({ ticker }: Props) {
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={side === "swap"}
             className={side === "swap" ? "on" : undefined}
             disabled={!swapEnabled}
             title={
@@ -370,15 +377,20 @@ export function MarketClient({ ticker }: Props) {
         <button
           type="button"
           className="g-cta"
-          disabled={busy || isConnecting || isSwitching || !known || !sideAvailable}
+          disabled={busy || isConnecting || isSwitching || !known || !sideAvailable || connectUnavailable}
+          title={connectUnavailable ? "Wallet connection isn't available on this deployment yet" : undefined}
           onClick={() => void mintSession()}
         >
           {ctaLabel}
         </button>
         <p className="g-hint">
-          {!isConnected
-            ? "Connect to review this trade as a signing request. Nothing is sent until your wallet signs."
-            : "Opens a signing request you review and sign in your wallet. GRAAV never holds your key."}
+          {connectUnavailable
+            ? knownOnX && !scar
+              ? "Wallet connection isn't available on this deployment yet — trade from X above."
+              : "Wallet connection isn't available on this deployment yet."
+            : !isConnected
+              ? "Connect to review this trade as a signing request. Nothing is sent until your wallet signs."
+              : "Opens a signing request you review and sign in your wallet. GRAAV never holds your key."}
         </p>
 
         {known && (

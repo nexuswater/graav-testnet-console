@@ -253,8 +253,9 @@ export function AccountMenu({ onStatus }: Props) {
       ) : (
       <button
         type="button"
-        className="g-btn g-wallet-pill g-account-provider"
-        disabled={loadingMe && hint.configured}
+        className={`g-btn g-wallet-pill g-account-provider${hint.configured ? "" : " is-muted"}`}
+        disabled={!hint.configured || loadingMe}
+        title={hint.configured ? "Sign in with X (identity only)" : "Sign in with X isn't available on this deployment yet"}
         onClick={onSignInX}
       >
         <XMark size={24} />

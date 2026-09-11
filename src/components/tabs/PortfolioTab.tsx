@@ -317,7 +317,7 @@ export function PortfolioTab({ setStatusMsg }: Props) {
           <p className="g-sub">Scanning markets…</p>
         ) : !address ? (
           <div className="empty g-sub" style={{ padding: "32px 8px", display: "grid", gap: 12, justifyItems: "start" }}>
-            <span>Connect a wallet to see your holdings.</span>
+            <span>Holdings appear here once a wallet is connected.</span>
             {walletConnectConnector ? (
               <button type="button" className="g-cta" style={{ width: "auto", marginTop: 0 }} disabled={isConnecting} onClick={() => void connectWallet()}>
                 {isConnecting ? "Connecting…" : "Connect wallet"}

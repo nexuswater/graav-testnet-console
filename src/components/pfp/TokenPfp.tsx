@@ -17,8 +17,12 @@ export function TokenPfp({
   ensure = true,
 }: Props) {
   const [uri, setUri] = useState<string | null>(null);
+  // Placeholders like "?" or "" (symbol still loading) never hit the API.
+  const resolvable = /^\$?[A-Za-z0-9_]{1,32}$/.test(ticker);
 
   useEffect(() => {
+    setUri(null);
+    if (!resolvable) return;
     let cancelled = false;
     const q = ensure ? "?ensure=1" : "";
     void fetch(`/api/pfp/${encodeURIComponent(ticker)}${q}`)
@@ -32,7 +36,7 @@ export function TokenPfp({
     return () => {
       cancelled = true;
     };
-  }, [ticker, ensure]);
+  }, [ticker, ensure, resolvable]);
 
   const dim =
     size === "lg" ? 96 : size === "md" ? 72 : 40;
@@ -50,9 +54,9 @@ export function TokenPfp({
           color: "var(--muted)",
           fontWeight: 650,
         }}
-        aria-label={ticker}
+        aria-label={resolvable ? ticker : "Loading"}
       >
-        {ticker.slice(0, 1).toUpperCase()}
+        {ticker.replace(/^\$/, "").slice(0, 1).toUpperCase() || "·"}
       </div>
     );
   }

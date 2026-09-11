@@ -97,7 +97,12 @@ export function LaunchOnXCard({ ticker, onTicker }: Props) {
         </p>
       </div>
 
-      <pre className="g-launch-draft" aria-label="Composer draft">
+      <pre
+        className="g-launch-draft"
+        data-example={tickerOk ? undefined : "true"}
+        aria-label={tickerOk ? "Your draft" : "Example draft"}
+        title={tickerOk ? undefined : "Example — add your ticker above"}
+      >
         {draft}
       </pre>
 

@@ -137,22 +137,28 @@ export default function NewMarketPage() {
           <label className="g-field block">
             <span>Name</span>
             <input
+              className="sm"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="GRAAV Example"
+              autoComplete="off"
             />
           </label>
           <label className="g-field block" style={{ marginTop: 12 }}>
             <span>Symbol / ticker</span>
             <input
+              className="sm"
               value={symbol}
               onChange={(e) => setSymbol(e.target.value)}
               placeholder="gEXAMPLE"
+              autoComplete="off"
+              spellCheck={false}
             />
           </label>
           <label className="g-field block" style={{ marginTop: 12 }}>
             <span>Origin post (optional)</span>
             <input
+              className="sm"
               value={originInput}
               onChange={(e) => setOriginInput(e.target.value)}
               placeholder="https://x.com/…/status/…"
@@ -255,21 +261,26 @@ export default function NewMarketPage() {
 
           {!isConnected && (
             <div className="g-alert" style={{ marginTop: 16 }}>
-              You can connect on the signing page, or{" "}
               {walletConnectConnector ? (
-                <button
-                  type="button"
-                  className="link-x"
-                  style={{ background: "none", border: 0, padding: 0, cursor: "pointer", fontWeight: 650 }}
-                  disabled={isConnecting}
-                  onClick={() => void connect().then((r) => { if (!r.ok) setErr(r.error ?? "Could not connect a wallet."); })}
-                >
-                  {isConnecting ? "connecting…" : "connect your wallet now"}
-                </button>
+                <>
+                  Your signature creates the market.{" "}
+                  <button
+                    type="button"
+                    className="link-x"
+                    style={{ background: "none", border: 0, padding: 0, cursor: "pointer", fontWeight: 650 }}
+                    disabled={isConnecting}
+                    onClick={() => void connect().then((r) => { if (!r.ok) setErr(r.error ?? "Could not connect a wallet."); })}
+                  >
+                    {isConnecting ? "Connecting…" : "Connect wallet"}
+                  </button>{" "}
+                  now or on the signing page.
+                </>
               ) : (
-                <span>connect a wallet once it is available on this deployment</span>
+                <>
+                  Wallet connection isn&apos;t available on this deployment yet, so nothing can be signed here.{" "}
+                  <Link href="/launch" className="link-x" style={{ fontWeight: 650 }}>Launch from X</Link> instead.
+                </>
               )}
-              . Your signature creates the market.
             </div>
           )}
 

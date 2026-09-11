@@ -83,7 +83,8 @@ export function SigningSessionClient({ initial }: Props) {
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const [seedAmount, setSeedAmount] = useState("");
   const [blockReason, setBlockReason] = useState<string | null>(null);
-  const [nowSec, setNowSec] = useState(() => Math.floor(Date.now() / 1000));
+  // null until mounted: the countdown and the locale time label are client-only so SSR and hydration agree.
+  const [nowSec, setNowSec] = useState<number | null>(null);
   const [tokenAddr, setTokenAddr] = useState<Address | null>(
     (payload?.token as Address) || null
   );
@@ -169,13 +170,13 @@ export function SigningSessionClient({ initial }: Props) {
   // the page flips to Expired on its own instead of leaving Sign enabled.
   const pendingExpiry = view.status === "pending" ? payload?.expiry ?? null : null;
   useEffect(() => {
-    if (!pendingExpiry) return;
     const tick = () => setNowSec(Math.floor(Date.now() / 1000));
     tick();
+    if (!pendingExpiry) return;
     const timer = setInterval(tick, 1000);
     return () => clearInterval(timer);
   }, [pendingExpiry]);
-  const expiredLocally = pendingExpiry !== null && nowSec >= pendingExpiry;
+  const expiredLocally = pendingExpiry !== null && nowSec !== null && nowSec >= pendingExpiry;
   useEffect(() => {
     if (expiredLocally) void refreshStatus();
   }, [expiredLocally, refreshStatus]);
@@ -508,16 +509,16 @@ export function SigningSessionClient({ initial }: Props) {
     }
   };
 
-  // Shown in the visitor's own time zone; the countdown below is the live cue.
-  const expiryLabel = payload
+  // Shown in the visitor's own time zone once mounted; the countdown is the live cue.
+  const expiryLabel = payload && nowSec !== null
     ? new Date(payload.expiry * 1000).toLocaleString(undefined, {
         dateStyle: "medium",
         timeStyle: "short",
       })
-    : "—";
+    : "…";
 
   const expiresIn = useMemo(() => {
-    if (!payload?.expiry) return null;
+    if (!payload?.expiry || nowSec === null) return null;
     const totalSec = payload.expiry - nowSec;
     if (totalSec <= 0) return "expired";
     const m = Math.floor(totalSec / 60);
@@ -571,6 +572,8 @@ export function SigningSessionClient({ initial }: Props) {
 
 
   const signed = isConfirmed || view.status === "signed";
+  // Blocked by a gate, expired, or invalid — nothing on this page can be signed.
+  const unsignable = !signed && (Boolean(blockReason) || view.status === "expired" || expiredLocally);
   const shareSymbol =
     (typeof tokenSymbol === "string" && tokenSymbol) || payload?.createSymbol || "";
   const shareKind: XShareKind =
@@ -652,11 +655,13 @@ export function SigningSessionClient({ initial }: Props) {
             {XRPL_EVM_TESTNET_ID}
           </p>
           <p className="g-micro" style={{ marginTop: 4 }} aria-live="polite">
-            {signed
-              ? `Signed · request was valid until ${expiryLabel}`
-              : expiresIn && expiresIn !== "expired"
-                ? `Expires in ${expiresIn} · ${expiryLabel}`
-                : `Expired ${expiryLabel}`}
+            {nowSec === null
+              ? "Checking expiry…"
+              : signed
+                ? `Signed · request was valid until ${expiryLabel}`
+                : expiresIn && expiresIn !== "expired"
+                  ? `Expires in ${expiresIn} · ${expiryLabel}`
+                  : `Expired ${expiryLabel}`}
           </p>
 
           {payload && (
@@ -786,58 +791,63 @@ export function SigningSessionClient({ initial }: Props) {
             </div>
           )}
 
-          {!isConnected ? (
-            <div style={{ display: "grid", gap: 8 }}>
-              {walletConnectConnector ? (
-                <button type="button" onClick={() => void handleWalletConnect()} disabled={isConnecting} className="g-btn g-wallet-pill g-session-wallet-pill">
-                  <WalletConnectMark />
-                  {isConnecting ? "Connecting…" : "WalletConnect"}
-                </button>
-              ) : (
-                <p className="g-micro" role="status" style={{ color: "var(--muted)", textAlign: "center" }}>
-                  Wallet connection isn&apos;t available on this deployment yet.
-                </p>
-              )}
-              <button type="button" onClick={() => void handleCopyLink()} className="g-cta ghost">Copy link</button>
-            </div>
-          ) : !onCorrectChain ? (
-            <button
-              type="button"
-              onClick={() => void handleSwitch()}
-              disabled={isSwitching}
-              className="g-cta danger"
-            >
-              {isSwitching ? "Switching…" : "Switch to XRPL EVM"}
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => void execute()}
-              disabled={!canSign}
-              className="g-cta"
-            >
-              {view.status === "signed"
-                ? "Already signed"
-                : isWriting || isConfirming
-                  ? "Confirm in wallet…"
-                  : payload?.action === "create"
-                    ? "Sign launch in wallet"
-                    : "Sign in wallet"}
-            </button>
+          {/* A blocked or expired request cannot be signed; skip the wallet controls and point onward. */}
+          {!unsignable && (
+            !isConnected ? (
+              <div style={{ display: "grid", gap: 8 }}>
+                {walletConnectConnector ? (
+                  <button type="button" onClick={() => void handleWalletConnect()} disabled={isConnecting} className="g-btn g-wallet-pill g-session-wallet-pill">
+                    <WalletConnectMark />
+                    {isConnecting ? "Connecting…" : "WalletConnect"}
+                  </button>
+                ) : (
+                  <p className="g-micro" role="status" style={{ color: "var(--muted)", textAlign: "center" }}>
+                    Wallet connection isn&apos;t available on this deployment yet.
+                  </p>
+                )}
+                <button type="button" onClick={() => void handleCopyLink()} className="g-cta ghost">Copy link</button>
+              </div>
+            ) : !onCorrectChain ? (
+              <button
+                type="button"
+                onClick={() => void handleSwitch()}
+                disabled={isSwitching}
+                className="g-cta danger"
+              >
+                {isSwitching ? "Switching…" : "Switch to XRPL EVM"}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => void execute()}
+                disabled={!canSign}
+                className="g-cta"
+              >
+                {view.status === "signed"
+                  ? "Already signed"
+                  : isWriting || isConfirming
+                    ? "Confirm in wallet…"
+                    : payload?.action === "create"
+                      ? "Sign launch in wallet"
+                      : "Sign in wallet"}
+              </button>
+            )
           )}
 
-          <p className="g-hint">
-            Need XRP for gas?{" "}
-            <a
-              href={FAUCET_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="link-x"
-              style={{ fontWeight: 650 }}
-            >
-              Open faucet →
-            </a>
-          </p>
+          {!unsignable && !signed && (
+            <p className="g-hint">
+              Need XRP for gas?{" "}
+              <a
+                href={FAUCET_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="link-x"
+                style={{ fontWeight: 650 }}
+              >
+                Open faucet →
+              </a>
+            </p>
+          )}
           {signed && shareSymbol && (
             <a
               className="g-cta ghost"
@@ -848,13 +858,13 @@ export function SigningSessionClient({ initial }: Props) {
               <XMark size={14} /> Share on X
             </a>
           )}
-          {(blockReason || view.status === "expired" || expiredLocally) && !signed && (
-            <Link href="/?tab=Trade" className="g-cta ghost" style={{ display: "block", textAlign: "center", textDecoration: "none" }}>
+          {unsignable && (
+            <Link href="/?tab=Trade" className="g-cta" style={{ display: "block", textAlign: "center", textDecoration: "none" }}>
               Open Trade
             </Link>
           )}
           <Link href="/" className="g-cta ghost" style={{ display: "block", textAlign: "center", textDecoration: "none" }}>
-            {signed ? "Back to Markets" : blockReason ? "Back to Markets" : "Reject"}
+            {signed || unsignable ? "Back to Markets" : "Reject"}
           </Link>
         </div>
 

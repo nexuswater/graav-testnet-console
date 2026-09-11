@@ -1645,6 +1645,10 @@ details.g-details summary {
   white-space: pre-wrap;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
+/* Until a ticker is typed the draft is only an example. */
+.g-launch-draft[data-example="true"] {
+  color: var(--secondary);
+}
 .g-launch-cta-row {
   display: grid;
   grid-template-columns: 1fr;

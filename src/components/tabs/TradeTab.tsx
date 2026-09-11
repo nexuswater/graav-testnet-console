@@ -718,6 +718,8 @@ export function TradeTab({
           <div className="g-seg" role="tablist" aria-label="Trade side">
             <button
               type="button"
+              role="tab"
+              aria-selected={activeSide === "buy"}
               className={activeSide === "buy" ? "on" : undefined}
               onClick={() => setTradeSide("buy")}
             >
@@ -725,6 +727,8 @@ export function TradeTab({
             </button>
             <button
               type="button"
+              role="tab"
+              aria-selected={activeSide === "sell"}
               className={activeSide === "sell" ? "on" : undefined}
               onClick={() => setTradeSide("sell")}
             >
@@ -732,6 +736,8 @@ export function TradeTab({
             </button>
             <button
               type="button"
+              role="tab"
+              aria-selected={activeSide === "swap"}
               className={activeSide === "swap" ? "on" : undefined}
               onClick={() => setTradeSide("swap")}
             >
