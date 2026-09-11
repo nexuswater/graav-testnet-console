@@ -212,7 +212,7 @@ export function parseIntent(raw: string): IntentPlan {
     if (!okSym) {
       return {
         kind: "launch",
-        reply: `"${tickerRaw}" isn't a valid ticker. Use 1–15 letters, digits, or underscores, starting with a letter.`,
+        reply: `Bad ticker "${tickerRaw}" — use 1–15 letters, digits, or underscores, starting with a letter.`,
       };
     }
     return {
