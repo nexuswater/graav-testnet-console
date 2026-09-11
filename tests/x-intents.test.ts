@@ -4,6 +4,8 @@ import {
   launchDmUrl,
   parseXPostUrl,
   portfolioCommandText,
+  sharePostIntentUrl,
+  shareText,
   tradeCommandText,
   tradeDmUrl,
   tradePostIntentUrl,
@@ -60,6 +62,13 @@ test("trade commands use the grammar Chat and the mention bot already parse", ()
   assert.equal(sell.kind, "sell");
   assert.equal(sell.handoff?.prefill?.sellAmount, "10");
   assert.equal(parseIntent(portfolioCommandText()).kind, "portfolio");
+});
+
+test("share drafts name the action and the product handle, and stay composer-only", () => {
+  assert.equal(shareText("bought", "$gSWAP"), "Bought $gSWAP on @graav_xyz");
+  assert.equal(shareText("sold", "gSWAP"), "Sold $gSWAP on @graav_xyz");
+  assert.equal(shareText("launched", "HORMUZ"), "Launched $HORMUZ on @graav_xyz");
+  assert.match(sharePostIntentUrl("bought", "gSWAP"), /^https:\/\/x\.com\/intent\/post\?text=/);
 });
 
 test("X post links parse to a numeric id; anything else is rejected", () => {

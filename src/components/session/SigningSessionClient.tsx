@@ -58,7 +58,8 @@ import { TokenPfp } from "@/components/pfp/TokenPfp";
 import { copyToClipboard } from "@/lib/metaMaskDeepLink";
 import { asStatusText } from "@/lib/statusMsg";
 import { SeedMarketField } from "@/components/launch/SeedMarketField";
-import { GRAAV_X_HANDLE_AT, seedAmountDisplay } from "@/lib/xLaunchComposer";
+import { XMark } from "@/components/XMark";
+import { GRAAV_X_HANDLE_AT, seedAmountDisplay, sharePostIntentUrl, type XShareKind } from "@/lib/xLaunchComposer";
 
 type Props = {
   initial: PublicSessionView;
@@ -554,6 +555,16 @@ export function SigningSessionClient({ initial }: Props) {
   }, [payload, tokenSymbol]);
 
 
+  const signed = isConfirmed || view.status === "signed";
+  const shareSymbol =
+    (typeof tokenSymbol === "string" && tokenSymbol) || payload?.createSymbol || "";
+  const shareKind: XShareKind =
+    payload?.action === "create"
+      ? "launched"
+      : payload?.action === "sell" || (payload?.action === "swap" && payload.swapSide === "tokenToXrp")
+        ? "sold"
+        : "bought";
+
   // Placeholder / malformed / unsigned session → clear help (never blank 404)
   const unusableId = isUnusableSessionId(view.id);
   const showInvalidHelp =
@@ -822,10 +833,20 @@ export function SigningSessionClient({ initial }: Props) {
               Open faucet →
             </a>
           </p>
+          {signed && shareSymbol && (
+            <a
+              className="g-cta ghost"
+              href={sharePostIntentUrl(shareKind, shareSymbol)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <XMark size={14} /> Share on X
+            </a>
+          )}
           <Link href="/" className="g-cta ghost" style={{ display: "block", textAlign: "center", textDecoration: "none" }}>
-            Reject
+            {signed ? "Back to Markets" : "Reject"}
           </Link>
-          <p className="g-hint">An expired request or a wallet on another network cannot send.</p>
+          {!signed && <p className="g-hint">An expired request or a wallet on another network cannot send.</p>}
         </div>
 
         {(statusMsg || txHash || view.txHash || writeError) && (

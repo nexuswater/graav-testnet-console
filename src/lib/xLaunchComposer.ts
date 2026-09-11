@@ -116,6 +116,19 @@ export function tradeDmUrl(side: XTradeSide, ticker: string, amount: string): st
   return xDmUrl(tradeCommandText(side, ticker, amount));
 }
 
+export type XShareKind = "bought" | "sold" | "launched";
+
+/** Post-action share draft. Opens the composer only; the user decides whether to post. */
+export function shareText(kind: XShareKind, ticker: string): string {
+  const symbol = ticker.trim().replace(/^\$/, "");
+  const verb = kind === "bought" ? "Bought" : kind === "sold" ? "Sold" : "Launched";
+  return `${verb} $${symbol} on ${GRAAV_X_HANDLE_AT}`;
+}
+
+export function sharePostIntentUrl(kind: XShareKind, ticker: string): string {
+  return xPostIntentUrl(shareText(kind, ticker));
+}
+
 export function seedAmountDisplay(raw: string): string {
   const trimmed = raw.trim();
   if (!trimmed) return "None (optional)";

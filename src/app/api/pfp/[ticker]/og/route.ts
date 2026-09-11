@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 
 type Ctx = { params: Promise<{ ticker: string }> };
 
-/** GET /api/pfp/[ticker]/og — 1200×1200 PNG for unfurl. */
+/** GET /api/pfp/[ticker]/og — 1200×1200 JPEG for unfurl. */
 export async function GET(_req: Request, ctx: Ctx) {
   const { ticker: raw } = await ctx.params;
   const ticker = normalizeTicker(decodeURIComponent(raw));
@@ -23,7 +23,7 @@ export async function GET(_req: Request, ctx: Ctx) {
     const og = await rasterizeOg(bytes);
     return new NextResponse(new Uint8Array(og), {
       headers: {
-        "Content-Type": "image/png",
+        "Content-Type": "image/jpeg",
         "Cache-Control": "public, max-age=300",
       },
     });

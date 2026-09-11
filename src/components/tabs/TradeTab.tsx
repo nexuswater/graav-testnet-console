@@ -43,7 +43,8 @@ import { TokenPfp } from "@/components/pfp/TokenPfp";
 import { XTradeCta } from "@/components/XTradeCta";
 import { resolveKnown } from "@/lib/chatIntent";
 import { homeMarkets } from "@/lib/marketsRegistry";
-import { GRAAV_X_HANDLE_AT } from "@/lib/xLaunchComposer";
+import { XMark } from "@/components/XMark";
+import { GRAAV_X_HANDLE_AT, sharePostIntentUrl } from "@/lib/xLaunchComposer";
 
 function explorerAddress(addr: string) {
   return `${EXPLORER_URL}/address/${addr}`;
@@ -1030,6 +1031,17 @@ export function TradeTab({
               {isConfirming && " (confirming…)"}
               {isConfirmed && " ✓"}
             </p>
+          )}
+          {isConfirmed && symbol && (
+            <a
+              className="g-cta ghost"
+              style={{ marginTop: 12 }}
+              href={sharePostIntentUrl(xSide === "sell" ? "sold" : "bought", symbol)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <XMark size={14} /> Share on X
+            </a>
           )}
           {writeError && (
             <p className="mt-2 break-all" style={{ color: "var(--bad)" }}>

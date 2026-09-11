@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const ticker = normalizeTicker(decodeURIComponent(raw));
   const known = findKnownMarket(ticker);
   const dollar = "$" + ticker;
-  const title = `${dollar} · GRAAV`;
+  const title = dollar;
   const description = known
     ? `${known.name} on GRAAV · XRPL EVM. Buy from a post or DM to @graav_xyz; your wallet signs.`
     : `${dollar} on GRAAV · XRPL EVM`;
@@ -20,13 +20,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title,
     description,
     openGraph: {
-      title,
+      title: `${dollar} · GRAAV`,
       description,
       images: [{ url: og, width: 1200, height: 1200, alt: dollar }],
     },
     twitter: {
       card: "summary",
-      title,
+      title: `${dollar} · GRAAV`,
       description,
       images: [og],
     },

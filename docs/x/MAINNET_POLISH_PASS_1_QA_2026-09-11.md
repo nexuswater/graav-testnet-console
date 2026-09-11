@@ -4,7 +4,7 @@ Branch `cursor/mainnet-polish-pass-1-c034` on main `9ff0764` (#6 cron coverage, 
 
 Locks verified on every surface: one TESTNET cue (header pill only) · mock RLUSD `0x04B9…913F` displayed as **RLUSD** (never mRLUSD / Test RLUSD) · no g589 / `$MOMENT` promote (g589 appears only as a listed row / chip, MOMENT only as a not-launched row) · every X CTA opens x.com (post / quote / DM compose) and nothing posts, sends, or spends · Base-first fail-closed Funding preserved from #4/#5/#6 · X-primary Launch preserved from #4.
 
-Gates: `npm run check` ✓ · `npm run lint` ✓ (3 pre-existing `no-img-element`) · `npm test` ✓ 88/88 · `npm run build` ✓ (pre-existing `pino-pretty` warning from WalletConnect).
+Gates: `npm run check` ✓ · `npm run lint` ✓ (3 pre-existing `no-img-element`) · `npm test` ✓ 89/89 · `npm run build` ✓ (pre-existing `pino-pretty` warning from WalletConnect).
 
 Captures: `/opt/cursor/artifacts/screenshots/polish1-*.png` — dark + light × 390 / 1440 for every surface below, scrolled mobile views (sticky header + nav), `/s/{id}` for a minted session, and `polish1-state-*` for the empty / error / edge states listed here.
 
@@ -135,6 +135,28 @@ Legend: **✓** works · **⊘** disabled with a visible reason · **ℹ** infor
 | `/s/<id>` | ✓ Review and sign / Signed / Expired / Invalid / Blocked; action, factory, market, token, minimum received, chain, graduated, liquidity pool; create requests show origin + seed; **WalletConnect** (⊘ hint when unavailable) / **Copy link** / **Switch to XRPL EVM** / **Sign in wallet** / **Reject**; block reasons in plain language; bogus id → help page (`polish1-state-session-invalid`) |
 | `/new` | ✓ in-app fallback for an XRP market: Generate default / Upload image / **Review and sign** (connect-wallet alert until connected); download exact file |
 | `/coin` | ✓ Launch on X · Browse markets · contract details |
+| Any unknown route | ✓ branded 404 (`not-found.tsx`) with **Back to Markets** · **Launch on X** (`polish1-dark-*-not-found`) |
+| Render error | ✓ branded boundary (`error.tsx`): "Nothing was sent or signed", **Try again** · **Back to Markets**, digest shown when present |
+
+## After-action X CTAs
+
+| Where | Behaviour |
+| --- | --- |
+| `/s/<id>` once signed / confirmed | ✓ **Share on X** (`Bought / Sold / Launched $TICKER on @graav_xyz`, composer only); Reject becomes **Back to Markets** |
+| Trade status card once confirmed | ✓ **Share on X** for the side just traded |
+| Launch once `Coin created` | ✓ **Share on X** (`Launched $TICKER …`) |
+
+## Images and metadata
+
+| Item | Behaviour |
+| --- | --- |
+| Header lockup (`/brand/graav-header-lockup*.png`, 1x/2x/3x) | ✓ inverted in light theme; links home |
+| Token pfps (`/api/pfp/<ticker>`) | ✓ letter placeholder until loaded; official marks for gSWAP / g589 / memes / MOMENT / ORBIT / SIGNAL |
+| Unfurl image (`/api/pfp/<ticker>/og`) | ✓ 1200×1200 JPEG ≈ 157 KB (was a 2.6 MB PNG) |
+| Root metadata | ✓ title template `%s · GRAAV`, description, OpenGraph + Twitter card with the lockup, `metadataBase` from `NEXT_PUBLIC_APP_URL` |
+| `/t/<ticker>` metadata | ✓ `$TICKER · GRAAV`, plain description, pfp unfurl |
+| Favicon | ✓ |
+| Unused Next.js template SVGs (`file / globe / next / vercel / window.svg`) | removed |
 
 ## Not changed (known, honest)
 

@@ -13,11 +13,13 @@ import { RLUSD_CLONE_INFRA, RLUSD_V1 as C } from "@/lib/rlusd-v1/config";
 import { rlusdFactoryAbi } from "@/lib/rlusd-v1/contracts";
 import { buildCreateCoinParams } from "@/lib/rlusd-v1/createCoin";
 import type { PfpProfile } from "@/lib/pfpTypes";
+import { XMark } from "@/components/XMark";
 import {
   GRAAV_X_HANDLE_AT,
   isValidLaunchTicker,
   sanitizeLaunchTicker,
   seedAmountDisplay,
+  sharePostIntentUrl,
 } from "@/lib/xLaunchComposer";
 
 type Step = "details" | "review" | "sign";
@@ -364,6 +366,15 @@ export default function LaunchPage() {
         {created && (
           <div className="g-alert" style={{ marginTop: 16 }}>
             Coin created · token {created.token} · curve {created.curve}
+            <a
+              className="g-cta ghost"
+              style={{ marginTop: 12 }}
+              href={sharePostIntentUrl("launched", cleanTicker)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <XMark size={14} /> Share on X
+            </a>
           </div>
         )}
         {txHash && <p className="g-mono" style={{ marginTop: 12 }}>{txHash}{isConfirmed ? " · confirmed" : isConfirming ? " · pending" : ""}</p>}
