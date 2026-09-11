@@ -7,6 +7,7 @@ import { useAccount, useChainId, usePublicClient, useWaitForTransactionReceipt, 
 import { AppChrome } from "@/components/AppChrome";
 import { LaunchOnXCard } from "@/components/launch/LaunchOnXCard";
 import { SeedMarketField } from "@/components/launch/SeedMarketField";
+import { XPrimaryNote } from "@/components/XPrimaryNote";
 import { LinkIcon, UploadIcon } from "@/components/shell/Icons";
 import { XRPL_EVM_TESTNET_ID } from "@/lib/chain";
 import { tipMarketAvailability } from "@/lib/rlusd-v1/availability";
@@ -238,18 +239,19 @@ export default function LaunchPage() {
   return (
     <AppChrome active="launch">
       <main className="g-main g-launch">
-        <Link href="/" className="g-back">← Markets</Link>
+        <Link href="/" className="g-back">← Charts</Link>
         <h1 className="g-hero-title">Launch on X.</h1>
         <p className="g-hero-sub">
-          Quote-RT or post with $TICKER. That post is the Moment. Then sign in your
+          Post, repost, or DM with $TICKER. That is the Moment. Then sign in your
           wallet — chat never authorizes.
         </p>
         <p className="g-hint" style={{ marginTop: 8 }}>
           Quoted in Test RLUSD · {GRAAV_X_HANDLE_AT} · signature or nothing via /s
         </p>
+        <XPrimaryNote />
 
         <ol className="g-stepper" aria-label="Launch steps">
-          <li className={step === "details" ? "on" : undefined}><span>1</span> Post on X</li>
+          <li className={step === "details" ? "on" : undefined}><span>1</span> On X</li>
           <li className={step === "review" ? "on" : undefined}><span>2</span> Review</li>
           <li className={step === "sign" ? "on" : undefined}><span>3</span> Sign</li>
         </ol>
@@ -259,10 +261,10 @@ export default function LaunchPage() {
             <LaunchOnXCard ticker={ticker} onTicker={setTicker} onPostedReview={goXReview} />
 
             <details className="g-details g-launch-advanced">
-              <summary>Advanced · paste a link (testnet fallback)</summary>
+              <summary>Advanced · in-app paste-link (fallback)</summary>
               <p className="g-hint" style={{ marginTop: 8, marginBottom: 4 }}>
-                Paste-into-site is not the primary create. Use this only to bind an
-                existing post id on testnet.
+                Daily create is on X. Paste-into-site is testnet fallback only — not the
+                lead story.
               </p>
               <form onSubmit={(event) => void goPasteReview(event)} className="g-launch-form">
                 <div className="g-field">
@@ -342,7 +344,7 @@ export default function LaunchPage() {
             <div className="g-kv">
               <span>Source</span>
               <span className="g-mono">
-                {fromX ? "X post / quote-RT" : post}
+                {fromX ? "X post / repost / DM" : post}
               </span>
             </div>
             <div className="g-kv"><span>Quote</span><span>Test RLUSD</span></div>
@@ -361,9 +363,9 @@ export default function LaunchPage() {
                       Continue to /s sign
                     </button>
                     <p className="g-hint">
-                      After Launch ${cleanTicker} on X, {GRAAV_X_HANDLE_AT} hands you a /s
-                      link. Open it to sign in wallet. Chat never authorizes. Optional seed
-                      is review-only — this desk does not spend.
+                      After Launch ${cleanTicker} on X (post, repost, or DM), {GRAAV_X_HANDLE_AT}{" "}
+                      hands you a /s link. Open it to sign in wallet. Chat never authorizes.
+                      Optional seed is review-only — this desk does not spend.
                     </p>
                   </>
                 ) : (
@@ -382,8 +384,9 @@ export default function LaunchPage() {
                 {fromX && (
                   <div className="g-alert" style={{ marginTop: 12 }}>
                     <strong>Signature or nothing via /s.</strong> Open the signing
-                    link from {GRAAV_X_HANDLE_AT} after your post. This console does
-                    not post to X and does not spend the seed. Chat ≠ authorization.
+                    link from {GRAAV_X_HANDLE_AT} after your post, repost, or DM. This
+                    console does not write to X and does not spend the seed. Chat ≠
+                    authorization.
                     <p className="g-mono" style={{ marginTop: 8 }}>/s/{"{id}"}</p>
                   </div>
                 )}

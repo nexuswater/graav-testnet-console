@@ -648,7 +648,7 @@ export function SigningSessionClient({ initial }: Props) {
           </h1>
           <p className="g-hint" style={{ marginTop: 8 }}>
             {payload?.action === "create"
-              ? `After the X post · ${GRAAV_X_HANDLE_AT} · signature or nothing via /s`
+              ? `After the X post, repost, or DM · ${GRAAV_X_HANDLE_AT} · signature or nothing via /s`
               : "XRPL EVM Testnet · you sign · we never hold the key"}
           </p>
           <p className="g-sub" style={{ marginTop: 6 }}>

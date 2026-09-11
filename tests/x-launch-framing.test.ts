@@ -10,6 +10,31 @@ import {
   sanitizeLaunchTicker,
   seedAmountDisplay,
 } from "../src/lib/xLaunchComposer.js";
+import {
+  ATTRIBUTION_V1,
+  ATTRIBUTION_V1_LINE,
+  CROSS_CHAIN_TESTNET_ORDER,
+  KERNEL_LAB_REF,
+} from "../src/lib/xPrimary.js";
+
+test("attribution V1 copy sums and locks", () => {
+  assert.equal(ATTRIBUTION_V1.creator + ATTRIBUTION_V1.protocol + ATTRIBUTION_V1.distributor, 100);
+  assert.equal(ATTRIBUTION_V1.hopOfDistributor.reduce((a, b) => a + b, 0), 100);
+  assert.equal(ATTRIBUTION_V1.hopOfDistributor.length, ATTRIBUTION_V1.depth);
+  assert.equal(ATTRIBUTION_V1.missingHop, "protocol");
+  assert.equal(ATTRIBUTION_V1.payOnce, true);
+  assert.match(ATTRIBUTION_V1_LINE, /original poster/);
+  assert.match(KERNEL_LAB_REF.selector, /^0x[0-9a-f]{8}$/);
+  assert.equal(KERNEL_LAB_REF.forge, "20/20");
+});
+
+test("cross-chain testnet order is home first and fail-closed", () => {
+  assert.equal(CROSS_CHAIN_TESTNET_ORDER[0]?.stage, "home");
+  assert.match(CROSS_CHAIN_TESTNET_ORDER[0]?.label ?? "", /1449000/);
+  assert.match(CROSS_CHAIN_TESTNET_ORDER[1]?.label ?? "", /Base Sepolia/);
+  assert.match(CROSS_CHAIN_TESTNET_ORDER[2]?.label ?? "", /Arbitrum/);
+  assert.equal(CROSS_CHAIN_TESTNET_ORDER[3]?.stage, "later");
+});
 
 test("Launch composer is X-first and never promotes g589 or MOMENT", () => {
   assert.equal(LAUNCH_EXAMPLE_TICKER, "HORMUZ");

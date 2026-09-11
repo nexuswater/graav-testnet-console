@@ -25,7 +25,7 @@ export function ChatTab({ onHandoff }: Props) {
     {
       id: "welcome",
       role: "bot",
-      text: "Preview intents only. Try BUY gSWAP 0.1 · SELL 1 g589 · LAUNCH MYCOIN. Wallet signing stays separate.",
+      text: "Same intents as X posts, reposts, and DMs. Preview only — chat never authorizes. Try LAUNCH HORMUZ · BUY gSWAP 0.1. Then sign via /s.",
     },
   ]);
 

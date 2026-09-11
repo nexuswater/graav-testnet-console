@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { TokenPfp } from "@/components/pfp/TokenPfp";
 import { ArrowRightIcon, SearchIcon } from "@/components/shell/Icons";
+import { XPrimaryNote } from "@/components/XPrimaryNote";
 import { homeMarkets } from "@/lib/marketsRegistry";
 import { registryRowAvailability } from "@/lib/rlusd-v1/availability";
 import { RLUSD_MARKET_REGISTRY } from "@/lib/rlusd-v1/marketRegistry";
@@ -71,15 +72,19 @@ export function MarketsView() {
       <section className="g-hero">
         <div>
           <h1 className="g-hero-title">Ideas become markets.</h1>
-          <p className="g-hero-sub">Coins start as posts on X — quote-RT or post, then sign in wallet.</p>
+          <p className="g-hero-sub">
+            Charts on graav.xyz. Daily launch, trade, and share happen on X — posts, reposts, or DMs.
+          </p>
         </div>
         <Link href="/launch" className="g-cta g-cta-inline">
           Launch on X →
         </Link>
       </section>
 
+      <XPrimaryNote />
+
       <div className="g-network-bar">
-        <span>XRPL EVM Testnet · Test assets only</span>
+        <span>XRPL EVM Testnet · Test RLUSD / XRP · test assets only</span>
         <span className="g-network-status">
           <span className="g-dot" />
           New coin launches are being connected
@@ -146,9 +151,9 @@ export function MarketsView() {
       </div>
 
       <footer className="g-launch-progress">
-        <span>Launch on X</span>
+        <span>Daily on X</span>
         <ol>
-          <li>Post or quote-RT</li>
+          <li>Post · repost · DM</li>
           <li>Open /s · optional seed</li>
           <li>Sign in wallet</li>
         </ol>

@@ -217,7 +217,7 @@ export function parseIntent(raw: string): IntentPlan {
     }
     return {
       kind: "launch",
-      reply: `Launch $${ticker} on X (post or quote-RT). Chat never authorizes. After the post, open the /s link to review, optionally seed Test RLUSD, and sign in wallet.`,
+      reply: `Launch $${ticker} on X (post, repost, or DM). Chat never authorizes. After that, open the /s link to review, optionally seed Test RLUSD, and sign in wallet.`,
       handoff: {
         tab: "Markets",
         label: `Launch $${ticker} on X`,
@@ -232,6 +232,6 @@ export function parseIntent(raw: string): IntentPlan {
   return {
     kind: text ? "unknown" : "help",
     reply:
-      "Intents: BUY <coin> <amount> · SELL <amount> <coin> · LAUNCH <ticker>. Chat previews only. Your wallet signs.",
+      "Intents: BUY <coin> <amount> · SELL <amount> <coin> · LAUNCH <ticker>. Same on X posts, reposts, and DMs. Chat previews only. Your wallet signs via /s.",
   };
 }

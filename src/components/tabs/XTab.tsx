@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ConnectX } from "@/components/ConnectX";
+import { ATTRIBUTION_V1_LINE, X_DAILY_OPS_LINE } from "@/lib/xPrimary";
 
 type Props = {
   onGoTrade: () => void;
@@ -116,14 +117,14 @@ export function XTab({ onGoTrade }: Props) {
   return (
     <div className="space-y-5">
       <section>
-        <h1 className="g-title">X · identity + bot</h1>
+        <h1 className="g-title">X · daily ops</h1>
         <p className="g-sub" style={{ marginTop: 8 }}>
           Product handle{" "}
           <span style={{ color: "var(--x)" }}>
             {caps?.productHandle || "@graav_xyz"}
           </span>
-          . User Connect X is identity only. Public write stays env-gated —
-          tweets never send txs; replies emit{" "}
+          . {X_DAILY_OPS_LINE} User Connect X is identity only. Public write
+          stays env-gated — posts and DMs never send txs; replies emit{" "}
           <code className="g-micro">/s/&#123;id&#125;</code> only.
         </p>
       </section>
@@ -270,14 +271,14 @@ export function XTab({ onGoTrade }: Props) {
           </span>
         </li>
         <li className="g-card">
-          <span>Create-market (TG-bot style)</span>
+          <span>Launch $ticker on X</span>
           <span className="g-micro ml-2">
-            parse LAUNCH|CREATE &lt;ticker&gt; → Trade prefill · X write fail-closed · Aggregated USDC OFF
+            post / repost / DM → /s review · optional seed · wallet sign · X write fail-closed · Aggregated USDC OFF
           </span>
         </li>
         <li className="g-card">
           <span style={{ color: "var(--warn)" }}>Share &amp; Earn</span>
-          <span className="g-micro ml-2">not live</span>
+          <span className="g-micro ml-2">not live · {ATTRIBUTION_V1_LINE}</span>
         </li>
         <li className="g-card">
           <span>Bot Factory</span>
@@ -295,6 +296,9 @@ export function XTab({ onGoTrade }: Props) {
           style={{ color: "var(--muted)" }}
         >
           <p className="rounded-[10px] border border-[var(--line)] bg-[var(--bg)] px-3 py-2">
+            @graav_xyz launch $HORMUZ
+          </p>
+          <p className="rounded-[10px] border border-[var(--line)] bg-[var(--bg)] px-3 py-2">
             @graav_xyz buy $g589 0.1
           </p>
           <p className="rounded-[10px] border border-[var(--line)] bg-[var(--bg)] px-3 py-2">
@@ -305,9 +309,9 @@ export function XTab({ onGoTrade }: Props) {
           </p>
         </div>
         <p className="g-hint">
-          Mentions reply path mints the same dual-factory allowlist sessions as
-          Chat. One cashtag per API post. Quote-post is Enterprise — use
-          composer/link.
+          Same commands work in a DM to @graav_xyz (private). Mentions and DMs
+          mint the same dual-factory allowlist sessions as Chat. One cashtag per
+          API post. Quote-post is Enterprise — use composer/link.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <button

@@ -37,7 +37,7 @@ export function LaunchOnXCard({ ticker, onTicker, onPostedReview }: Props) {
         Create on X
       </h2>
       <ol className="g-launch-path" aria-label="How launch works">
-        <li>Post or quote-RT with $TICKER</li>
+        <li>Post, repost, or DM with $TICKER</li>
         <li>Open the /s link GRAAV sends</li>
         <li>Review, optional seed, sign in wallet</li>
       </ol>
@@ -57,7 +57,7 @@ export function LaunchOnXCard({ ticker, onTicker, onPostedReview }: Props) {
           aria-describedby="launch-x-ticker-hint"
         />
         <p id="launch-x-ticker-hint" className="g-hint">
-          Example: quote-RT a post → Launch $HORMUZ. Not a paste box on this site.
+          Example: quote-RT a post → Launch $HORMUZ. DMs are the same action, privately.
         </p>
       </div>
 
@@ -85,7 +85,7 @@ export function LaunchOnXCard({ ticker, onTicker, onPostedReview }: Props) {
         target="_blank"
         rel="noopener noreferrer"
       >
-        Quote-RT a post on X
+        Repost / quote-RT on X
       </a>
       <div className="g-launch-cta-row">
         <button type="button" className="g-cta ghost" onClick={() => void copyDraft()}>
@@ -101,9 +101,9 @@ export function LaunchOnXCard({ ticker, onTicker, onPostedReview }: Props) {
         </a>
       </div>
       <p className="g-hint">
-        Composer / open X only. This console never posts and never spends. Public
-        X write stays closed. After you post, {GRAAV_X_HANDLE_AT} hands you a /s
-        link — chat ≠ authorization.
+        Composer / open X only. This console never posts, reposts, or sends DMs.
+        Public X write stays closed. After you post, {GRAAV_X_HANDLE_AT} hands you
+        a /s link — chat ≠ authorization. DMs are the same intents, privately.
       </p>
       <button
         type="button"

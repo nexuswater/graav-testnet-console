@@ -6,6 +6,7 @@ import { FAUCET_URL, XRPL_EVM_TESTNET_ID } from "@/lib/chain";
 import { shortAddr } from "@/lib/wallet";
 import type { TradePrefill } from "@/lib/tradePrefill";
 import { homeMarkets } from "@/lib/marketsRegistry";
+import { CROSS_CHAIN_FAIL_CLOSED_LINE, CROSS_CHAIN_TESTNET_ORDER } from "@/lib/xPrimary";
 
 type ProbeStatus = "ok" | "blocked" | "unsupported";
 
@@ -178,12 +179,25 @@ export function CrossChainTab({ onGoTrade }: Props) {
       <section>
         <h1 className="g-title">Funding</h1>
         <p className="g-sub" style={{ marginTop: 8 }}>
-          Testnet funding stays fail-closed. Display quote is RLUSD. Mainnet Buy is closed.
+          Home is XRPL EVM Testnet {XRPL_EVM_TESTNET_ID} with Test RLUSD. Testnet funding stays fail-closed. Mainnet Buy is closed.
         </p>
         <p className="g-hint" style={{ marginTop: 8 }}>
-          Availability is shown below. Probe diagnostics stay behind Details.
+          Availability is shown below. Probe diagnostics stay behind Details. Daily ops stay on X.
         </p>
       </section>
+
+      <div className="g-card">
+        <div style={{ fontWeight: 650, marginBottom: 8 }}>Testnet inbound order</div>
+        <ol className="g-route-order" aria-label="Cross-chain testnet order">
+          {CROSS_CHAIN_TESTNET_ORDER.map((leg) => (
+            <li key={leg.id}>
+              <span className="g-micro">{leg.stage.toUpperCase()}</span>
+              <strong>{leg.label}</strong>
+            </li>
+          ))}
+        </ol>
+        <p className="g-hint">{CROSS_CHAIN_FAIL_CLOSED_LINE} Catalog presence ≠ live quote.</p>
+      </div>
 
       <div className="g-alert">
         Availability: testnet Buy is disabled. A live Squid USDC→RLUSD quote is required before any Buy.
