@@ -9,8 +9,10 @@ import { homeMarkets } from "@/lib/marketsRegistry";
 import { CROSS_CHAIN_FAIL_CLOSED_LINE } from "@/lib/xPrimary";
 import {
   BASE_SEPOLIA_CORRIDOR,
+  CORRIDOR_ORDER_LINE,
   DEFERRED_CORRIDORS,
   DEFERRED_REASON,
+  NO_LIVE_QUOTE_LINE,
   isActiveCorridor,
   type CorridorGate,
 } from "@/lib/crosschain/corridor";
@@ -191,7 +193,7 @@ export function CrossChainTab({ onGoTrade }: Props) {
           Home is XRPL EVM Testnet {XRPL_EVM_TESTNET_ID} with Test RLUSD. Testnet funding stays fail-closed. Mainnet Buy is closed.
         </p>
         <p className="g-hint" style={{ marginTop: 8 }}>
-          Availability is shown below. Probe diagnostics stay behind Details. Daily ops stay on X.
+          {CORRIDOR_ORDER_LINE} Probe diagnostics stay behind Details. Daily ops stay on X.
         </p>
       </section>
 
@@ -201,7 +203,9 @@ export function CrossChainTab({ onGoTrade }: Props) {
             <div id="base-corridor-title" style={{ fontWeight: 650 }}>
               First corridor · {BASE_SEPOLIA_CORRIDOR.label}
             </div>
-            <div className="g-micro" style={{ marginTop: 2 }}>{BASE_SEPOLIA_CORRIDOR.path}</div>
+            <div className="g-micro" style={{ marginTop: 2 }}>
+              {BASE_SEPOLIA_CORRIDOR.path} · {BASE_SEPOLIA_CORRIDOR.via}
+            </div>
           </div>
           <span className="g-pill g-corridor-status" data-pass={corridor?.pass ? "true" : "false"}>
             {loading && !corridor ? "PROBING" : corridor?.status ?? "FAIL-CLOSED"}
@@ -225,19 +229,25 @@ export function CrossChainTab({ onGoTrade }: Props) {
           )}
         </ol>
         <p className="g-hint">
-          {CROSS_CHAIN_FAIL_CLOSED_LINE} Buy stays disabled until every check is OK on Base.
-          Catalog presence ≠ live quote.
+          {CROSS_CHAIN_FAIL_CLOSED_LINE} {NO_LIVE_QUOTE_LINE} Buy stays disabled until every
+          check is OK on Base. Catalog presence ≠ live quote.
         </p>
         <div className="g-corridor-deferred">
-          <span className="g-micro">DEFERRED</span>
+          <span className="g-micro">NEXT</span>
           <span>
-            {DEFERRED_CORRIDORS.map((d) => d.label).join(" · ")} — {DEFERRED_REASON}
+            {DEFERRED_CORRIDORS.filter((d) => d.stage === "after-base").map((d) => d.label).join(" · ")} — only after Base Sepolia PASS.
+          </span>
+        </div>
+        <div className="g-corridor-deferred" style={{ marginTop: 6, paddingTop: 6 }}>
+          <span className="g-micro">LATER</span>
+          <span>
+            {DEFERRED_CORRIDORS.filter((d) => d.stage === "later").map((d) => d.label).join(" · ")} — {DEFERRED_REASON}
           </span>
         </div>
       </div>
 
       <div className="g-alert">
-        Availability: testnet Buy is disabled. A live Squid USDC→RLUSD quote from Base Sepolia is required before any Buy.
+        Availability: testnet Buy is disabled. {NO_LIVE_QUOTE_LINE} Base Sepolia is the only corridor under check.
       </div>
 
       <details className="g-details">
@@ -567,10 +577,11 @@ export function CrossChainTab({ onGoTrade }: Props) {
             ))}
 
             <div style={{ fontWeight: 650, marginTop: 8 }}>
-              Deferred until Base PASS — not probed
+              Deferred — not probed this slice
             </div>
             <p className="g-micro" style={{ color: "var(--muted)" }}>
-              {deferred.map((leg) => leg.label).join(" · ")}
+              Arbitrum Sepolia only after Base PASS · Robinhood / Hyperliquid later ·{" "}
+              {deferred.filter((leg) => !DEFERRED_CORRIDORS.some((d) => d.key === leg.key)).map((leg) => leg.label).join(" · ")}
             </p>
           </div>
         )}

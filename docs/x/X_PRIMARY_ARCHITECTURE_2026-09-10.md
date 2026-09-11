@@ -55,13 +55,13 @@ RLUSD **quote display** on Coin V1 remains Test RLUSD. Do not mix the 60/25/15 a
 
 Home is **XRPL EVM Testnet `1449000` + Test RLUSD**.
 
-**Base Sepolia is the FIRST inbound corridor: USDC (84532) → RLUSD → XRPL EVM testnet.** It is the only corridor wired for route checks this slice.
+**Inbound corridor order: Base Sepolia → RLUSD on XRPL EVM testnet FIRST (Aggregated / Squid).** It is the only corridor wired for route checks this slice. **Arbitrum only after Base PASS. Robinhood / Hyperliquid later.**
 
-Route checks (all must be OK before any Buy): dest listed · source listed · USDC on Base Sepolia · RLUSD on xrpl-evm (ITS) · live USDC→RLUSD quote + depth smoke · signed quote + tx rail wired. Live quote and tx rail are **not** wired this slice, so the gate reads **FAIL-CLOSED**.
+Route checks (all must be OK before any Buy): dest listed · source listed · USDC on Base Sepolia · RLUSD on xrpl-evm (ITS) · live Squid USDC→RLUSD quote + depth smoke · signed quote + tx rail wired. Live quote and tx rail are **not** wired this slice, so the gate reads **FAIL-CLOSED**. **Buy is never enabled without a live quote.**
 
-**Deferred until Base PASS (not probed):** Arbitrum Sepolia · Robinhood · Hyperliquid.
+**Not probed this slice:** Arbitrum Sepolia (next, only after Base PASS) · Robinhood · Hyperliquid (later).
 
-**Fail-closed:** no proven route = no Buy. Catalog presence ≠ live quote. Funding is the only cross-chain story; daily ops stay on X.
+**Fail-closed:** no live route = no Buy. Catalog presence ≠ live quote. No corridor is invented. Funding is the only cross-chain story; daily ops stay on X.
 
 ### 6. Paste-link Launch
 

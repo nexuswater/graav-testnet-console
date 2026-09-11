@@ -16,18 +16,27 @@ export const BASE_SEPOLIA_CORRIDOR = {
   settleAsset: "RLUSD",
   destChainId: XRPL_EVM_TESTNET_DEST,
   path: "USDC → RLUSD → XRPL EVM 1449000",
+  via: "Aggregated · Squid",
 } as const;
 
 /** Only Base is wired / probed this slice. */
 export const ACTIVE_CORRIDOR_KEYS: readonly string[] = [BASE_SEPOLIA_CORRIDOR.key];
 
-export const DEFERRED_CORRIDORS = [
-  { key: "arbitrumSepolia", label: "Arbitrum Sepolia" },
-  { key: "robinhood", label: "Robinhood Chain Testnet" },
-  { key: "hyperliquid", label: "HyperEVM Testnet" },
+export type DeferredStage = "after-base" | "later";
+
+/** Arb only after Base PASS; Robinhood / Hyperliquid later. None are probed this slice. */
+export const DEFERRED_CORRIDORS: readonly { key: string; label: string; stage: DeferredStage; reason: string }[] = [
+  { key: "arbitrumSepolia", label: "Arbitrum Sepolia", stage: "after-base", reason: "Only after Base Sepolia PASS — not probed this slice." },
+  { key: "robinhood", label: "Robinhood Chain Testnet", stage: "later", reason: "Later — after Base PASS and Arbitrum. Not probed this slice." },
+  { key: "hyperliquid", label: "HyperEVM Testnet", stage: "later", reason: "Later — after Base PASS and Arbitrum. Not probed this slice." },
 ] as const;
 
 export const DEFERRED_REASON = "Out of scope until Base Sepolia PASS — not probed this slice.";
+
+export const CORRIDOR_ORDER_LINE =
+  "Inbound order: Base Sepolia → RLUSD on XRPL EVM testnet first (Aggregated · Squid). Arbitrum only after Base PASS. Robinhood / Hyperliquid later.";
+
+export const NO_LIVE_QUOTE_LINE = "Buy is never enabled without a live Squid USDC → RLUSD quote.";
 
 export function isActiveCorridor(key: string): boolean {
   return ACTIVE_CORRIDOR_KEYS.includes(key);
@@ -74,7 +83,7 @@ export type CorridorGate = {
   pass: boolean;
   status: "PASS" | "FAIL-CLOSED";
   reason: string;
-  deferred: { key: string; label: string; reason: string }[];
+  deferred: { key: string; label: string; stage: DeferredStage; reason: string }[];
 };
 
 /** Fail-closed gate for the Base Sepolia corridor. Pure; no network. */
@@ -135,7 +144,7 @@ export function baseCorridorGate(s: CorridorSignals): CorridorGate {
     status: pass ? "PASS" : "FAIL-CLOSED",
     reason: pass
       ? `Base Sepolia corridor PASS: ${c.path}.`
-      : `FAIL-CLOSED: ${c.path} — missing ${missing.join("; ")}. No Buy.`,
-    deferred: DEFERRED_CORRIDORS.map((d) => ({ ...d, reason: DEFERRED_REASON })),
+      : `FAIL-CLOSED: ${c.path} — missing ${missing.join("; ")}. No Buy without a live Squid quote.`,
+    deferred: DEFERRED_CORRIDORS.map((d) => ({ ...d })),
   };
 }

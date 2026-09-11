@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   ACTIVE_CORRIDOR_KEYS,
   BASE_SEPOLIA_CORRIDOR,
+  CORRIDOR_ORDER_LINE,
   DEFERRED_CORRIDORS,
   baseCorridorGate,
   isActiveCorridor,
@@ -19,17 +20,20 @@ const allCatalog: CorridorSignals = {
   signedTxWired: false,
 };
 
-test("Base Sepolia is the only active corridor; Arb/RH/HL deferred", () => {
+test("Base Sepolia is the only active corridor; Arb after Base PASS, RH/HL later", () => {
   assert.deepEqual([...ACTIVE_CORRIDOR_KEYS], ["base"]);
   assert.equal(BASE_SEPOLIA_CORRIDOR.chainId, 84532);
   assert.equal(BASE_SEPOLIA_CORRIDOR.destChainId, 1449000);
   assert.equal(BASE_SEPOLIA_CORRIDOR.path, "USDC → RLUSD → XRPL EVM 1449000");
+  assert.equal(BASE_SEPOLIA_CORRIDOR.via, "Aggregated · Squid");
   assert.equal(isActiveCorridor("base"), true);
   for (const d of DEFERRED_CORRIDORS) assert.equal(isActiveCorridor(d.key), false);
   assert.deepEqual(
-    DEFERRED_CORRIDORS.map((d) => d.key),
-    ["arbitrumSepolia", "robinhood", "hyperliquid"],
+    DEFERRED_CORRIDORS.map((d) => [d.key, d.stage]),
+    [["arbitrumSepolia", "after-base"], ["robinhood", "later"], ["hyperliquid", "later"]],
   );
+  assert.match(CORRIDOR_ORDER_LINE, /Base Sepolia → RLUSD on XRPL EVM testnet first/);
+  assert.match(CORRIDOR_ORDER_LINE, /Arbitrum only after Base PASS/);
 });
 
 test("catalog presence alone never passes the Base corridor (fail-closed)", () => {
@@ -37,7 +41,7 @@ test("catalog presence alone never passes the Base corridor (fail-closed)", () =
   assert.equal(gate.catalogReady, true);
   assert.equal(gate.pass, false);
   assert.equal(gate.status, "FAIL-CLOSED");
-  assert.match(gate.reason, /No Buy/);
+  assert.match(gate.reason, /No Buy without a live Squid quote/);
   assert.match(gate.reason, /Live USDC → RLUSD quote/);
   assert.equal(gate.deferred.length, 3);
 });
