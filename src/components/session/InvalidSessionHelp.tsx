@@ -48,13 +48,13 @@ export function InvalidSessionHelp({ sessionId }: Props) {
         style={{ maxWidth: 560, margin: "0 auto", width: "100%" }}
       >
         <div className="g-sheet">
-          <div className="g-status">Not a real session</div>
+          <div className="g-status">Not a signing request</div>
           <h1 className="g-display" style={{ fontSize: 28 }}>
-            This isn’t a real session link
+            This isn’t a signing link
           </h1>
           <p className="g-sub" style={{ marginTop: 12, lineHeight: 1.5 }}>
-            Ask GRAAV for a Buy/Swap URL or open Trade. Placeholder links like{" "}
-            <span className="g-mono">/s/{"{id}"}</span> are not signed sessions.
+            Ask GRAAV on X for a new signing link, or open Trade to sign in-app. Placeholder
+            links like <span className="g-mono">/s/{"{id}"}</span> cannot be signed.
           </p>
           {shown && (
             <p className="g-hint" style={{ marginTop: 10 }}>
