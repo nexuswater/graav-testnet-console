@@ -701,7 +701,7 @@ export function TradeTab({
         <div className="g-alert" style={{ marginBottom: 16 }}>
           RLUSD Coin V1 factory is pinned. New launches stay unavailable until a signed createCoin binds a coin and curve.
           <span className="flex flex-wrap gap-2" style={{ marginTop: 10 }}>
-            <Link href="/launch" className="g-btn sm" style={{ textDecoration: "none" }}>Launch coin</Link>
+            <Link href="/launch" className="g-btn sm" style={{ textDecoration: "none" }}>Launch on X</Link>
             <Link href="/" className="g-btn sm" style={{ textDecoration: "none" }}>Markets</Link>
           </span>
         </div>

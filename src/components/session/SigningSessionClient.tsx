@@ -58,6 +58,8 @@ import {
 import { TokenPfp } from "@/components/pfp/TokenPfp";
 import { copyToClipboard } from "@/lib/metaMaskDeepLink";
 import { asStatusText } from "@/lib/statusMsg";
+import { SeedMarketField } from "@/components/launch/SeedMarketField";
+import { GRAAV_X_HANDLE_AT, seedAmountDisplay } from "@/lib/xLaunchComposer";
 
 type Props = {
   initial: PublicSessionView;
@@ -79,6 +81,7 @@ export function SigningSessionClient({ initial }: Props) {
   const walletConnectConnector = connectors.find((c) => c.id === "walletConnect" || c.name.toLowerCase().includes("walletconnect"));
 
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
+  const [seedAmount, setSeedAmount] = useState("");
   const [blockReason, setBlockReason] = useState<string | null>(null);
   const [tokenAddr, setTokenAddr] = useState<Address | null>(
     (payload?.token as Address) || null
@@ -529,7 +532,7 @@ export function SigningSessionClient({ initial }: Props) {
       (payload.createSymbol ? payload.createSymbol : null) ||
       "token";
     if (payload.action === "create") {
-      return `Create ${payload.createName || sym}`;
+      return `Launch $${sym}`;
     }
     if (payload.action === "buy") {
       return `Buy ${payload.amount || "?"} XRP of ${sym}`;
@@ -644,10 +647,14 @@ export function SigningSessionClient({ initial }: Props) {
             {actionSummary}
           </h1>
           <p className="g-hint" style={{ marginTop: 8 }}>
-            XRPL EVM Testnet · you sign · we never hold the key
+            {payload?.action === "create"
+              ? `After the X post · ${GRAAV_X_HANDLE_AT} · signature or nothing via /s`
+              : "XRPL EVM Testnet · you sign · we never hold the key"}
           </p>
           <p className="g-sub" style={{ marginTop: 6 }}>
-            Amount {amountDisplay}
+            {payload?.action === "create"
+              ? `Seed ${seedAmountDisplay(seedAmount)} · quoted in Test RLUSD`
+              : `Amount ${amountDisplay}`}
             {" · "}
             {XRPL_EVM_TESTNET_ID} ({XRPL_EVM_TESTNET_HEX})
           </p>
@@ -755,6 +762,15 @@ export function SigningSessionClient({ initial }: Props) {
                     <span>Token image</span>
                     <span className="g-mono" style={{ maxWidth: "65%", overflowWrap: "anywhere", textAlign: "right" }}>{payload.metadataURI || "—"}</span>
                   </div>
+                  <div className="g-kv">
+                    <span>Seed (optional)</span>
+                    <span>{seedAmountDisplay(seedAmount)}</span>
+                  </div>
+                  <SeedMarketField value={seedAmount} onChange={setSeedAmount} id="session-seed" />
+                  <p className="g-hint">
+                    Chat ≠ authorization. Signature or nothing. Optional seed is
+                    review-only on this desk — Sign does not spend it.
+                  </p>
                 </>
               )}
             </div>
@@ -819,7 +835,9 @@ export function SigningSessionClient({ initial }: Props) {
                 ? "Already signed"
                 : isWriting || isConfirming
                   ? "Confirm in wallet…"
-                  : "Sign in wallet"}
+                  : payload?.action === "create"
+                    ? "Sign launch in wallet"
+                    : "Sign in wallet"}
             </button>
           )}
 

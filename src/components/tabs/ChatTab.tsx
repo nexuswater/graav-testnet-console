@@ -72,7 +72,9 @@ export function ChatTab({ onHandoff }: Props) {
       role: "bot",
       text: reply,
       handoff: parsed.handoff,
-      href: parsed.kind === "launch" ? "/launch" : undefined,
+      href: parsed.kind === "launch"
+        ? `/launch${parsed.handoff?.prefill?.createSymbol ? `?ticker=${encodeURIComponent(parsed.handoff.prefill.createSymbol)}` : ""}`
+        : undefined,
       sessionUrl,
     };
     setMsgs((m) => [...m, userMsg, botMsg]);

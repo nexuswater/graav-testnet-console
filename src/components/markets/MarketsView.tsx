@@ -71,10 +71,10 @@ export function MarketsView() {
       <section className="g-hero">
         <div>
           <h1 className="g-hero-title">Ideas become markets.</h1>
-          <p className="g-hero-sub">Discover coins born from posts.</p>
+          <p className="g-hero-sub">Coins start as posts on X — quote-RT or post, then sign in wallet.</p>
         </div>
         <Link href="/launch" className="g-cta g-cta-inline">
-          Launch coin →
+          Launch on X →
         </Link>
       </section>
 
@@ -93,8 +93,8 @@ export function MarketsView() {
             className="g-search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search coins or paste an X post"
-            aria-label="Search coins or paste an X post"
+            placeholder="Search coins"
+            aria-label="Search coins"
           />
         </label>
         <div className="g-filters" role="tablist" aria-label="Market filters">
@@ -146,10 +146,10 @@ export function MarketsView() {
       </div>
 
       <footer className="g-launch-progress">
-        <span>Create from a post</span>
+        <span>Launch on X</span>
         <ol>
-          <li>Choose a post</li>
-          <li>Review details</li>
+          <li>Post or quote-RT</li>
+          <li>Open /s · optional seed</li>
           <li>Sign in wallet</li>
         </ol>
       </footer>

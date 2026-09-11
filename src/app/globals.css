@@ -352,6 +352,19 @@ a.link-x:hover {
   border: 0;
   cursor: pointer;
   transition: opacity 160ms ease-out;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+a.g-cta[aria-disabled="true"] {
+  background: var(--surface);
+  color: var(--secondary);
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .g-cta-inline {
@@ -1521,6 +1534,72 @@ details.g-details summary {
 }
 
 /* Launch Step 1: captions stay above controls on ~360–430px phones */
+.g-launch-x {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin-top: 4px;
+}
+.g-launch-x-kicker {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--secondary);
+  font-weight: 650;
+}
+.g-launch-path {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding: 0;
+  margin: 12px 0 4px;
+  list-style: none;
+  color: var(--secondary);
+  font-size: 13px;
+}
+.g-launch-path li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.g-launch-path li::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 99px;
+  background: var(--text);
+}
+.g-launch-draft {
+  margin: 12px 0 0;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--input);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.g-launch-cta-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0 12px;
+}
+.g-launch-cta-row .g-cta {
+  margin-top: 12px;
+}
+.g-launch-advanced {
+  margin-top: 28px;
+}
+.g-launch-advanced summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  color: var(--secondary);
+  font-size: 13px;
+}
 .g-launch-form {
   display: flex;
   flex-direction: column;
@@ -1633,6 +1712,9 @@ details.g-details summary {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+  }
+  .g-launch-cta-row {
+    grid-template-columns: 1fr 1fr;
   }
 }
 

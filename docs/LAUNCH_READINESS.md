@@ -18,7 +18,7 @@ Reviewable RC only. Mainnet CLOSED. M4 HOLD. Do not deploy, Production-push, bro
 
 - **Markets** — searchable rows, quote assets, honest availability. Unavailable launches use a neutral status.
 - **Trade** — pay / receive, fee, slippage, min received, distinct review → approve → sign. Review disabled until inputs and integration prerequisites pass.
-- **Launch** — Details → Review → Sign. `createCoin(CreateParams, bytes)` only. Authorization is never fabricated.
+- **Launch** — Post or quote-RT on X creates the Moment; GRAAV hands off a `/s` link to review (optional Test RLUSD seed) and wallet-sign. Paste-link is a testnet fallback, not the lead. `createCoin(CreateParams, bytes)` only on the fallback rail. Authorization is never fabricated. No public X write.
 - **Portfolio** — readable holdings. Unknown reads stay unknown (not zero).
 - **Chat** — concise intent previews. Wallet signing is a separate step.
 - **Funding** — simple unavailability. Probe diagnostics behind Details.

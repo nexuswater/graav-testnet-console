@@ -201,8 +201,8 @@ export function parseIntent(raw: string): IntentPlan {
     return plan;
   }
 
-  // LAUNCH / CREATE <ticker> — mint create /s (M2 factory). Chat ≠ authorization.
-  // X post stays fail-closed until FEATURE + keys + Director green (dryRun default).
+  // LAUNCH / CREATE <ticker> — hand off to X-first Launch + /s sign.
+  // Chat ≠ authorization. X write stays fail-closed (FEATURE_PUBLIC_X_WRITE).
   const launch = text.match(/^(?:LAUNCH|CREATE)\s+(\S+)\s*$/i);
   if (launch) {
     const tickerRaw = launch[1].replace(/^\$/, "");
@@ -217,10 +217,10 @@ export function parseIntent(raw: string): IntentPlan {
     }
     return {
       kind: "launch",
-      reply: `Launch ${ticker}. Open Launch to review details. Chat never authorizes createCoin.`,
+      reply: `Launch $${ticker} on X (post or quote-RT). Chat never authorizes. After the post, open the /s link to review, optionally seed Test RLUSD, and sign in wallet.`,
       handoff: {
         tab: "Markets",
-        label: `Open Launch · ${ticker}`,
+        label: `Launch $${ticker} on X`,
         prefill: {
           action: "launch",
           createName: ticker,
