@@ -95,8 +95,7 @@ export function ConnectX({ compact }: Props) {
           </button>
         </div>
         <p className="g-micro">
-          Identity bound · no tweet/DM scopes · X login ≠ trade authorization ·
-          chat ≠ authorization
+          Identity linked. GRAAV never posts for you and never authorizes a trade.
         </p>
       </div>
     );
@@ -112,7 +111,7 @@ export function ConnectX({ compact }: Props) {
         style={compact ? undefined : { borderColor: "var(--x)", color: "var(--x)" }}
       >
         <XMark />
-        {compact ? "X" : hint.configured ? "Sign in with X" : "Connect X"}
+        {compact ? "X" : "Sign in with X"}
       </button>
       {(notice || !hint.configured) && (
         <p
@@ -125,10 +124,9 @@ export function ConnectX({ compact }: Props) {
           {notice || hint.message}
         </p>
       )}
-      {!compact && (
+      {!compact && hint.configured && !notice && (
         <p className="g-micro">
-          Identity bind only · no tweet/DM write scopes · X login ≠ trade
-          authorization · chat ≠ authorization
+          Identity only. GRAAV never posts for you and never authorizes a trade.
         </p>
       )}
     </div>

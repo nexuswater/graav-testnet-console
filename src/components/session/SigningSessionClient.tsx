@@ -23,9 +23,7 @@ import {
   type Hex,
 } from "viem";
 import {
-  ATTRIBUTION_V1_FACTORY_ADDRESS,
   FACTORY_ADDRESS,
-  M22_FACTORY_ADDRESS,
   TEST_DEX_V2_ADDRESS,
   T589_TOKEN_ADDRESS,
   GSWAP_TOKEN_ADDRESS,
@@ -591,23 +589,14 @@ export function SigningSessionClient({ initial }: Props) {
       </header>
 
       <p className="g-micro-warn px-4 pt-3">
-        chat ≠ authorization · emit URL never auto-tx · server holds no key ·{" "}
-        <a
-          href={FAUCET_URL}
-          target="_blank"
-          rel="noreferrer"
-          className="underline"
-          style={{ color: "var(--accent)", fontWeight: 650 }}
-        >
-          faucet.xrplevm.org
-        </a>
+        Nothing is sent until you sign in your wallet. GRAAV never holds your key.
       </p>
 
       <main className="g-main" style={{ maxWidth: 560, margin: "0 auto", width: "100%" }}>
         <div className="xl" style={{ fontSize: 13, color: "var(--x)", marginBottom: 4 }}>
-          From X / Chat
+          Signing request
           {expiresIn && expiresIn !== "expired"
-            ? ` · expires ${expiresIn}`
+            ? ` · expires in ${expiresIn}`
             : view.status === "expired" || expiresIn === "expired"
               ? " · expired"
               : ""}
@@ -623,7 +612,7 @@ export function SigningSessionClient({ initial }: Props) {
                   ? "Invalid"
                   : blockReason
                     ? "Blocked"
-                    : "Grok asked you to confirm"}
+                    : "Review and sign"}
           </div>
 
           {(payload?.action === "create" || payload?.action === "buy") &&
@@ -649,24 +638,21 @@ export function SigningSessionClient({ initial }: Props) {
           </h1>
           <p className="g-hint" style={{ marginTop: 8 }}>
             {payload?.action === "create"
-              ? `After the X post, repost, or DM · ${GRAAV_X_HANDLE_AT} · signature or nothing via /s`
-              : "XRPL EVM Testnet · you sign · we never hold the key"}
+              ? `Requested from your post, repost, or DM to ${GRAAV_X_HANDLE_AT}. You sign in your wallet.`
+              : "You sign in your wallet. GRAAV never holds your key."}
           </p>
           <p className="g-sub" style={{ marginTop: 6 }}>
             {payload?.action === "create"
-              ? `Seed ${seedAmountDisplay(seedAmount)} · quoted in Test RLUSD`
+              ? `Seed ${seedAmountDisplay(seedAmount)} · quoted in RLUSD`
               : `Amount ${amountDisplay}`}
-            {" · "}
-            {XRPL_EVM_TESTNET_ID} ({XRPL_EVM_TESTNET_HEX})
+            {" · XRPL EVM "}
+            {XRPL_EVM_TESTNET_ID}
           </p>
           <p className="g-micro" style={{ marginTop: 4 }}>
             Expires{" "}
             {expiresIn && expiresIn !== "expired"
               ? `in ${expiresIn}`
               : expiryLabel}
-          </p>
-          <p className="g-micro" style={{ marginTop: 8 }}>
-            Dual-factory: gSWAP→M2.2 · g589/T589-style→M2
           </p>
 
           {payload && (
@@ -769,8 +755,7 @@ export function SigningSessionClient({ initial }: Props) {
                   </div>
                   <SeedMarketField value={seedAmount} onChange={setSeedAmount} id="session-seed" />
                   <p className="g-hint">
-                    Chat ≠ authorization. Signature or nothing. Optional seed is
-                    review-only on this desk — Sign does not spend it.
+                    The seed is recorded for review; this signature creates the coin and does not spend it.
                   </p>
                 </>
               )}
@@ -791,12 +776,12 @@ export function SigningSessionClient({ initial }: Props) {
 
           {!onCorrectChain && isConnected && (
             <div className="g-alert bad" style={{ marginTop: 16 }}>
-              <strong>Wrong network</strong> (wallet {chainId || "—"}). In your wallet switch to{" "}
-              <strong>XRPL EVM Testnet</strong>{" "}
+              <strong>Wrong network.</strong> Switch your wallet to{" "}
+              <strong>XRPL EVM</strong>{" "}
               <span className="g-mono">
                 {XRPL_EVM_TESTNET_ID} ({XRPL_EVM_TESTNET_HEX})
               </span>{" "}
-              before Sign.
+              before signing.
             </div>
           )}
 
@@ -821,9 +806,7 @@ export function SigningSessionClient({ initial }: Props) {
               disabled={isSwitching}
               className="g-cta danger"
             >
-              {isSwitching
-                ? "Switching…"
-                : `Switch to XRPL EVM Testnet · ${XRPL_EVM_TESTNET_ID} (${XRPL_EVM_TESTNET_HEX})`}
+              {isSwitching ? "Switching…" : "Switch to XRPL EVM"}
             </button>
           ) : (
             <button
@@ -842,8 +825,8 @@ export function SigningSessionClient({ initial }: Props) {
             </button>
           )}
 
-          <div className="g-alert" style={{ marginTop: 12 }}>
-            Need testnet XRP / gas to sign?{" "}
+          <p className="g-hint">
+            Need XRP for gas?{" "}
             <a
               href={FAUCET_URL}
               target="_blank"
@@ -851,13 +834,13 @@ export function SigningSessionClient({ initial }: Props) {
               className="link-x"
               style={{ fontWeight: 650 }}
             >
-              faucet.xrplevm.org →
+              Open faucet →
             </a>
-          </div>
+          </p>
           <Link href="/" className="g-cta ghost" style={{ display: "block", textAlign: "center", textDecoration: "none" }}>
             Reject
           </Link>
-          <p className="g-hint">Wrong network or expired session cannot send.</p>
+          <p className="g-hint">An expired request or a wallet on another network cannot send.</p>
         </div>
 
         {(statusMsg || txHash || view.txHash || writeError) && (
@@ -888,12 +871,8 @@ export function SigningSessionClient({ initial }: Props) {
 
         <p className="g-micro" style={{ marginTop: 24, textAlign: "center" }}>
           <Link href="/" style={{ color: "var(--muted)" }}>
-            ← Back to console
+            ← Back to GRAAV
           </Link>
-          {" · "}
-          M2 {shortAddr(FACTORY_ADDRESS)} / M2.2 {shortAddr(M22_FACTORY_ADDRESS)} · V2{" "}
-          {shortAddr(TEST_DEX_V2_ADDRESS)} · Attribution V1 tip{" "}
-          {shortAddr(ATTRIBUTION_V1_FACTORY_ADDRESS)}
         </p>
       </main>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import Link from "next/link";
 import { useAccount } from "wagmi";
 import { useRouter } from "next/navigation";
 import { AppChrome } from "@/components/AppChrome";
@@ -108,7 +109,9 @@ export default function NewMarketPage() {
       <main className="g-main" style={{ maxWidth: 560, margin: "0 auto", width: "100%" }}>
         <h1 className="g-display" style={{ fontSize: 28 }}>New market</h1>
         <p className="g-sub" style={{ marginTop: 8 }}>
-          One file is the token image on GRAAV. Chat ≠ authorization — you sign CREATE in wallet.
+          In-app fallback for creating an XRP-quoted market. Daily launches happen from a post,
+          repost, or DM on X — see <Link href="/launch" className="link-x">Launch</Link>. You sign the
+          create in your wallet.
         </p>
 
         <div className="g-sheet">
@@ -158,7 +161,7 @@ export default function NewMarketPage() {
                 />
               ) : (
                 <div className="g-sub" style={{ marginBottom: 8 }}>
-                  Drop or click to upload · or generate Deep Space default
+                  Drop or click to upload, or generate the default mark
                 </div>
               )}
               <span style={{ color: "var(--x)", fontWeight: 650, fontSize: 14 }}>
@@ -166,7 +169,7 @@ export default function NewMarketPage() {
               </span>
             </label>
             <p className="g-hint">
-              X web intent cannot attach the file — download below and attach manually when you Post on X.
+              X cannot receive the file from a link — download it below and attach it when you post.
             </p>
           </div>
 
@@ -215,14 +218,14 @@ export default function NewMarketPage() {
                 )}
               </div>
               <p className="g-hint" style={{ marginTop: 8 }}>
-                Web intent cannot send the file — download first, then attach on X.
+                Download first, then attach it to your post on X.
               </p>
             </div>
           )}
 
           {!isConnected && (
             <div className="g-alert warn" style={{ marginTop: 16 }}>
-              Connect wallet first — CREATE requires your signature. Chat ≠ auth.
+              Connect your wallet first — creating a market requires your signature.
             </div>
           )}
 
@@ -238,10 +241,10 @@ export default function NewMarketPage() {
             disabled={busy || !name.trim() || !ticker}
             onClick={() => void handleCreateSession()}
           >
-            {busy ? "Preparing…" : "Create · Sign in wallet"}
+            {busy ? "Preparing…" : "Review and sign"}
           </button>
           <p className="g-hint">
-            Mints a signing session via allowlisted M2 factory. Origin post never becomes the token image.
+            Opens a signing session for the create. The origin post is recorded; it never becomes the token image.
           </p>
           {sessionUrl && (
             <p className="g-micro" style={{ marginTop: 8, wordBreak: "break-all" }}>

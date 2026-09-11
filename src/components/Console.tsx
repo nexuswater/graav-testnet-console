@@ -91,7 +91,7 @@ export function Console() {
         )}
         {tab === "X" && (
           <main className="g-main">
-            <XTab onGoTrade={() => goTrade()} />
+            <XTab />
           </main>
         )}
       </div>

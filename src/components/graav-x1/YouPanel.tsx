@@ -7,7 +7,7 @@ import { api,ensureChain,requireWallet,short,userFacingError,type WalletProps } 
 import { address,need,safeAddress } from './web-validation';
 import { XMark } from '@/components/XMark';
 import { XrplMark } from '@/components/XrplMark';
-import { ATTRIBUTION_V1_RULE, KERNEL_LAB_LINE } from '@/lib/xPrimary';
+import { ATTRIBUTION_V1_RULE } from '@/lib/xPrimary';
 
 type Status={x:{xUserId:string;handle:string|null};binding:{id:string;wallet:string;boundAt:number}|null};
 type XMe={bound:boolean;id?:string;username?:string};
@@ -49,7 +49,7 @@ export function YouPanel(props:WalletProps & {onXLogin():void}) {
   const canSign=Boolean(status && props.connectedWallet && !busy);
   const isCurrent=Boolean(status?.binding && props.connectedWallet && safeAddress(status.binding.wallet)!==null && safeAddress(status.binding.wallet)===safeAddress(props.connectedWallet));
   return <main className="graav-x1">
-    <p className="eyebrow">GRAAV / YOU</p><h1>Your rewards identity</h1>
+    <p className="eyebrow">ACCOUNT</p><h1>Your rewards identity</h1>
     <div className="x1-card">
       <div className="x1-row"><span style={{display:'inline-flex',alignItems:'center',gap:8}}><XMark size={18} /> X</span><strong>{status ? `@${status.x.handle||status.x.xUserId}`:'Not signed in'}</strong><span>{status?.binding?'Bound':status?'Logged in':''}</span></div>
       <div className="x1-row"><span style={{display:'inline-flex',alignItems:'center',gap:8}}><XrplMark size={22} /> Wallet</span><strong>{props.connectedWallet?short(props.connectedWallet):'Not connected'}</strong><span>{props.connectedWallet?'Connected':''}</span></div>
@@ -64,10 +64,10 @@ export function YouPanel(props:WalletProps & {onXLogin():void}) {
     <p role="alert">{error}</p>
     <section className="x1-card"><h2>RT / share attribution V1</h2>
       <p>{ATTRIBUTION_V1_RULE}</p>
-      <p className="muted">Rewards are earned on X — posts, reposts, and DMs. This bind is identity only and never signs a trade. {KERNEL_LAB_LINE}</p>
+      <p className="muted">Rewards are earned on X — posts, reposts, and DMs. This link is identity only and never signs a trade.</p>
     </section>
     {rewards && <section className="x1-card"><h2>Share rewards</h2><strong>{formatEther(BigInt(rewards.balanceWei))} XRP</strong>
-      <p className="muted">Testnet off-chain credit. No XRP payout has been sent.</p>
+      <p className="muted">Off-chain credit. No XRP payout has been sent yet.</p>
       {!rewards.entries.length && <p>Credits appear after an eligible shared BUY is verified.</p>}
       <ul>{rewards.entries.map(e=><li key={e.id}>{e.kind==='REVERSAL'?'Reversal':'Credit'} · {formatEther(BigInt(e.amount_wei))} XRP · {short(e.distributor_wallet)} · <a href={e.explorerUrl} target="_blank" rel="noreferrer">Buy transaction</a></li>)}</ul>
     </section>}

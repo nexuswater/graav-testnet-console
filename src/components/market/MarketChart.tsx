@@ -88,7 +88,7 @@ export function MarketChart({ ticker, priceXrp = null }: Props) {
         width="100%"
         height={h}
         role="img"
-        aria-label={`$${ticker} ${range} chart (illustrative testnet)`}
+        aria-label={`$${ticker} ${range} chart (illustrative)`}
       >
         <polyline
           fill="none"
@@ -100,7 +100,7 @@ export function MarketChart({ ticker, priceXrp = null }: Props) {
         />
       </svg>
       <p className="g-hint" style={{ marginTop: 4, marginBottom: 0 }}>
-        Illustrative · live OHLC feed not wired yet · timeframe switches work
+        Illustrative shape anchored to the live price — trade history is not indexed yet.
       </p>
     </div>
   );
