@@ -4,7 +4,15 @@ Branch `cursor/mainnet-polish-pass-1-c034` on main `9ff0764` (#6 cron coverage, 
 
 Locks verified on every surface: one TESTNET cue (header pill only) · mock RLUSD `0x04B9…913F` displayed as **RLUSD** (never mRLUSD / Test RLUSD) · no g589 / `$MOMENT` promote (g589 appears only as a listed row / chip, MOMENT only as a not-launched row) · every X CTA opens x.com (post / quote / DM compose) and nothing posts, sends, or spends · Base-first fail-closed Funding preserved from #4/#5/#6 · X-primary Launch preserved from #4.
 
-Gates: `npm run check` ✓ · `npm run lint` ✓ (3 pre-existing `no-img-element`) · `npm test` ✓ 89/89 · `npm run build` ✓ (pre-existing `pino-pretty` warning from WalletConnect).
+Gates: `npm run check` ✓ · `npm run lint` ✓ (3 pre-existing `no-img-element`) · `npm test` ✓ 91/91 · `npm run build` ✓ (pre-existing `pino-pretty` warning from WalletConnect).
+
+## RLUSD pin (Exec, 2026-09-11)
+
+Mock RLUSD is live on XRPL EVM testnet `1449000` at `0x04B9eF8Fa40E6336e8404a18cC4F6a5a852e913F`. Read-only verification from this pass (`eth_getCode` / `eth_call`): 1,904 bytes of code · `name()` = `MockRLUSD` · `symbol()` = `mRLUSD` · `decimals()` = 18 · `totalSupply()` = 1,000,000,000.
+
+- The console never renders the on-chain symbol for the quote: every label is the constant `RLUSD_V1.quoteSymbol` = **RLUSD**. `tests/rlusd-display.test.ts` locks the pinned address, decimals and symbol, and fails if any `src/components` or `src/app` file contains `mRLUSD`, `Test RLUSD` or `MockRLUSD`.
+- Portfolio reads `balanceOf` on the pinned token and shows it as **RLUSD** (with a "Track RLUSD in your wallet" action that registers the token under the RLUSD label). `/m/<id>` RLUSD panels quote in RLUSD.
+- Cross-chain stays as pinned: the Base Sepolia corridor reads **FAIL / fail-closed** (0 of 7 gates at capture time); Buy is disabled with a visible reason and no route is invented.
 
 Captures: `/opt/cursor/artifacts/screenshots/polish1-*.png` — dark + light × 390 / 1440 for every surface below, scrolled mobile views (sticky header + nav), `/s/{id}` for a minted session, and `polish1-state-*` for the empty / error / edge states listed here.
 

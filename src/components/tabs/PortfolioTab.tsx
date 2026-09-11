@@ -7,10 +7,13 @@ import {
   useBalance,
   useChainId,
   usePublicClient,
+  useReadContract,
   useSwitchChain,
 } from "wagmi";
 import type { Address } from "viem";
 import { formatTokenAmount } from "@/lib/formatNumber";
+import { RLUSD_V1 } from "@/lib/rlusd-v1/config";
+import { rlusdErc20Abi } from "@/lib/rlusd-v1/contracts";
 import {
   FACTORY_ADDRESS,
   FAUCET_URL,
@@ -56,6 +59,22 @@ export function PortfolioTab({ setStatusMsg }: Props) {
     isFetching: nativeFetching,
   } = useBalance({
     address,
+    chainId: XRPL_EVM_TESTNET_ID,
+    query: { enabled: !!address },
+  });
+
+  // Quote balance from the pinned RLUSD token (displayed as RLUSD; the on-chain symbol is not used).
+  const quoteAddress = RLUSD_V1.quoteAddress as Address;
+  const {
+    data: rlusdBal,
+    isFetching: rlusdFetching,
+    isError: rlusdError,
+    refetch: refetchRlusd,
+  } = useReadContract({
+    address: quoteAddress,
+    abi: rlusdErc20Abi,
+    functionName: "balanceOf",
+    args: address ? [address] : undefined,
     chainId: XRPL_EVM_TESTNET_ID,
     query: { enabled: !!address },
   });
@@ -155,12 +174,13 @@ export function PortfolioTab({ setStatusMsg }: Props) {
       }
       setMarkets(next);
       void refetchNative();
+      void refetchRlusd();
     } catch (e) {
       setError(String(e));
     } finally {
       setLoading(false);
     }
-  }, [address, publicClient, refetchNative]);
+  }, [address, publicClient, refetchNative, refetchRlusd]);
 
   useEffect(() => {
     void refresh();
@@ -188,6 +208,12 @@ export function PortfolioTab({ setStatusMsg }: Props) {
     });
     if (!res.ok) setStatusMsg(res.error ?? "Your wallet declined to track this token.");
     else setStatusMsg(`Asked your wallet to track ${h.symbol} (${shortAddr(h.token)}).`);
+  };
+
+  const trackRlusd = async () => {
+    const res = await watchTokenAsset({ address: quoteAddress, symbol: RLUSD_V1.quoteSymbol, decimals: RLUSD_V1.quoteDecimals });
+    if (!res.ok) setStatusMsg(res.error ?? "Your wallet declined to track RLUSD.");
+    else setStatusMsg(`Asked your wallet to track RLUSD (${shortAddr(quoteAddress)}).`);
   };
 
   const withBalance = markets.filter((m) => m.balance !== null && m.balance > BigInt(0));
@@ -242,6 +268,20 @@ export function PortfolioTab({ setStatusMsg }: Props) {
           </span>
         </div>
         <div className="g-kv inline">
+          <span>RLUSD</span>
+          <span>
+            {!address
+              ? "—"
+              : rlusdBal !== undefined
+                ? `${formatTokenAmount(rlusdBal as bigint)} RLUSD`
+                : rlusdFetching
+                  ? "…"
+                  : rlusdError
+                    ? "Unknown"
+                    : "—"}
+          </span>
+        </div>
+        <div className="g-kv inline">
           <span>Coins held</span>
           <span>{address ? String(withBalance.length) : "—"}</span>
         </div>
@@ -255,6 +295,19 @@ export function PortfolioTab({ setStatusMsg }: Props) {
             <a href={FAUCET_URL} target="_blank" rel="noreferrer" className="link-x" style={{ fontWeight: 650 }}>
               Open faucet →
             </a>
+          </p>
+        )}
+        {address && (
+          <p className="g-hint">
+            RLUSD is the quote for new coins.{" "}
+            <button
+              type="button"
+              className="link-x"
+              style={{ background: "none", border: 0, padding: 0, cursor: "pointer", fontWeight: 650 }}
+              onClick={() => void trackRlusd()}
+            >
+              Track RLUSD in your wallet
+            </button>
           </p>
         )}
       </div>
