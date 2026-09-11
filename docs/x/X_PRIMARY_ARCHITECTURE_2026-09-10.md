@@ -47,6 +47,8 @@ The distributor **15** decays multi-hop, **depth 4**: **40 / 25 / 20 / 15 of tha
 
 Kernel lab **CODE READY**: `buyWithAttribution` selector `0xada7290b`, forge **20/20**. The console may reference it. **No tip redeploy in this PR. Do not invent tip addresses.**
 
+> **2026-09-11 addendum (Exec remint, separate PR):** the Attribution V1 tip was reminted as **stack2** (TEMPLATE_VERSION 2) and pinned from the Exec deployment record — Factory `0x3d826B1495d517bA9fa1721b7e0CDB0513461e68`, Guardian `0x8c78Ff…17e0`, AttributionVerifier `0xE04763…f322`, GraduationManager `0x5eD78c…0211`, Vault `0xF9E6E3…bc49`. Exec smoke PASS (createMarket + buy + buyWithAttribution attributed=true). Retired stack1 `0xc5D6…` is not pinned; Coin Soft Factory `0xd2b7…` is untouched. The 60 / 25 / 15 SoT copy above is unchanged. Record: `docs/x/ATTRIBUTION_V1_TIP_PIN_STACK2_1449000.md`.
+
 RT / share rewards are X-native. Bind on graav.xyz (account) is identity for those rewards — it never authorizes a trade.
 
 RLUSD **quote display** on Coin V1 remains Test RLUSD. Do not mix the 60/25/15 attribution SoT with the Coin V1 `40/35/20/5` quote-fee policy.

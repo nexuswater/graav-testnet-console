@@ -35,8 +35,11 @@ See `docs/TESTNET_REGISTRY.md` and Protocol SoT `S_SESSION_BIND_ABI.md`:
 | TestDex V2 | `0xA3f6a5c32842FF045B5Eb628141210466E39ED83` |
 | TestDex V1 (scar — never swap) | `0x60335a73798c4AA4fB6fB4b14C5ECa1263a4A874` |
 | gSWAP market → **must bind M2.2** | `0x7a4bCfF97A33F408F356B9B54fd5709dCA34078a` |
+| Attribution V1 Factory (tip · stack2 · TEMPLATE_VERSION 2) | `0x3d826B1495d517bA9fa1721b7e0CDB0513461e68` |
+| Coin Soft Factory (RLUSD lane, separate) | `0xd2b7C9D3df75b081c4CB01F711D31D06263EbA20` |
 
 - Dual-factory: reject gSWAP bound to M2 factory.
+- Attribution V1 tip (stack2): Guardian `0x8c78Ff4462dBDDEeB4eEDdc92e739101e82217e0` · AttributionVerifier `0xE04763CdC4779deBc2293bacd4F98d5D7B82f322` · GraduationManager `0x5eD78c0ac98aEA25dd3f123a5654Ac5531220211` · Vault `0xF9E6E3D238a7AA4304229aB527a3e4c2d131bc49`. `buyWithAttribution` `0xada7290b`, depth-4 hops. No market pinned yet → buy/sell fail closed. Retired stack1 `0xc5D6…` is never pinned. See `docs/x/ATTRIBUTION_V1_TIP_PIN_STACK2_1449000.md`.
 - Gate post-grad on `market.graduated()` (not Factory flag).
 - Swap requires `graduated()==true` and `tokenToLpId(token)!=0` on V2 only.
 
@@ -167,5 +170,6 @@ Intents match ChatTab allowlist (`buy $g589 0.1`, `buy $gSWAP 0.1`, …). Dual-f
 | Faucet | https://faucet.xrplevm.org |
 | M2 Factory | 0x72be5a300956f9dF0F4264a4211251dD17CA276B |
 | M2.2 Factory | 0x8f2D4E36ec0Ef2e55e0073830C22C8f863D89076 |
+| Attribution V1 Factory (tip · stack2) | 0x3d826B1495d517bA9fa1721b7e0CDB0513461e68 |
 
 T589 market is graduated on v1 scar (no swap). Use gSWAP (M2.2 + V2) for post-grad swap prove, or a fresh meme ticker for curve buy/sell.
