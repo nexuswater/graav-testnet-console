@@ -306,7 +306,8 @@ a.link-x:hover {
 }
 
 .g-field label:not(.g-upload),
-.g-field-label {
+.g-field-label,
+label.g-field > span:first-child {
   display: block;
   position: static;
   color: var(--muted);

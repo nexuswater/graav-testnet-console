@@ -15,7 +15,7 @@ import type { WalletProps } from "./wallet";
  * identity without a browser extension.
  */
 export function useConsoleBridge(): WalletProps & { onXLogin(): void } {
-  const { address } = useAccount();
+  const { address, chainId } = useAccount();
   const { connectAsync, connectors } = useConnect();
   const { signTypedDataAsync } = useSignTypedData();
   const { switchChainAsync } = useSwitchChain();
@@ -23,7 +23,8 @@ export function useConsoleBridge(): WalletProps & { onXLogin(): void } {
   const injected = connectors.find((c) => c.id === "io.metamask") ?? connectors.find((c) => c.id === "injected");
   const walletConnect = connectors.find((c) => c.id === "walletConnect" || c.name.toLowerCase().includes("walletconnect"));
 
-  async function switchToChain() {
+  async function switchToChain(current: number | undefined = chainId) {
+    if (current === XRPL_EVM_TESTNET_ID) return;
     try {
       await switchChainAsync({ chainId: XRPL_EVM_TESTNET_ID });
       return;
@@ -40,8 +41,8 @@ export function useConsoleBridge(): WalletProps & { onXLogin(): void } {
     async onConnect() {
       const connector = injected ?? walletConnect;
       if (!connector) throw new Error(WALLET_UNAVAILABLE_MSG);
-      await connectAsync({ connector });
-      await switchToChain();
+      const result = await connectAsync({ connector });
+      await switchToChain(result.chainId);
     },
     async signTypedData(wallet, typedData: TypedData) {
       // viem derives EIP712Domain from `domain`; the wire copy carries it only for raw providers.
@@ -57,7 +58,7 @@ export function useConsoleBridge(): WalletProps & { onXLogin(): void } {
       } as unknown as Parameters<typeof signTypedDataAsync>[0];
       return signTypedDataAsync(variables) as Promise<Hex>;
     },
-    switchToChain,
+    switchToChain: () => switchToChain(),
     onXLogin() {
       if (!hint.configured) throw new Error(hint.message);
       window.location.assign("/api/auth/x");

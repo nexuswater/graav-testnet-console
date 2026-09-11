@@ -105,13 +105,5 @@
     "sha256": "cb5b786f92b4798088bc96b7818f4179fc1874f2621a5167616af5761989c3d8",
     "generated": true,
     "updatedAt": "2026-09-11T07:14:14.257Z"
-  },
-  "HORMUZ": {
-    "ticker": "HORMUZ",
-    "pfpURI": "/pfps/HORMUZ.351e4ff98413.png",
-    "contentType": "image/png",
-    "sha256": "351e4ff9841327f00307745872acd1c230ff8721ecc12d40fdd79ee29774bdc3",
-    "generated": true,
-    "updatedAt": "2026-09-11T08:46:44.561Z"
   }
 }
