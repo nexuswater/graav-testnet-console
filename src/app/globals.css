@@ -1826,14 +1826,15 @@ details.g-details summary {
   }
 }
 
-.graav-x1 {
+/* x1.css loads after this file; the .g-app prefix out-ranks its bare selector. */
+.g-app .graav-x1 {
   color: var(--text);
   margin-top: 8px;
   padding-top: 16px;
   padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
 }
 @media (min-width: 768px) {
-  .graav-x1 {
+  .g-app .graav-x1 {
     margin-top: 16px;
     padding-bottom: 48px;
   }
