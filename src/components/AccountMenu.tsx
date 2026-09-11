@@ -56,7 +56,7 @@ export function AccountMenu({ onStatus }: Props) {
     isPending: isConnecting,
   } = useConnect();
   const { disconnect } = useDisconnect();
-  const { switchChain, isPending: isSwitching } = useSwitchChain();
+  const { switchChainAsync, isPending: isSwitching } = useSwitchChain();
   const onCorrectChain = chainId === XRPL_EVM_TESTNET_ID;
   const walletConnectConnector = connectors.find((c) => c.id === "walletConnect" || c.name.toLowerCase().includes("walletconnect"));
 
@@ -129,17 +129,17 @@ export function AccountMenu({ onStatus }: Props) {
     }
   };
 
+  // Connected wallet first (works for WalletConnect); injected add/switch as the fallback.
   const handleSwitch = async () => {
-    const res = await ensureXrplEvmTestnet();
-    if (!res.ok) {
-      setStatus(res.error ?? "Switch failed");
-      return;
-    }
+    setStatus(null);
     try {
-      switchChain?.({ chainId: XRPL_EVM_TESTNET_ID });
+      await switchChainAsync({ chainId: XRPL_EVM_TESTNET_ID });
+      return;
     } catch {
-      /* ensure already handled */
+      /* wallet may not know the chain yet — try the injected add-chain path */
     }
+    const res = await ensureXrplEvmTestnet();
+    if (!res.ok) setStatus(res.error ?? "Could not switch network.");
   };
 
   const onSignInX = () => {
@@ -255,7 +255,7 @@ export function AccountMenu({ onStatus }: Props) {
         onClick={onSignInX}
       >
         <XMark size={24} />
-        <span className="g-account-provider-label">Login to X</span>
+        <span className="g-account-provider-label">Sign in with X</span>
         <span className="g-account-chevron" aria-hidden="true">›</span>
         </button>
       )}

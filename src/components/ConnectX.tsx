@@ -108,7 +108,7 @@ export function ConnectX({ compact }: Props) {
         onClick={onClick}
         disabled={loadingMe && hint.configured}
         className={compact ? "g-btn g-wallet-pill" : "g-btn sm"}
-        style={compact ? undefined : { borderColor: "var(--x)", color: "var(--x)" }}
+        style={compact ? undefined : { display: "inline-flex", alignItems: "center", gap: 8 }}
       >
         <XMark />
         {compact ? "X" : "Sign in with X"}

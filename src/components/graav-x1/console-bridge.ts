@@ -14,12 +14,12 @@ export function useConsoleBridge(): WalletProps & { onXLogin(): void } {
     getProvider: getInjectedEth,
     async onConnect() {
       const eth = getInjectedEth();
-      if (!eth) throw new Error("No injected wallet found. Install MetaMask.");
+      if (!eth) throw new Error("Linking needs a browser wallet such as MetaMask. WalletConnect signing for the identity link is not wired yet.");
       await eth.request({ method: "eth_requestAccounts" });
       const connector = connectors.find((c) => c.id === "io.metamask") ?? connectors.find((c) => c.id === "injected") ?? connectors[0];
       if (connector) await connectAsync({ connector });
       const chain = await ensureXrplEvmTestnet();
-      if (!chain.ok) throw new Error(chain.error ?? "Switch to XRPL EVM Testnet.");
+      if (!chain.ok) throw new Error(chain.error ?? "Switch your wallet to XRPL EVM.");
     },
     onXLogin() {
       if (!hint.configured) throw new Error(hint.message);

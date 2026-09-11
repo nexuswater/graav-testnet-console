@@ -75,7 +75,7 @@ export function SigningSessionClient({ initial }: Props) {
     connectors,
     isPending: isConnecting,
   } = useConnect();
-  const { switchChain, isPending: isSwitching } = useSwitchChain();
+  const { switchChainAsync, isPending: isSwitching } = useSwitchChain();
   const onCorrectChain = chainId === XRPL_EVM_TESTNET_ID;
   const walletConnectConnector = connectors.find((c) => c.id === "walletConnect" || c.name.toLowerCase().includes("walletconnect"));
 
@@ -291,19 +291,16 @@ export function SigningSessionClient({ initial }: Props) {
   };
 
 
+  // Connected wallet first (works for WalletConnect); injected add/switch as the fallback.
   const handleSwitch = async () => {
-    const res = await ensureXrplEvmTestnet();
-    if (!res.ok) {
-      setStatusMsg(res.error ?? "Switch failed");
+    try {
+      await switchChainAsync({ chainId: XRPL_EVM_TESTNET_ID });
       return;
+    } catch {
+      /* wallet may not know the chain yet — try the injected add-chain path */
     }
-    if (switchChain) {
-      try {
-        switchChain({ chainId: XRPL_EVM_TESTNET_ID });
-      } catch {
-        /* ensure handled */
-      }
-    }
+    const res = await ensureXrplEvmTestnet();
+    if (!res.ok) setStatusMsg(res.error ?? "Could not switch network.");
   };
 
   const safeWrite = async (

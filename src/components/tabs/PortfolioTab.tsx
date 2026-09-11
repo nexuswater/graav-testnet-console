@@ -7,6 +7,7 @@ import {
   useBalance,
   useChainId,
   usePublicClient,
+  useSwitchChain,
 } from "wagmi";
 import type { Address } from "viem";
 import { formatTokenAmount } from "@/lib/formatNumber";
@@ -46,6 +47,7 @@ export function PortfolioTab({ setStatusMsg }: Props) {
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
   const publicClient = usePublicClient({ chainId: XRPL_EVM_TESTNET_ID });
+  const { switchChainAsync } = useSwitchChain();
   const onCorrectChain = chainId === XRPL_EVM_TESTNET_ID;
 
   const {
@@ -164,9 +166,17 @@ export function PortfolioTab({ setStatusMsg }: Props) {
     void refresh();
   }, [refresh]);
 
+  // Connected wallet first (works for WalletConnect); injected add/switch as the fallback.
   const addNetwork = async () => {
+    try {
+      await switchChainAsync({ chainId: XRPL_EVM_TESTNET_ID });
+      setStatusMsg("XRPL EVM is set in your wallet.");
+      return;
+    } catch {
+      /* wallet may not know the chain yet — try the injected add-chain path */
+    }
     const res = await ensureXrplEvmTestnet();
-    if (!res.ok) setStatusMsg(res.error ?? "Could not add the network.");
+    if (!res.ok) setStatusMsg(res.error ?? "Could not switch network.");
     else setStatusMsg("XRPL EVM is set in your wallet.");
   };
 

@@ -73,6 +73,7 @@ export function TradeTab({
   const [marketAddr, setMarketAddr] = useState<Address | null>(null);
   const [tokenAddr, setTokenAddr] = useState<Address | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadingMarket, setLoadingMarket] = useState<string | null>(null);
   const [buyXrp, setBuyXrp] = useState("0.1");
   const [sellAmount, setSellAmount] = useState("1");
   const [swapSide, setSwapSide] = useState<"xrpToToken" | "tokenToXrp">(
@@ -116,6 +117,7 @@ export function TradeTab({
         setLoadError("Enter a ticker or market address.");
         return;
       }
+      setLoadingMarket(q);
       try {
         if (isAddress(q)) {
           const asAddr = q as Address;
@@ -171,6 +173,8 @@ export function TradeTab({
         setStatusMsg(null);
       } catch (e) {
         setLoadError(String(e));
+      } finally {
+        setLoadingMarket(null);
       }
     },
     [publicClient, setStatusMsg]
@@ -655,9 +659,12 @@ export function TradeTab({
           ))}
         </div>
         {loadError && (
-          <p className="g-sub mt-2" style={{ color: "var(--bad)" }}>
+          <p className="g-sub mt-2" role="alert" style={{ color: "var(--bad)" }}>
             {loadError}
           </p>
+        )}
+        {!loadError && loadingMarket && !marketAddr && (
+          <p className="g-sub mt-2" aria-live="polite">Loading {loadingMarket}…</p>
         )}
       </section>
 
@@ -674,7 +681,11 @@ export function TradeTab({
                 {symbol || "…"}
               </h2>
               <div className="g-sub" style={{ marginTop: 6 }}>
-                {displayPrice !== null ? `${formatPrice(displayPrice)} XRP / token` : "Price unavailable"}
+                {displayPrice !== null
+                  ? `${formatPrice(displayPrice)} XRP / token`
+                  : graduated === undefined || (isGraduated && v2Reserves === undefined && !v2ReservesError)
+                    ? "Loading price…"
+                    : "Price unavailable"}
               </div>
             </div>
           </div>
