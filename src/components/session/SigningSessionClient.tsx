@@ -194,35 +194,29 @@ export function SigningSessionClient({ initial }: Props) {
       isGswapMarket(payload.market) &&
       !isM22Factory(payload.factory)
     ) {
-      setBlockReason("gSWAP market must bind M2.2 factory");
+      setBlockReason("This request pairs the market with the wrong factory. Ask GRAAV for a new link.");
       return;
     }
     // V1 never swap
     if (payload.action === "swap" && payload.dex && isV1Dex(payload.dex)) {
-      setBlockReason("Fail-closed: TestDex V1 is scar-only (never swap)");
+      setBlockReason("Swaps are not available on the legacy pool.");
       return;
     }
     // SWAP: require market.graduated()==true AND tokenToLpId(token)!=0 (SoT)
     if (payload.action === "swap") {
       if (graduated === false) {
-        setBlockReason(
-          "Fail-closed: swap requires market.graduated()==true (use buy/sell on curve)"
-        );
+        setBlockReason("This market has not graduated yet — use Buy or Sell on the curve instead.");
         return;
       }
       if (graduated === true && lpId !== null && lpId === BigInt(0)) {
-        setBlockReason(
-          "Fail-closed: tokenToLpId(token)==0 — no V2 pool (T589 scar or unwired)"
-        );
+        setBlockReason("No liquidity pool exists for this token yet, so it cannot be swapped.");
         return;
       }
       if (
         tokenAddr &&
         tokenAddr.toLowerCase() === T589_TOKEN_ADDRESS.toLowerCase()
       ) {
-        setBlockReason(
-          "Fail-closed: T589 on TestDex V1 scar — never swap"
-        );
+        setBlockReason("Swaps are not available for this legacy market.");
         return;
       }
     }
@@ -231,9 +225,7 @@ export function SigningSessionClient({ initial }: Props) {
       (payload.action === "buy" || payload.action === "sell") &&
       graduated === true
     ) {
-      setBlockReason(
-        "Fail-closed: market.graduated()==true — use action=swap on TestDex V2"
-      );
+      setBlockReason("This market graduated — ask GRAAV for a Swap link instead of Buy or Sell.");
       return;
     }
     setBlockReason(null);
@@ -334,7 +326,7 @@ export function SigningSessionClient({ initial }: Props) {
   const execute = async () => {
     if (!canSign || !payload) return;
     if (!onCorrectChain) {
-      setStatusMsg("Wrong chain — switch to 1449000 first");
+      setStatusMsg("Switch your wallet to XRPL EVM first.");
       return;
     }
     resetWrite();
@@ -344,7 +336,7 @@ export function SigningSessionClient({ initial }: Props) {
         const name = payload.createName || "";
         const symbol = payload.createSymbol || "";
         if (!name || !symbol) {
-          setStatusMsg("createName/createSymbol missing");
+          setStatusMsg("This request is missing the coin name or ticker.");
           return;
         }
         const fac = (factoryAddr || FACTORY_ADDRESS) as Address;
@@ -369,13 +361,13 @@ export function SigningSessionClient({ initial }: Props) {
       }
 
       if (!marketAddr) {
-        setStatusMsg("market required");
+        setStatusMsg("This request is missing the market.");
         return;
       }
 
       if (payload.action === "buy") {
         if (graduated === true) {
-          setStatusMsg("Buy blocked — graduated");
+          setStatusMsg("This market graduated — Buy is not available.");
           return;
         }
         const value = parseEther(payload.amount || "0");
@@ -394,11 +386,11 @@ export function SigningSessionClient({ initial }: Props) {
 
       if (payload.action === "sell") {
         if (graduated === true) {
-          setStatusMsg("Sell blocked — graduated");
+          setStatusMsg("This market graduated — Sell is not available.");
           return;
         }
         if (!tokenAddr || !address) {
-          setStatusMsg("token/wallet not ready");
+          setStatusMsg("Still reading the token and wallet — try again in a moment.");
           return;
         }
         const amount = parseEther(payload.amount || "0");
@@ -436,19 +428,19 @@ export function SigningSessionClient({ initial }: Props) {
 
       if (payload.action === "swap") {
         if (!tokenAddr || !dexAddr) {
-          setStatusMsg("token/dex not ready");
+          setStatusMsg("Still reading the token and DEX — try again in a moment.");
           return;
         }
         if (isV1Dex(dexAddr) || dexAddr.toLowerCase() !== TEST_DEX_V2_ADDRESS.toLowerCase()) {
-          setStatusMsg("Fail-closed: V1 never swap — V2 only");
+          setStatusMsg("Swaps run only on the current DEX.");
           return;
         }
         if (graduated !== true) {
-          setStatusMsg("Fail-closed: swap requires market.graduated()==true");
+          setStatusMsg("This market has not graduated yet.");
           return;
         }
         if (lpId === null || lpId === BigInt(0)) {
-          setStatusMsg("Fail-closed: tokenToLpId(token)==0");
+          setStatusMsg("No liquidity pool for this token yet.");
           return;
         }
         const amount = parseEther(payload.amount || "0");
@@ -684,29 +676,25 @@ export function SigningSessionClient({ initial }: Props) {
                 </span>
               </div>
               <div className="g-kv">
-                <span>minOut</span>
+                <span>Minimum received</span>
                 <span>{payload.minOut || "0"}</span>
               </div>
               <div className="g-kv">
                 <span>Chain</span>
                 <span className="g-mono">
-                  {payload.chainId} ({XRPL_EVM_TESTNET_HEX}) locked
+                  XRPL EVM {payload.chainId} ({XRPL_EVM_TESTNET_HEX})
                 </span>
               </div>
               {graduated != null && (
                 <div className="g-kv">
-                  <span>graduated()</span>
-                  <span style={{ color: graduated ? "var(--warn)" : "var(--good)" }}>
-                    {String(graduated)}
-                  </span>
+                  <span>Graduated</span>
+                  <span>{graduated ? "yes" : "no"}</span>
                 </div>
               )}
               {payload.action === "swap" && lpId !== null && (
                 <div className="g-kv">
-                  <span>tokenToLpId</span>
-                  <span style={{ color: lpId === BigInt(0) ? "var(--bad)" : "var(--text)" }}>
-                    {lpId === BigInt(0) ? "0 (no pool)" : String(lpId)}
-                  </span>
+                  <span>Liquidity pool</span>
+                  <span>{lpId === BigInt(0) ? "none" : `#${String(lpId)}`}</span>
                 </div>
               )}
               {payload.action === "create" && (
