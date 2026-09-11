@@ -89,7 +89,7 @@ export function ChatTab({ onHandoff }: Props) {
         };
         if (res.ok && data.url) {
           sessionUrl = data.url;
-          reply += `\n\nSigning link: ${data.url}`;
+          reply += "\n\nYour signing link is ready — open it and sign in your wallet.";
         } else {
           reply += `\n\nCouldn't create a signing link (${data.error || res.status}). Use Trade instead.`;
         }

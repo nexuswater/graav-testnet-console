@@ -783,7 +783,7 @@ export function TradeTab({
                 </button>
               </div>
               <p className="g-hint">
-                Approved: {formatTokenAmount(allowance)} {symbol}
+                Approved: {allowance === undefined ? "—" : `${formatTokenAmount(allowance)} ${symbol}`}
               </p>
             </>
           )}

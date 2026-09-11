@@ -651,7 +651,7 @@ export function SigningSessionClient({ initial }: Props) {
             <div style={{ marginTop: 20 }}>
               <div className="g-kv">
                 <span>Action</span>
-                <span>{payload.action}</span>
+                <span style={{ textTransform: "capitalize" }}>{payload.action}</span>
               </div>
               <div className="g-kv">
                 <span>Factory</span>
