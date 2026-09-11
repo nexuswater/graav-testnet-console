@@ -219,7 +219,15 @@ export function buildCapabilityMatrix(opts?: {
       label: "X bot reply-session (mention → /s)",
       status: "SCAFFOLD",
       detail:
-        "POST /api/x/reply-session parses intent + mints /s; posts only when FEATURE_PUBLIC_X_WRITE=true AND product token AND dryRun:false. Default fail-closed.",
+        "POST /api/x/reply-session parses intent + mints /s; posts only when FEATURE_PUBLIC_X_WRITE=true AND product token AND dryRun:false AND the /s rail is wallet-signable. Default fail-closed.",
+    },
+    {
+      id: "cron_dry_run",
+      label: "Cron x-auto-reply dry-run (buy / sell / create / MOMENT)",
+      status: "SCAFFOLD",
+      detail: write.ok
+        ? "Write gate open: cron posts READY rows only (buy/sell). create stays SOFT_READY (dry-run mint, no post) until the /s Coin V1 sign rail lands; MOMENT BLOCKED until the first Moment market."
+        : "Write CLOSED → cron auto dry-runs: reads mentions, plans + mints /s (no claim, no post). ?dryRun=1 forces it; ?fixtures=1 runs the canonical matrix without X keys. GET /api/x/coverage shows the matrix.",
     },
     {
       id: "write",
@@ -357,6 +365,9 @@ export type XMention = {
   text: string;
   author_id?: string;
   created_at?: string;
+  conversation_id?: string;
+  /** quoted / replied_to / retweeted — drives the soft-ready originTweetId bind. */
+  referenced_tweets?: { type?: string; id?: string }[];
 };
 
 export async function fetchProductMentions(params?: {
@@ -383,7 +394,7 @@ export async function fetchProductMentions(params?: {
   const max = Math.min(Math.max(params?.maxResults ?? 5, 5), 100);
   const url = new URL(`${X_API}/users/${c.productUserId}/mentions`);
   url.searchParams.set("max_results", String(max));
-  url.searchParams.set("tweet.fields", "created_at,author_id,conversation_id");
+  url.searchParams.set("tweet.fields", "created_at,author_id,conversation_id,referenced_tweets");
   // Prefer not to spend paid search credits — mentions timeline is enough.
   const res = await fetch(url.toString(), {
     headers: { Authorization: `Bearer ${read.token}` },
