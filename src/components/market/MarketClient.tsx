@@ -17,10 +17,13 @@ import {
   EXPLORER_URL,
   marketAbi,
   erc20Abi,
+  testDexV2Abi,
   TEST_DEX_V2_ADDRESS,
+  isV2DexConfigured,
 } from "@/lib/chain";
 import { findKnownMarket } from "@/lib/marketsRegistry";
 import { shortAddr } from "@/lib/wallet";
+import { formatPrice, poolPrice } from "@/lib/formatNumber";
 import { MarketChart } from "@/components/market/MarketChart";
 import { XTradeCta } from "@/components/XTradeCta";
 import { resolveKnown } from "@/lib/chatIntent";
@@ -94,6 +97,16 @@ export function MarketClient({ ticker }: Props) {
     functionName: "balanceOf",
     args: address ? [address] : undefined,
     query: { enabled: !!known?.token && !!address },
+  });
+
+  // Graduated markets price on the DEX pool; the curve price reads 0 after graduation.
+  const v2Configured = isV2DexConfigured();
+  const { data: v2Reserves } = useReadContract({
+    address: v2Configured ? TEST_DEX_V2_ADDRESS : undefined,
+    abi: testDexV2Abi,
+    functionName: "getReserves",
+    args: known?.token ? [known.token] : undefined,
+    query: { enabled: v2Configured && !!known?.token && graduated === true && !scar },
   });
 
   const buyEnabled = graduated === false && !scar;
@@ -191,14 +204,20 @@ export function MarketClient({ ticker }: Props) {
     router,
   ]);
 
-  const priceLabel = useMemo(() => {
-    if (price === undefined) return "—";
-    try {
-      return `${Number(formatEther(price as bigint)).toPrecision(4)} XRP`;
-    } catch {
-      return "—";
+  const priceXrp = useMemo<number | null>(() => {
+    if (graduated === true) {
+      const reserves = Array.isArray(v2Reserves) ? (v2Reserves as readonly [bigint, bigint]) : null;
+      return reserves ? poolPrice(reserves[0], reserves[1]) : null;
     }
-  }, [price]);
+    if (price === undefined) return null;
+    try {
+      const n = Number(formatEther(price as bigint));
+      return Number.isFinite(n) && n > 0 ? n : null;
+    } catch {
+      return null;
+    }
+  }, [graduated, price, v2Reserves]);
+  const priceLabel = priceXrp !== null ? `${formatPrice(priceXrp)} XRP` : "—";
 
   const ctaLabel = !isConnected
     ? "Connect wallet to sign here"
@@ -244,16 +263,9 @@ export function MarketClient({ ticker }: Props) {
         <div className="g-display" style={{ marginTop: 20, fontSize: 34 }}>
           {priceLabel}
         </div>
-        <div className="g-sub">per token</div>
+        <div className="g-sub">{priceXrp !== null ? "per token" : "price unavailable"}</div>
 
-        <MarketChart
-          ticker={ticker}
-          priceXrp={
-            price !== undefined
-              ? Number(formatEther(price as bigint))
-              : null
-          }
-        />
+        <MarketChart ticker={ticker} priceXrp={priceXrp} />
 
         {!known && (
           <div className="g-alert warn" style={{ marginTop: 16 }}>

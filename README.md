@@ -94,6 +94,7 @@ Env (see `.env.example`):
 - `NEXT_PUBLIC_APP_URL` — optional absolute origin for redirect_uri
 - `X_SESSION_SECRET` — optional signing secret for identity cookie
 - `SESSION_SIGNING_SECRET` — optional HMAC for `/s/{id}` opaque ids
+- `NEXT_PUBLIC_X_PRODUCT_USER_ID` — optional numeric id of `@graav_xyz`; when set, DM CTAs deep-link the X compose sheet (otherwise they open the profile). Composer/DM CTAs only ever open x.com — the console never posts or sends.
 
 Without credentials, Connect X stays an honest stub. Session cookie stores `{id, username, name}` only (httpOnly); access tokens are not exposed to client JS.
 

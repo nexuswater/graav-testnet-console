@@ -132,7 +132,8 @@ a.link-x:hover {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  overflow-x: hidden;
+  /* No overflow clipping here: it would turn .g-app into the scroll container
+     and defeat the sticky header and bottom nav. html/body clip the x-axis. */
   width: 100%;
 }
 
@@ -375,6 +376,8 @@ a.g-cta[aria-disabled="true"] {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .g-cta:hover:not(:disabled) {
@@ -391,6 +394,13 @@ a.g-cta[aria-disabled="true"] {
   background: transparent;
   color: var(--text);
   border: 1px solid var(--line-2);
+}
+
+.g-cta.ghost:disabled,
+a.g-cta.ghost[aria-disabled="true"] {
+  background: transparent;
+  color: var(--secondary);
+  border-color: var(--border);
 }
 
 .g-cta.danger {
@@ -1061,12 +1071,12 @@ details.g-details summary {
 }
 
 @media (max-width: 560px) {
-  .g-kv {
+  .g-kv:not(.inline) {
     flex-direction: column;
     align-items: stretch;
     gap: 4px;
   }
-  .g-kv > span:last-child {
+  .g-kv:not(.inline) > span:last-child {
     width: 100%;
   }
 }
@@ -1571,12 +1581,18 @@ details.g-details summary {
   min-height: 44px;
 }
 
+.g-main.g-launch {
+  max-width: 720px;
+  width: 100%;
+  margin: 0 auto;
+}
+
 /* Launch Step 1: captions stay above controls on ~360–430px phones */
 .g-launch-x {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  margin-top: 4px;
+  margin-top: 28px;
 }
 .g-launch-x-kicker {
   margin: 0;

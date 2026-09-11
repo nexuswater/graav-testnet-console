@@ -8,7 +8,8 @@ import {
   useChainId,
   usePublicClient,
 } from "wagmi";
-import { formatEther, type Address } from "viem";
+import type { Address } from "viem";
+import { formatTokenAmount } from "@/lib/formatNumber";
 import {
   FACTORY_ADDRESS,
   FAUCET_URL,
@@ -218,23 +219,23 @@ export function PortfolioTab({ setStatusMsg }: Props) {
       )}
 
       <div className="g-sheet" style={{ marginTop: 0 }}>
-        <div className="g-kv">
+        <div className="g-kv inline">
           <span>XRP</span>
           <span>
             {!address
               ? "—"
               : nativeBal
-                ? `${formatEther(nativeBal.value)} XRP`
+                ? `${formatTokenAmount(nativeBal.value)} XRP`
                 : nativeFetching
                   ? "…"
                   : "—"}
           </span>
         </div>
-        <div className="g-kv">
+        <div className="g-kv inline">
           <span>Coins held</span>
           <span>{address ? String(withBalance.length) : "—"}</span>
         </div>
-        <div className="g-kv">
+        <div className="g-kv inline">
           <span>Markets</span>
           <span>{marketCount !== null ? String(marketCount) : "…"}</span>
         </div>
@@ -295,7 +296,7 @@ export function PortfolioTab({ setStatusMsg }: Props) {
                     </span>
                   </div>
                   <div className="g-sub">
-                    {h.balance === null ? "Balance unknown" : `${formatEther(h.balance)} ${h.symbol}`}
+                    {h.balance === null ? "Balance unknown" : `${formatTokenAmount(h.balance)} ${h.symbol}`}
                     {" · "}
                     {h.name}
                   </div>

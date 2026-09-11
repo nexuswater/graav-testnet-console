@@ -10,7 +10,7 @@
     "check": "tsc --noEmit",
     "test:chat-intent": "node --import tsx --test --test-concurrency=1 tests/chatIntent.test.ts",
     "test:rlusd": "node --import tsx --test --test-concurrency=1 tests/rlusd.test.ts tests/rlusd-ingress.test.ts",
-    "test:rc": "node --import tsx --test --test-concurrency=1 tests/rc-honesty.test.ts tests/x-launch-framing.test.ts tests/x-intents.test.ts tests/base-corridor.test.ts tests/attribution-v1-pin.test.ts",
+    "test:rc": "node --import tsx --test --test-concurrency=1 tests/rc-honesty.test.ts tests/x-launch-framing.test.ts tests/x-intents.test.ts tests/format-number.test.ts tests/base-corridor.test.ts tests/attribution-v1-pin.test.ts",
     "test:corridor": "node --import tsx --test --test-concurrency=1 tests/base-sepolia-corridor.test.ts",
     "test:x-cron": "node --import tsx --test --test-concurrency=1 tests/x-cron-coverage.test.ts",
     "test": "npm run test:chat-intent && npm run test:rlusd && npm run test:rc && npm run test:corridor && npm run test:x-cron"

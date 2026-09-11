@@ -92,43 +92,47 @@ export function baseCorridorGate(s: CorridorSignals): CorridorGate {
   const checks: CorridorCheck[] = [
     {
       id: "dest-listed",
-      label: `Dest XRPL EVM ${c.destChainId} listed`,
+      label: "XRPL EVM listed as destination",
       ok: s.squidHasDest,
-      detail: s.squidHasDest ? "Squid lists 1449000." : "Squid /v2/chains missing 1449000.",
+      detail: s.squidHasDest
+        ? `Squid lists XRPL EVM ${c.destChainId}.`
+        : `Squid does not list XRPL EVM ${c.destChainId} yet.`,
     },
     {
       id: "source-listed",
-      label: `Source ${c.label} ${c.chainId} listed`,
+      label: `${c.label} listed as source`,
       ok: s.squidHasSource || s.axelarHasSource,
       detail: s.squidHasSource
-        ? "Squid lists Base Sepolia."
+        ? `Squid lists ${c.label}.`
         : s.axelarHasSource
-          ? "Axelar lists base-sepolia; Squid does not."
-          : "Base Sepolia absent from Squid and Axelar catalogs.",
+          ? `Axelar lists ${c.label}; Squid does not yet.`
+          : `${c.label} is not in the Squid or Axelar catalogs.`,
     },
     {
       id: "usdc-on-source",
-      label: "USDC on Base Sepolia",
+      label: `USDC on ${c.label}`,
       ok: s.usdcOnSource,
-      detail: s.usdcOnSource ? "USDC in Squid Base Sepolia tokens." : "USDC not cataloged on Base Sepolia.",
+      detail: s.usdcOnSource ? `USDC is cataloged on ${c.label}.` : `USDC is not cataloged on ${c.label} yet.`,
     },
     {
       id: "rlusd-on-dest",
-      label: "RLUSD on XRPL EVM (ITS)",
+      label: "RLUSD on XRPL EVM",
       ok: s.rlusdOnDest,
-      detail: s.rlusdOnDest ? "Axelar ITS lists RLUSD on xrpl-evm." : "Axelar ITS has no RLUSD on xrpl-evm.",
+      detail: s.rlusdOnDest
+        ? "Axelar ITS lists RLUSD on XRPL EVM."
+        : "Axelar ITS does not list RLUSD on XRPL EVM yet.",
     },
     {
       id: "live-quote",
-      label: "Live USDC → RLUSD quote + depth smoke",
+      label: "Live USDC → RLUSD quote with depth",
       ok: s.liveQuote,
-      detail: s.liveQuote ? "Live quote proven." : "No live quote. Catalog presence ≠ route.",
+      detail: s.liveQuote ? "Live quote confirmed." : "No live quote yet. Being listed is not a route.",
     },
     {
       id: "signed-tx-wired",
-      label: "Signed quote + tx rail wired",
+      label: "Signed quote and transaction rail",
       ok: s.signedTxWired,
-      detail: s.signedTxWired ? "Rail wired." : "Not wired this slice — no new write rails.",
+      detail: s.signedTxWired ? "Rail wired." : "Not wired yet.",
     },
   ];
   const catalogReady = checks

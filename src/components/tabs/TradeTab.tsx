@@ -38,6 +38,7 @@ import {
 } from "@/lib/chain";
 import { shortAddr } from "@/lib/wallet";
 import type { TradePrefill } from "@/lib/tradePrefill";
+import { formatPrice, formatTokenAmount, poolPrice } from "@/lib/formatNumber";
 import { TokenPfp } from "@/components/pfp/TokenPfp";
 import { XTradeCta } from "@/components/XTradeCta";
 import { resolveKnown } from "@/lib/chatIntent";
@@ -586,6 +587,12 @@ export function TradeTab({
 
   const activeSide = tradeSide;
   const symbol = typeof tokenSymbol === "string" ? tokenSymbol : "";
+  // Graduated markets price on the DEX pool; the curve price reads 0 after graduation.
+  const displayPrice = isGraduated
+    ? poolPrice(v2XrpReserve, v2TokReserve)
+    : price !== undefined
+      ? Number(formatEther(price))
+      : null;
   const knownOnX = symbol ? resolveKnown(symbol) : null;
   const xSide: "buy" | "sell" =
     activeSide === "sell" || (activeSide === "swap" && swapSide === "tokenToXrp") ? "sell" : "buy";
@@ -667,9 +674,7 @@ export function TradeTab({
                 {symbol || "…"}
               </h2>
               <div className="g-sub" style={{ marginTop: 6 }}>
-                {price !== undefined
-                  ? `${Number(formatEther(price)).toPrecision(4)} XRP / token`
-                  : "—"}
+                {displayPrice !== null ? `${formatPrice(displayPrice)} XRP / token` : "Price unavailable"}
               </div>
             </div>
           </div>
@@ -778,7 +783,7 @@ export function TradeTab({
                 </button>
               </div>
               <p className="g-hint">
-                Allowance: {allowance !== undefined ? formatEther(allowance) : "—"}
+                Approved: {formatTokenAmount(allowance)} {symbol}
               </p>
             </>
           )}
@@ -828,9 +833,9 @@ export function TradeTab({
                     />
                   </div>
                   <p className="g-hint">
-                    Est. out:{" "}
+                    Estimated receive:{" "}
                     {quoteOut !== null
-                      ? `${formatEther(quoteOut)} ${
+                      ? `${formatTokenAmount(quoteOut)} ${
                           swapSide === "xrpToToken"
                             ? symbol || "token"
                             : "XRP"
@@ -900,29 +905,21 @@ export function TradeTab({
             </div>
             <div className="g-kv">
               <span>Curve reserve</span>
-              <span>
-                {realXrp !== undefined ? formatEther(realXrp) + " XRP" : "…"}
-              </span>
+              <span>{realXrp !== undefined ? `${formatTokenAmount(realXrp)} XRP` : "…"}</span>
             </div>
             <div className="g-kv">
               <span>Tokens on curve</span>
-              <span>
-                {tokenReserve !== undefined ? formatEther(tokenReserve) : "…"}
-              </span>
+              <span>{tokenReserve !== undefined ? formatTokenAmount(tokenReserve) : "…"}</span>
             </div>
             <div className="g-kv">
               <span>Graduation threshold</span>
-              <span>
-                {threshold !== undefined
-                  ? formatEther(threshold) + " XRP"
-                  : "…"}
-              </span>
+              <span>{threshold !== undefined ? `${formatTokenAmount(threshold)} XRP` : "…"}</span>
             </div>
             <div className="g-kv">
               <span>Your balance</span>
               <span>
                 {tokenBalance !== undefined
-                  ? formatEther(tokenBalance)
+                  ? `${formatTokenAmount(tokenBalance)} ${symbol}`
                   : isConnected
                     ? "…"
                     : "Connect wallet"}
@@ -949,19 +946,11 @@ export function TradeTab({
               <>
                 <div className="g-kv">
                   <span>Pool XRP</span>
-                  <span>
-                    {v2XrpReserve !== undefined
-                      ? formatEther(v2XrpReserve)
-                      : "…"}
-                  </span>
+                  <span>{formatTokenAmount(v2XrpReserve)}</span>
                 </div>
                 <div className="g-kv">
                   <span>Pool {symbol || "token"}</span>
-                  <span>
-                    {v2TokReserve !== undefined
-                      ? formatEther(v2TokReserve)
-                      : "…"}
-                  </span>
+                  <span>{formatTokenAmount(v2TokReserve)}</span>
                 </div>
               </>
             )}
