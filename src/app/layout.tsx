@@ -16,9 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GRAAV · setup, charts, account",
+  title: "GRAAV",
   description:
-    "graav.xyz is setup, account, and charts. Daily ops on X — posts, reposts, and DMs. TESTNET · chat ≠ authorization · signature or nothing via /s.",
+    "Launch and trade coins from a post, repost, or DM on X. Charts, portfolio, and account on graav.xyz. Your wallet signs every transaction.",
 };
 
 export default function RootLayout({

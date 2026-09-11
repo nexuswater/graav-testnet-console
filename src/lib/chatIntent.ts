@@ -119,7 +119,7 @@ export function parseIntent(raw: string): IntentPlan {
     return {
       kind: "portfolio",
       reply:
-        "Opening Portfolio. Chat never authorizes trades — balances are read on-chain from your connected wallet.",
+        "Opening Portfolio. Balances are read on-chain from your connected wallet — chat never authorizes a trade.",
       handoff: { tab: "Portfolio", label: "Open Portfolio" },
     };
   }
@@ -131,8 +131,8 @@ export function parseIntent(raw: string): IntentPlan {
     const known = resolveKnown(symbol);
     const action = known?.graduated ? "swap" : "buy";
     const reply = known
-      ? `${action === "swap" ? "Swap" : "Buy"} ${known.symbol}. Preview only — wallet signing stays on Trade.`
-      : `Buy ${symbol} parsed. Market not configured for a session. Open Trade to review.`;
+      ? `${action === "swap" ? "Swap" : "Buy"} ${known.symbol} — preview only. Your wallet signs.`
+      : `Buy ${symbol} — that market is not configured for a signing link yet. Open Trade to review.`;
     const plan: IntentPlan = {
       kind: "buy",
       reply,
@@ -174,8 +174,8 @@ export function parseIntent(raw: string): IntentPlan {
     const plan: IntentPlan = {
       kind: "sell",
       reply: isPct
-        ? `Sell ${amtOrPct} of ${symbol}. Enter a concrete amount on Trade before signing.`
-        : `Sell ${sellAmount} ${symbol}. Preview only — wallet signing stays on Trade.`,
+        ? `Sell ${amtOrPct} of ${symbol} — enter an exact amount on Trade before signing.`
+        : `Sell ${sellAmount} ${symbol} — preview only. Your wallet signs.`,
       handoff: {
         tab: "Trade",
         label: "Open Trade",
@@ -212,12 +212,12 @@ export function parseIntent(raw: string): IntentPlan {
     if (!okSym) {
       return {
         kind: "launch",
-        reply: `Create-market rejected: bad ticker "${tickerRaw}". Use 1–15 letters/digits/underscore starting with a letter. Chat ≠ auth.`,
+        reply: `"${tickerRaw}" isn't a valid ticker. Use 1–15 letters, digits, or underscores, starting with a letter.`,
       };
     }
     return {
       kind: "launch",
-      reply: `Launch $${ticker} on X (post, repost, or DM). Chat never authorizes. After that, open the /s link to review, optionally seed Test RLUSD, and sign in wallet.`,
+      reply: `Launch $${ticker} on X — post, repost, or DM. Chat never authorizes; GRAAV replies with a /s signing link where you review the optional RLUSD seed and sign in your wallet.`,
       handoff: {
         tab: "Markets",
         label: `Launch $${ticker} on X`,
@@ -232,6 +232,6 @@ export function parseIntent(raw: string): IntentPlan {
   return {
     kind: text ? "unknown" : "help",
     reply:
-      "Intents: BUY <coin> <amount> · SELL <amount> <coin> · LAUNCH <ticker>. Same on X posts, reposts, and DMs. Chat previews only. Your wallet signs via /s.",
+      "Try BUY <coin> <amount> · SELL <amount> <coin> · LAUNCH <ticker> · PORTFOLIO. The same commands work in posts, reposts, and DMs to @graav_xyz. Chat previews; your wallet signs via /s.",
   };
 }

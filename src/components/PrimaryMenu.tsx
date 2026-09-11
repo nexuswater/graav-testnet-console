@@ -62,15 +62,15 @@ export function PrimaryMenu({ activeTab, onSelectTab }: Props) {
       </button>
       {open && (
         <div className="g-menu-panel" role="menu">
-          <button type="button" role="menuitem" className={`g-menu-item${onHome && (activeTab === "Markets" || activeTab === "Trade") ? " on" : ""}`} onClick={() => goTab("Markets")}>Charts</button>
-          <Link href="/launch" role="menuitem" className={`g-menu-item${pathname.startsWith("/launch") ? " on" : ""}`} onClick={() => setOpen(false)}>Launch on X</Link>
-          <button type="button" role="menuitem" className={`g-menu-item${onHome && activeTab === "Trade" ? " on" : ""}`} onClick={() => goTab("Trade")}>Trade · fallback</button>
+          <button type="button" role="menuitem" className={`g-menu-item${onHome && activeTab === "Markets" ? " on" : ""}`} onClick={() => goTab("Markets")}>Markets</button>
+          <Link href="/launch" role="menuitem" className={`g-menu-item${pathname.startsWith("/launch") ? " on" : ""}`} onClick={() => setOpen(false)}>Launch</Link>
+          <button type="button" role="menuitem" className={`g-menu-item${onHome && activeTab === "Trade" ? " on" : ""}`} onClick={() => goTab("Trade")}>Trade</button>
           <button type="button" role="menuitem" className={`g-menu-item${onHome && activeTab === "Portfolio" ? " on" : ""}`} onClick={() => goTab("Portfolio")}>Portfolio</button>
           <button type="button" role="menuitem" className={`g-menu-item${onHome && activeTab === "Chat" ? " on" : ""}`} onClick={() => goTab("Chat")}>Chat</button>
           <div className="g-menu-divider" />
-          <Link href="/you" role="menuitem" className={`g-menu-item${pathname.startsWith("/you") ? " on" : ""}`} onClick={() => setOpen(false)}>Account</Link>
           <button type="button" role="menuitem" className={`g-menu-item${onHome && activeTab === "Cross-chain" ? " on" : ""}`} onClick={() => goTab("Cross-chain")}>Funding</button>
-          <button type="button" role="menuitem" className={`g-menu-item${onHome && activeTab === "X" ? " on" : ""}`} onClick={() => goTab("X")}>X daily ops</button>
+          <button type="button" role="menuitem" className={`g-menu-item${onHome && activeTab === "X" ? " on" : ""}`} onClick={() => goTab("X")}>X</button>
+          <Link href="/you" role="menuitem" className={`g-menu-item${pathname.startsWith("/you") ? " on" : ""}`} onClick={() => setOpen(false)}>Account</Link>
           <div className="g-menu-divider" />
           <div style={{ padding: "8px 10px 6px" }}><ThemeToggle /></div>
         </div>

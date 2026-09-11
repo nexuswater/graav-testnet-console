@@ -10,7 +10,6 @@
   --secondary: #a1a1aa;
   --cta-bg: #ffffff;
   --cta-fg: #000000;
-  --testnet: #f97316;
   --bg-2: var(--surface);
   --line: var(--border);
   --line-2: var(--border);
@@ -45,7 +44,6 @@
   --secondary: #62626b;
   --cta-bg: #111111;
   --cta-fg: #ffffff;
-  --testnet: #ea580c;
   --bg-2: var(--surface);
   --line: var(--border);
   --line-2: var(--border);
@@ -175,9 +173,11 @@ a.link-x:hover {
   font-weight: 650;
 }
 
+/* The single testnet cue in the shell: same quiet tone as every other pill. */
 .g-testnet {
-  color: var(--testnet);
-  border-color: var(--testnet);
+  color: var(--secondary);
+  border-color: var(--border);
+  flex-shrink: 0;
 }
 
 .g-chip {
@@ -1182,32 +1182,6 @@ details.g-details summary {
   border-bottom-color: var(--text);
 }
 
-.g-secondary-nav {
-  display: none;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  padding: 8px 24px 0;
-  font-size: 12px;
-  color: var(--secondary);
-}
-.g-secondary-nav a {
-  color: var(--secondary);
-  text-decoration: none;
-  min-height: 32px;
-  display: inline-flex;
-  align-items: center;
-}
-.g-secondary-nav a.on {
-  color: var(--text);
-}
-.g-lock-bar {
-  margin: 0;
-  padding: 6px 16px 0;
-  font-size: 12px;
-  line-height: 16px;
-  color: var(--secondary);
-}
 .g-route-order {
   display: grid;
   gap: 8px;
@@ -1265,13 +1239,6 @@ details.g-details summary {
   min-width: 64px;
   letter-spacing: 0.06em;
 }
-@media (min-width: 768px) {
-  .g-lock-bar {
-    padding: 4px 24px 0;
-    text-align: right;
-  }
-}
-
 .g-theme {
   display: flex;
   border: 1px solid var(--border);
@@ -1303,7 +1270,7 @@ details.g-details summary {
   position: sticky;
   bottom: 0;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   border-top: 1px solid var(--border);
   background: var(--bg);
   padding: 6px 8px calc(8px + env(safe-area-inset-bottom, 0px));
@@ -1661,6 +1628,48 @@ details.g-details summary {
 .g-launch-cta-row .g-cta {
   margin-top: 12px;
 }
+
+/* Trade-on-X block: primary + DM side by side on wide screens, stacked on phones. */
+.g-x-cta {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0 12px;
+  margin-top: 4px;
+}
+.g-x-cta .g-cta {
+  margin-top: 12px;
+}
+.g-x-cta-draft {
+  grid-column: 1 / -1;
+  overflow-wrap: anywhere;
+}
+.g-x-cta-draft code {
+  font-family: ui-monospace, "SF Mono", Menlo, var(--font-geist-mono), monospace;
+  color: var(--text);
+}
+.g-or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0 4px;
+  color: var(--secondary);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.g-or::before,
+.g-or::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.g-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
 .g-launch-advanced {
   margin-top: 28px;
 }
@@ -1749,7 +1758,6 @@ details.g-details summary {
 
 @media (min-width: 768px) {
   .g-desktop-nav,
-  .g-secondary-nav,
   .g-top-actions .g-theme {
     display: flex;
   }
@@ -1784,7 +1792,8 @@ details.g-details summary {
     justify-content: space-between;
     align-items: center;
   }
-  .g-launch-cta-row {
+  .g-launch-cta-row,
+  .g-x-cta {
     grid-template-columns: 1fr 1fr;
   }
 }

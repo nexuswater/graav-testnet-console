@@ -7,10 +7,8 @@ import { useAccount, useChainId, usePublicClient, useWaitForTransactionReceipt, 
 import { AppChrome } from "@/components/AppChrome";
 import { LaunchOnXCard } from "@/components/launch/LaunchOnXCard";
 import { SeedMarketField } from "@/components/launch/SeedMarketField";
-import { XPrimaryNote } from "@/components/XPrimaryNote";
 import { LinkIcon, UploadIcon } from "@/components/shell/Icons";
 import { XRPL_EVM_TESTNET_ID } from "@/lib/chain";
-import { tipMarketAvailability } from "@/lib/rlusd-v1/availability";
 import { RLUSD_CLONE_INFRA, RLUSD_V1 as C } from "@/lib/rlusd-v1/config";
 import { rlusdFactoryAbi } from "@/lib/rlusd-v1/contracts";
 import { buildCreateCoinParams } from "@/lib/rlusd-v1/createCoin";
@@ -23,11 +21,20 @@ import {
 } from "@/lib/xLaunchComposer";
 
 type Step = "details" | "review" | "sign";
-type OriginPath = "x" | "paste";
 
 const shortFactory = C.factoryAddress
   ? `${C.factoryAddress.slice(0, 6)}…${C.factoryAddress.slice(-4)}`
   : "Not configured";
+
+function Stepper({ step }: { step: Step }) {
+  return (
+    <ol className="g-stepper" aria-label="Create from a post link">
+      <li className={step === "details" ? "on" : undefined}><span>1</span> Details</li>
+      <li className={step === "review" ? "on" : undefined}><span>2</span> Review</li>
+      <li className={step === "sign" ? "on" : undefined}><span>3</span> Sign</li>
+    </ol>
+  );
+}
 
 export default function LaunchPage() {
   const { address, isConnected } = useAccount();
@@ -38,7 +45,6 @@ export default function LaunchPage() {
   const submitting = useRef(false);
 
   const [step, setStep] = useState<Step>("details");
-  const [originPath, setOriginPath] = useState<OriginPath>("x");
   const [sourcePostId, setSourcePostId] = useState("");
   const [name, setName] = useState("");
   const [ticker, setTicker] = useState("");
@@ -59,9 +65,6 @@ export default function LaunchPage() {
   const post = sourcePostId.trim();
   const tickerOk = isValidLaunchTicker(cleanTicker);
   const pasteReady = Boolean(post && cleanName && tickerOk);
-  const xReady = tickerOk;
-  const tip = tipMarketAvailability();
-  const fromX = originPath === "x";
 
   useEffect(() => {
     const raw = new URLSearchParams(window.location.search).get("ticker");
@@ -100,18 +103,9 @@ export default function LaunchPage() {
     return data;
   };
 
-  const goXReview = () => {
-    if (!xReady) return;
-    setOriginPath("x");
-    setError(null);
-    if (!name.trim()) setName(cleanTicker);
-    setStep("review");
-  };
-
   const goPasteReview = async (event: FormEvent) => {
     event.preventDefault();
     if (!pasteReady || busy) return;
-    setOriginPath("paste");
     setBusy(true);
     setError(null);
     try {
@@ -166,15 +160,10 @@ export default function LaunchPage() {
     }
   };
 
-  const goXSign = () => {
-    setError(null);
-    setStep("sign");
-  };
-
   const signCreate = async () => {
     if (!params || !signature || !factory || !address || !publicClient || submitting.current) return;
     if (!isConnected || !onCorrectChain) {
-      setError("Connect wallet on XRPL EVM Testnet before signing.");
+      setError("Connect your wallet on XRPL EVM before signing.");
       return;
     }
     submitting.current = true;
@@ -182,7 +171,6 @@ export default function LaunchPage() {
     setBusy(true);
     setError(null);
     try {
-      setError(null);
       await publicClient.simulateContract({
         address: factory,
         abi: rlusdFactoryAbi,
@@ -190,14 +178,12 @@ export default function LaunchPage() {
         args: [params, signature],
         account: address,
       });
-      const hash = await writeContractAsync({
+      await writeContractAsync({
         address: factory,
         abi: rlusdFactoryAbi,
         functionName: "createCoin",
         args: [params, signature],
       });
-      setError(null);
-      void hash;
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -239,33 +225,24 @@ export default function LaunchPage() {
   return (
     <AppChrome active="launch">
       <main className="g-main g-launch">
-        <Link href="/" className="g-back">← Charts</Link>
+        <Link href="/" className="g-back">← Markets</Link>
         <h1 className="g-hero-title">Launch on X.</h1>
         <p className="g-hero-sub">
-          Post, repost, or DM with $TICKER. That is the Moment. Then sign in your
-          wallet — chat never authorizes.
+          Post, repost, or DM <strong>Launch $TICKER</strong> to {GRAAV_X_HANDLE_AT}. GRAAV replies
+          with a signing link; you review the seed and sign in your wallet. Quoted in RLUSD.
         </p>
-        <p className="g-hint" style={{ marginTop: 8 }}>
-          Quoted in Test RLUSD · {GRAAV_X_HANDLE_AT} · signature or nothing via /s
-        </p>
-        <XPrimaryNote />
-
-        <ol className="g-stepper" aria-label="Launch steps">
-          <li className={step === "details" ? "on" : undefined}><span>1</span> On X</li>
-          <li className={step === "review" ? "on" : undefined}><span>2</span> Review</li>
-          <li className={step === "sign" ? "on" : undefined}><span>3</span> Sign</li>
-        </ol>
 
         {step === "details" && (
           <>
-            <LaunchOnXCard ticker={ticker} onTicker={setTicker} onPostedReview={goXReview} />
+            <LaunchOnXCard ticker={ticker} onTicker={setTicker} />
 
             <details className="g-details g-launch-advanced">
-              <summary>Advanced · in-app paste-link (fallback)</summary>
+              <summary>Advanced · create from a post link</summary>
               <p className="g-hint" style={{ marginTop: 8, marginBottom: 4 }}>
-                Daily create is on X. Paste-into-site is testnet fallback only — not the
-                lead story.
+                Already posted? Create here instead of waiting for the reply. Review, then sign in
+                your wallet — nothing is created without your signature.
               </p>
+              <Stepper step={step} />
               <form onSubmit={(event) => void goPasteReview(event)} className="g-launch-form">
                 <div className="g-field">
                   <label className="g-field-label" htmlFor="launch-x-post">X post</label>
@@ -276,7 +253,7 @@ export default function LaunchPage() {
                       className="sm"
                       value={sourcePostId}
                       onChange={(event) => setSourcePostId(event.target.value)}
-                      placeholder="Paste a link or post ID"
+                      placeholder="Paste the post link or ID"
                       autoComplete="off"
                     />
                   </span>
@@ -324,14 +301,14 @@ export default function LaunchPage() {
                     </span>
                   </label>
                 </div>
-                <div className="g-field">
-                  <label className="g-field-label" htmlFor="launch-quote">Quoted in</label>
-                  <input id="launch-quote" className="sm" value="Test RLUSD" readOnly />
-                </div>
                 <button type="submit" className="g-cta" disabled={reviewDisabled}>
-                  {busy ? "Preparing…" : "Review paste-link fallback"}
+                  {busy ? "Preparing…" : "Review"}
                 </button>
-                <p className="g-hint">Wallet signing still happens after review. Chat ≠ authorization.</p>
+                <p className="g-hint">
+                  {pasteReady
+                    ? "Quoted in RLUSD. You sign in your wallet after review."
+                    : "Add the post, a name, and a ticker to review."}
+                </p>
               </form>
             </details>
           </>
@@ -339,72 +316,46 @@ export default function LaunchPage() {
 
         {step !== "details" && (
           <section className="g-review">
-            <div className="g-kv"><span>Name</span><span>{cleanName || cleanTicker}</span></div>
-            <div className="g-kv"><span>Ticker</span><span>{cleanTicker}</span></div>
-            <div className="g-kv">
-              <span>Source</span>
-              <span className="g-mono">
-                {fromX ? "X post / repost / DM" : post}
-              </span>
-            </div>
-            <div className="g-kv"><span>Quote</span><span>Test RLUSD</span></div>
+            <Stepper step={step} />
+            <div className="g-kv"><span>Name</span><span>{cleanName}</span></div>
+            <div className="g-kv"><span>Ticker</span><span>${cleanTicker}</span></div>
+            <div className="g-kv"><span>Source post</span><span className="g-mono">{post}</span></div>
+            <div className="g-kv"><span>Quote</span><span>RLUSD</span></div>
             <div className="g-kv"><span>Seed</span><span>{seedAmountDisplay(seedAmount)}</span></div>
             <div className="g-kv"><span>Factory</span><span className="g-mono">{shortFactory}</span></div>
             <div className="g-kv"><span>Authorizer</span><span className="g-mono">{RLUSD_CLONE_INFRA.launchAuthorizer.slice(0, 6)}…{RLUSD_CLONE_INFRA.launchAuthorizer.slice(-4)}</span></div>
-            <div className="g-kv"><span>Existing tip market</span><span>{tip.state === "unconfigured" ? "Awaiting first create" : tip.state}</span></div>
 
             <SeedMarketField value={seedAmount} onChange={setSeedAmount} id="launch-seed" />
 
             {step === "review" && (
               <>
-                {fromX ? (
-                  <>
-                    <button type="button" className="g-cta" disabled={!tickerOk} onClick={goXSign}>
-                      Continue to /s sign
-                    </button>
-                    <p className="g-hint">
-                      After Launch ${cleanTicker} on X (post, repost, or DM), {GRAAV_X_HANDLE_AT}{" "}
-                      hands you a /s link. Open it to sign in wallet. Chat never authorizes.
-                      Optional seed is review-only — this desk does not spend.
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <button type="button" className="g-cta" disabled={!params || busy || !isConnected || !onCorrectChain} onClick={() => void requestAuth()}>
-                      {busy ? "Requesting authorization…" : "Continue to sign"}
-                    </button>
-                    <p className="g-hint">Authorization is requested from the LaunchAuthorizer. A missing operator key keeps Sign disabled.</p>
-                  </>
-                )}
+                <button
+                  type="button"
+                  className="g-cta"
+                  disabled={!params || busy || !isConnected || !onCorrectChain}
+                  onClick={() => void requestAuth()}
+                >
+                  {busy ? "Requesting authorization…" : "Continue to sign"}
+                </button>
+                <p className="g-hint">
+                  {!isConnected
+                    ? "Connect your wallet to continue."
+                    : !onCorrectChain
+                      ? "Switch your wallet to XRPL EVM to continue."
+                      : "GRAAV authorizes the launch first. If authorization is unavailable, Sign stays disabled."}
+                </p>
                 <button type="button" className="g-cta ghost" onClick={() => setStep("details")}>Back</button>
               </>
             )}
             {step === "sign" && (
               <>
-                {fromX && (
-                  <div className="g-alert" style={{ marginTop: 12 }}>
-                    <strong>Signature or nothing via /s.</strong> Open the signing
-                    link from {GRAAV_X_HANDLE_AT} after your post, repost, or DM. This
-                    console does not write to X and does not spend the seed. Chat ≠
-                    authorization.
-                    <p className="g-mono" style={{ marginTop: 8 }}>/s/{"{id}"}</p>
-                  </div>
-                )}
                 {authState === "unavailable" && (
-                  <div className="g-alert warn">Launch authorization is unavailable. The console will not fabricate a signature.</div>
+                  <div className="g-alert warn">Launch authorization is unavailable right now. Sign stays disabled.</div>
                 )}
-                {!fromX && (
-                  <button type="button" className="g-cta" disabled={signDisabled} onClick={() => void signCreate()}>
-                    {isWriting || isConfirming ? "Waiting for wallet…" : "Sign createCoin"}
-                  </button>
-                )}
+                <button type="button" className="g-cta" disabled={signDisabled} onClick={() => void signCreate()}>
+                  {isWriting || isConfirming ? "Waiting for wallet…" : "Sign in wallet"}
+                </button>
                 <button type="button" className="g-cta ghost" onClick={() => setStep("review")}>Back to review</button>
-                {fromX && (
-                  <p className="g-hint">
-                    Public X write stays closed. Composer and /s handoff only. Seed{" "}
-                    {seedAmountDisplay(seedAmount)} is not sent until a later signed buy.
-                  </p>
-                )}
               </>
             )}
           </section>
@@ -412,7 +363,7 @@ export default function LaunchPage() {
 
         {created && (
           <div className="g-alert" style={{ marginTop: 16 }}>
-            CoinCreated · token {created.token} · curve {created.curve}
+            Coin created · token {created.token} · curve {created.curve}
           </div>
         )}
         {txHash && <p className="g-mono" style={{ marginTop: 12 }}>{txHash}{isConfirmed ? " · confirmed" : isConfirming ? " · pending" : ""}</p>}

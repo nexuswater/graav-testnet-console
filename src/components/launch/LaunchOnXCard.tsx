@@ -2,33 +2,48 @@
 
 import { useState } from "react";
 import { XMark } from "@/components/XMark";
+import { LinkIcon } from "@/components/shell/Icons";
 import { copyToClipboard } from "@/lib/metaMaskDeepLink";
 import {
   GRAAV_X_HANDLE_AT,
-  graavXProfileUrl,
   isValidLaunchTicker,
   launchComposerText,
+  launchDmUrl,
   launchPostIntentUrl,
-  launchQuoteRtUrl,
+  launchQuoteIntentUrl,
+  parseXPostUrl,
   sanitizeLaunchTicker,
+  xDmDeepLinkAvailable,
 } from "@/lib/xLaunchComposer";
 
 type Props = {
   ticker: string;
   onTicker: (ticker: string) => void;
-  onPostedReview: () => void;
 };
 
-export function LaunchOnXCard({ ticker, onTicker, onPostedReview }: Props) {
+/**
+ * Primary launch path. Every CTA opens X (post, quote-repost, or DM) with the
+ * draft prefilled — the user finishes inside X and nothing is posted for them.
+ */
+export function LaunchOnXCard({ ticker, onTicker }: Props) {
   const [copied, setCopied] = useState(false);
+  const [quoteUrl, setQuoteUrl] = useState("");
   const clean = sanitizeLaunchTicker(ticker);
   const tickerOk = isValidLaunchTicker(clean);
   const draft = launchComposerText(clean);
-  const postHref = launchPostIntentUrl(clean);
+  const quoted = parseXPostUrl(quoteUrl);
+  const quoteInvalid = quoteUrl.trim().length > 0 && !quoted;
+  const postHref = quoted ? launchQuoteIntentUrl(clean, quoted.url) : launchPostIntentUrl(clean);
+  const dmHref = launchDmUrl(clean);
+  const dmDeepLink = xDmDeepLinkAvailable();
 
   const copyDraft = async () => {
     const ok = await copyToClipboard(draft);
     setCopied(ok);
+  };
+
+  const blockUnlessReady = (event: React.MouseEvent) => {
+    if (!tickerOk) event.preventDefault();
   };
 
   return (
@@ -36,11 +51,6 @@ export function LaunchOnXCard({ ticker, onTicker, onPostedReview }: Props) {
       <h2 id="launch-on-x-title" className="g-launch-x-kicker">
         Create on X
       </h2>
-      <ol className="g-launch-path" aria-label="How launch works">
-        <li>Post, repost, or DM with $TICKER</li>
-        <li>Open the /s link GRAAV sends</li>
-        <li>Review, optional seed, sign in wallet</li>
-      </ol>
 
       <div className="g-field">
         <label className="g-field-label" htmlFor="launch-x-ticker">
@@ -57,7 +67,33 @@ export function LaunchOnXCard({ ticker, onTicker, onPostedReview }: Props) {
           aria-describedby="launch-x-ticker-hint"
         />
         <p id="launch-x-ticker-hint" className="g-hint">
-          Example: quote-RT a post → Launch $HORMUZ. DMs are the same action, privately.
+          Letters, numbers, underscore · up to 15 · for example $HORMUZ
+        </p>
+      </div>
+
+      <div className="g-field">
+        <label className="g-field-label" htmlFor="launch-x-quote">
+          Post to quote (optional)
+        </label>
+        <span className="g-input-icon">
+          <LinkIcon />
+          <input
+            id="launch-x-quote"
+            className="sm"
+            value={quoteUrl}
+            onChange={(event) => setQuoteUrl(event.target.value)}
+            placeholder="https://x.com/…/status/…"
+            inputMode="url"
+            autoComplete="off"
+            spellCheck={false}
+            aria-invalid={quoteInvalid || undefined}
+            aria-describedby="launch-x-quote-hint"
+          />
+        </span>
+        <p id="launch-x-quote-hint" className="g-hint">
+          {quoteInvalid
+            ? "Paste a full x.com post link to quote-repost it."
+            : "Leave empty to post fresh, or paste a post link to quote-repost it as the launch."}
         </p>
       </div>
 
@@ -70,49 +106,49 @@ export function LaunchOnXCard({ ticker, onTicker, onPostedReview }: Props) {
         href={postHref}
         aria-disabled={!tickerOk}
         tabIndex={tickerOk ? 0 : -1}
-        onClick={(event) => {
-          if (!tickerOk) event.preventDefault();
-        }}
+        onClick={blockUnlessReady}
         target="_blank"
         rel="noopener noreferrer"
       >
         <XMark size={14} />
-        {tickerOk ? `Post Launch $${clean} on X` : "Add a ticker to post on X"}
-      </a>
-      <a
-        className="g-cta ghost"
-        href={launchQuoteRtUrl()}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Repost / quote-RT on X
+        {!tickerOk
+          ? "Add a ticker to continue on X"
+          : quoted
+            ? `Quote-repost · Launch $${clean}`
+            : `Post · Launch $${clean}`}
       </a>
       <div className="g-launch-cta-row">
-        <button type="button" className="g-cta ghost" onClick={() => void copyDraft()}>
-          {copied ? "Draft copied" : "Copy draft"}
-        </button>
         <a
           className="g-cta ghost"
-          href={graavXProfileUrl()}
+          href={dmHref}
+          aria-disabled={!tickerOk}
+          tabIndex={tickerOk ? 0 : -1}
+          onClick={blockUnlessReady}
           target="_blank"
           rel="noopener noreferrer"
+          title={
+            dmDeepLink
+              ? `Opens a DM to ${GRAAV_X_HANDLE_AT} with your draft`
+              : `Opens ${GRAAV_X_HANDLE_AT} — tap Message and paste your draft`
+          }
         >
-          {GRAAV_X_HANDLE_AT}
+          <XMark size={14} />
+          DM {GRAAV_X_HANDLE_AT}
         </a>
+        <button type="button" className="g-cta ghost" onClick={() => void copyDraft()} disabled={!tickerOk}>
+          {copied ? "Draft copied" : "Copy draft"}
+        </button>
       </div>
+
+      <ol className="g-launch-path" aria-label="What happens next">
+        <li>Post, quote, or DM the draft</li>
+        <li>{GRAAV_X_HANDLE_AT} replies with your signing link</li>
+        <li>Review the seed and sign in your wallet</li>
+      </ol>
       <p className="g-hint">
-        Composer / open X only. This console never posts, reposts, or sends DMs.
-        Public X write stays closed. After you post, {GRAAV_X_HANDLE_AT} hands you
-        a /s link — chat ≠ authorization. DMs are the same intents, privately.
+        Opens X with your draft — nothing is posted or sent for you.
+        {!dmDeepLink && " For a DM, tap Message on the profile and paste the draft."}
       </p>
-      <button
-        type="button"
-        className="g-cta"
-        disabled={!tickerOk}
-        onClick={onPostedReview}
-      >
-        I posted on X — review &amp; sign
-      </button>
     </section>
   );
 }

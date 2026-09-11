@@ -284,7 +284,7 @@ export function SigningSessionClient({ initial }: Props) {
   const handleWalletConnect = async () => {
     setStatusMsg(null);
     if (!walletConnectConnector) {
-      setStatusMsg("WalletConnect is unavailable until NEXT_PUBLIC_WC_PROJECT_ID is configured.");
+      setStatusMsg("Wallet connection isn't available on this deployment yet.");
       return;
     }
     try {
@@ -809,7 +809,7 @@ export function SigningSessionClient({ initial }: Props) {
                 </button>
               ) : (
                 <p className="g-micro" role="status" style={{ color: "var(--muted)", textAlign: "center" }}>
-                  WalletConnect unavailable — configure NEXT_PUBLIC_WC_PROJECT_ID to connect.
+                  Wallet connection isn&apos;t available on this deployment yet.
                 </p>
               )}
               <button type="button" onClick={() => void handleCopyLink()} className="g-cta ghost">Copy link</button>

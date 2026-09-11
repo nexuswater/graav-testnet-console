@@ -11,7 +11,6 @@ import {
 import { formatEther, type Address } from "viem";
 import {
   FACTORY_ADDRESS,
-
   FAUCET_URL,
   XRPL_EVM_TESTNET_ID,
   factoryAbi,
@@ -25,6 +24,8 @@ import {
   shortAddr,
   watchTokenAsset,
 } from "@/lib/wallet";
+import { XMark } from "@/components/XMark";
+import { portfolioCommandText, xDmUrl, xPostIntentUrl } from "@/lib/xLaunchComposer";
 
 type Holding = {
   marketId: bigint;
@@ -35,7 +36,6 @@ type Holding = {
   balance: bigint | null;
   graduated: boolean;
 };
-
 
 type Props = {
   setStatusMsg: (m: string | null) => void;
@@ -165,8 +165,8 @@ export function PortfolioTab({ setStatusMsg }: Props) {
 
   const addNetwork = async () => {
     const res = await ensureXrplEvmTestnet();
-    if (!res.ok) setStatusMsg(res.error ?? "Add network failed");
-    else setStatusMsg("XRPL EVM Testnet added / switched in wallet.");
+    if (!res.ok) setStatusMsg(res.error ?? "Could not add the network.");
+    else setStatusMsg("XRPL EVM is set in your wallet.");
   };
 
   const addToken = async (h: Holding) => {
@@ -175,62 +175,51 @@ export function PortfolioTab({ setStatusMsg }: Props) {
       symbol: h.symbol,
       decimals: 18,
     });
-    if (!res.ok) setStatusMsg(res.error ?? "watchAsset failed");
-    else
-      setStatusMsg(
-        `Asked wallet to watch ${h.symbol} (${shortAddr(h.token)}).`
-      );
+    if (!res.ok) setStatusMsg(res.error ?? "Your wallet declined to track this token.");
+    else setStatusMsg(`Asked your wallet to track ${h.symbol} (${shortAddr(h.token)}).`);
   };
 
   const withBalance = markets.filter((m) => m.balance !== null && m.balance > BigInt(0));
-  const unknownBalances = markets.filter((m) => m.balance === null);
+  const unknownBalances = address ? markets.filter((m) => m.balance === null) : [];
+  const zeroXrp = !!address && !!nativeBal && nativeBal.value === BigInt(0);
 
   return (
     <div className="space-y-5">
       <section>
-        <h1 className="g-title">Wallet</h1>
-        <p className="g-sub" style={{ marginTop: 8 }}>
-          Balances on chain {XRPL_EVM_TESTNET_ID}. Empty state is a sentence +
-          faucet.
-        </p>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <button type="button" onClick={() => void addNetwork()} className="g-btn sm">
-            Add XRPL EVM Testnet
-          </button>
-          <button
-            type="button"
-            onClick={() => void refresh()}
-            disabled={loading}
-            className="g-btn sm"
-            style={{
-              background: "var(--x)",
-              color: "#fff",
-              border: 0,
-              fontWeight: 650,
-            }}
-          >
-            {loading ? "Refreshing…" : "Refresh"}
-          </button>
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            <h1 className="g-title">Portfolio</h1>
+            <p className="g-sub" style={{ marginTop: 8 }}>
+              {address
+                ? `Holdings for ${shortAddr(address)} on XRPL EVM.`
+                : "Connect a wallet to see your XRP and coin balances."}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => void refresh()}
+              disabled={loading}
+              className="g-btn sm"
+            >
+              {loading ? "Refreshing…" : "Refresh"}
+            </button>
+          </div>
         </div>
       </section>
 
-      {!isConnected && (
-        <div className="g-alert">
-          Connect wallet to load native XRP and token balances. Markets still
-          enumerate from Factory.
-        </div>
-      )}
-
       {isConnected && !onCorrectChain && (
         <div className="g-alert warn">
-          Wallet chainId is {chainId}. Portfolio still reads XRPL EVM Testnet (
-          {XRPL_EVM_TESTNET_ID}) via RPC.
+          Your wallet is on another network. Balances shown are for XRPL EVM.{" "}
+          <button type="button" className="link-x" style={{ background: "none", border: 0, padding: 0, cursor: "pointer", fontWeight: 650 }} onClick={() => void addNetwork()}>
+            Switch network
+          </button>
         </div>
       )}
 
       <div className="g-sheet" style={{ marginTop: 0 }}>
         <div className="g-kv">
-          <span>Native XRP</span>
+          <span>XRP</span>
           <span>
             {!address
               ? "—"
@@ -242,79 +231,49 @@ export function PortfolioTab({ setStatusMsg }: Props) {
           </span>
         </div>
         <div className="g-kv">
-          <span>Factory markets</span>
-          <span>{marketCount !== null ? String(marketCount) : "…"}</span>
+          <span>Coins held</span>
+          <span>{address ? String(withBalance.length) : "—"}</span>
         </div>
         <div className="g-kv">
-          <span>Holdings &gt; 0</span>
-          <span>{String(withBalance.length)}</span>
+          <span>Markets</span>
+          <span>{marketCount !== null ? String(marketCount) : "…"}</span>
         </div>
-        {!address && (
+        {zeroXrp && (
           <p className="g-hint">
-            Connect a wallet. Need testnet XRP?{" "}
-            <a
-              href={FAUCET_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="link-x"
-            >
-              Open faucet
+            You need XRP for gas.{" "}
+            <a href={FAUCET_URL} target="_blank" rel="noreferrer" className="link-x" style={{ fontWeight: 650 }}>
+              Open faucet →
             </a>
           </p>
         )}
       </div>
 
-      {address && nativeBal && nativeBal.value === BigInt(0) && (
-        <div className="g-alert warn">
-          Wallet has 0 testnet XRP.{" "}
-          <a
-            href={FAUCET_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="link-x"
-            style={{ fontWeight: 650 }}
-          >
-            Open faucet →
-          </a>
-        </div>
-      )}
       {error && <div className="g-alert bad">{error}</div>}
 
       <section>
         {unknownBalances.length > 0 && (
-          <div className="g-alert warn">
-            {unknownBalances.length} holding {unknownBalances.length === 1 ? "read" : "reads"} unknown — not treated as zero.
+          <div className="g-alert warn" style={{ marginBottom: 12 }}>
+            {unknownBalances.length} balance{unknownBalances.length === 1 ? "" : "s"} could not be read and{" "}
+            {unknownBalances.length === 1 ? "is" : "are"} not shown as zero.
           </div>
         )}
         <h2 className="g-sub" style={{ marginBottom: 8 }}>
-          Open positions
+          Holdings
         </h2>
         {loading && markets.length === 0 ? (
-          <p className="g-sub">Scanning Factory markets…</p>
+          <p className="g-sub">Scanning markets…</p>
+        ) : !address ? (
+          <div className="empty g-sub" style={{ padding: "40px 8px" }}>
+            Connect a wallet from the account menu to see your holdings.
+          </div>
         ) : markets.length === 0 ? (
-          <div className="empty g-sub" style={{ padding: "48px 8px" }}>
-            No markets found on Factory. Need testnet XRP?{" "}
-            <a
-              href={FAUCET_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="link-x"
-            >
-              Open faucet
-            </a>
+          <div className="empty g-sub" style={{ padding: "40px 8px" }}>
+            No markets found yet.
           </div>
         ) : withBalance.length === 0 ? (
-          <div className="empty g-sub" style={{ padding: "48px 8px" }}>
-            No open positions yet. Get testnet XRP from the{" "}
-            <a
-              href={FAUCET_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="link-x"
-            >
-              faucet
-            </a>
-            , then buy on Trade.
+          <div className="empty g-sub" style={{ padding: "40px 8px" }}>
+            No coins held yet. Buy from a post or DM on X, or open{" "}
+            <Link href="/?tab=Trade" className="link-x">Trade</Link>.
           </div>
         ) : (
           <div style={{ borderTop: "1px solid var(--line)" }}>
@@ -330,26 +289,15 @@ export function PortfolioTab({ setStatusMsg }: Props) {
                 >
                   <div className="g-tick">
                     {h.symbol}
-                    {h.graduated ? (
-                      <span className="g-sub" style={{ marginLeft: 8 }}>
-                        <span className="g-dot grad" />
-                        graduated
-                      </span>
-                    ) : (
-                      <span className="g-sub" style={{ marginLeft: 8 }}>
-                        <span className="g-dot" />
-                        on curve
-                      </span>
-                    )}
+                    <span className="g-sub" style={{ marginLeft: 8 }}>
+                      <span className={`g-dot${h.graduated ? " grad" : " live"}`} />
+                      {h.graduated ? "Graduated" : "On curve"}
+                    </span>
                   </div>
                   <div className="g-sub">
-                    {shortAddr(h.token)}
+                    {h.balance === null ? "Balance unknown" : `${formatEther(h.balance)} ${h.symbol}`}
                     {" · "}
-                    {!address
-                      ? "—"
-                      : h.balance === null
-                        ? "Unknown"
-                        : formatEther(h.balance)}
+                    {h.name}
                   </div>
                 </Link>
                 <div className="flex items-center gap-2" style={{ flexShrink: 0 }}>
@@ -357,11 +305,13 @@ export function PortfolioTab({ setStatusMsg }: Props) {
                     href={`/t/${encodeURIComponent(h.symbol)}`}
                     className="g-btn sm"
                     style={{
-                      background: "var(--x)",
-                      color: "#fff",
+                      background: "var(--cta-bg)",
+                      color: "var(--cta-fg)",
                       border: 0,
                       fontWeight: 650,
                       textDecoration: "none",
+                      display: "inline-flex",
+                      alignItems: "center",
                     }}
                   >
                     Open
@@ -374,15 +324,30 @@ export function PortfolioTab({ setStatusMsg }: Props) {
                       void addToken(h);
                     }}
                     className="g-btn sm"
-                    title="Watch in MetaMask"
+                    title="Track this token in your wallet"
                   >
-                    Watch
+                    Track
                   </button>
                 </div>
               </div>
             ))}
           </div>
         )}
+      </section>
+
+      <section className="g-card text-sm">
+        <div style={{ fontWeight: 650 }}>Check from X</div>
+        <p className="g-hint" style={{ marginTop: 4 }}>
+          <code>{portfolioCommandText()}</code> — post it or send it as a DM and GRAAV replies with your holdings.
+        </p>
+        <div className="g-x-cta">
+          <a className="g-cta ghost" href={xPostIntentUrl(portfolioCommandText())} target="_blank" rel="noopener noreferrer">
+            <XMark size={14} /> Post
+          </a>
+          <a className="g-cta ghost" href={xDmUrl(portfolioCommandText())} target="_blank" rel="noopener noreferrer">
+            <XMark size={14} /> DM
+          </a>
+        </div>
       </section>
     </div>
   );

@@ -14,11 +14,7 @@ import {
   formatEther,
   parseEther,
   isAddress,
-  zeroHash,
-  decodeEventLog,
   type Address,
-  type Hex,
-  type Log,
 } from "viem";
 import {
   ATTRIBUTION_V1_FACTORY_ADDRESS,
@@ -26,13 +22,8 @@ import {
   GRADUATION_MANAGER_ADDRESS,
   M22_FACTORY_ADDRESS,
   M22_GRADUATION_MANAGER_ADDRESS,
-  T589_MARKET_ADDRESS,
   T589_TOKEN_ADDRESS,
-  MARKET2_ADDRESS,
-  GSWAP_MARKET_ADDRESS,
   GSWAP_TOKEN_ADDRESS,
-  G589_MARKET_ADDRESS,
-  MEME_TESTNET_MARKETS,
   EXPLORER_URL,
   XRPL_EVM_TESTNET_ID,
   factoryAbi,
@@ -47,12 +38,11 @@ import {
 } from "@/lib/chain";
 import { shortAddr } from "@/lib/wallet";
 import type { TradePrefill } from "@/lib/tradePrefill";
-import { Field } from "@/components/ui";
 import { TokenPfp } from "@/components/pfp/TokenPfp";
-import { XPrimaryNote } from "@/components/XPrimaryNote";
-import { RLUSD_V1 as RLUSD } from "@/lib/rlusd-v1/config";
-import { RLUSD_MARKET_REGISTRY } from "@/lib/rlusd-v1/marketRegistry";
-import { RlusdTradePanel } from "@/components/rlusd/RlusdTradePanel";
+import { XTradeCta } from "@/components/XTradeCta";
+import { resolveKnown } from "@/lib/chatIntent";
+import { homeMarkets } from "@/lib/marketsRegistry";
+import { GRAAV_X_HANDLE_AT } from "@/lib/xLaunchComposer";
 
 function explorerAddress(addr: string) {
   return `${EXPLORER_URL}/address/${addr}`;
@@ -78,15 +68,9 @@ export function TradeTab({
   const canTrade = isConnected && onCorrectChain;
   const v2Configured = isV2DexConfigured();
 
-  const [createName, setCreateName] = useState("");
-  const [createSymbol, setCreateSymbol] = useState("");
-  const [createUri, setCreateUri] = useState("");
   const [loadQuery, setLoadQuery] = useState("gSWAP");
   const [marketAddr, setMarketAddr] = useState<Address | null>(null);
   const [tokenAddr, setTokenAddr] = useState<Address | null>(null);
-  const [factoryGraduated, setFactoryGraduated] = useState<boolean | null>(
-    null
-  );
   const [loadError, setLoadError] = useState<string | null>(null);
   const [buyXrp, setBuyXrp] = useState("0.1");
   const [sellAmount, setSellAmount] = useState("1");
@@ -95,10 +79,8 @@ export function TradeTab({
   );
   const [swapAmount, setSwapAmount] = useState("0.1");
   const [tradeSide, setTradeSide] = useState<"buy" | "sell" | "swap">("swap");
-  const [showSearchExtras, setShowSearchExtras] = useState(false);
-  const [pendingCreate, setPendingCreate] = useState(false);
 
-  const skipInitialT589 = useRef(false);
+  const skipInitialLoad = useRef(false);
 
   const {
     writeContractAsync,
@@ -107,12 +89,11 @@ export function TradeTab({
     error: writeError,
     reset: resetWrite,
   } = useWriteContract();
-  const { isLoading: isConfirming, isSuccess: isConfirmed, data: receipt } =
+  const { isLoading: isConfirming, isSuccess: isConfirmed } =
     useWaitForTransactionReceipt({ hash: txHash });
 
   useEffect(() => {
     resetWrite();
-    setPendingCreate(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [marketAddr]);
 
@@ -122,63 +103,16 @@ export function TradeTab({
     }
   }, [isConfirmed, txHash, setStatusMsg]);
 
-  useEffect(() => {
-    if (!pendingCreate || !isConfirmed || !receipt || !publicClient) return;
-    setPendingCreate(false);
-    try {
-      for (const log of receipt.logs as Log[]) {
-        try {
-          const decoded = decodeEventLog({
-            abi: factoryAbi,
-            data: log.data,
-            topics: log.topics,
-          });
-          if (decoded.eventName === "MarketCreated") {
-            const args = decoded.args as {
-              marketId?: bigint;
-              token?: Address;
-              market?: Address;
-              symbol?: string;
-            };
-            if (args.market && args.token) {
-              skipInitialT589.current = true;
-              setMarketAddr(args.market);
-              setTokenAddr(args.token);
-              setFactoryGraduated(false);
-              const sym = args.symbol || createSymbol.trim() || "NEW";
-              setLoadQuery(args.market);
-              setStatusMsg(
-                `Created market #${args.marketId ?? "?"} ${sym} → ${args.market}. Staying on this market (not T589).`
-              );
-              return;
-            }
-          }
-        } catch {
-          /* not this event */
-        }
-      }
-      const sym = createSymbol.trim();
-      if (sym) {
-        skipInitialT589.current = true;
-        void loadMarketByQuery(sym);
-        setStatusMsg(`Create confirmed — loaded by symbol ${sym}.`);
-      }
-    } catch (e) {
-      setStatusMsg(`Create confirmed but parse failed: ${String(e)}`);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pendingCreate, isConfirmed, receipt]);
-
   const loadMarketByQuery = useCallback(
     async (qRaw: string) => {
       setLoadError(null);
       if (!publicClient) {
-        setLoadError("RPC client not ready");
+        setLoadError("Network client not ready. Try again in a moment.");
         return;
       }
       const q = qRaw.trim();
       if (!q) {
-        setLoadError("Enter a symbol or market address");
+        setLoadError("Enter a ticker or market address.");
         return;
       }
       try {
@@ -190,22 +124,19 @@ export function TradeTab({
               abi: marketAbi,
               functionName: "token",
             });
-            skipInitialT589.current = true;
+            skipInitialLoad.current = true;
             setMarketAddr(asAddr);
             setTokenAddr(tok as Address);
-            setFactoryGraduated(null);
-            setStatusMsg(`Loaded market ${asAddr}`);
+            setStatusMsg(`Loaded market ${shortAddr(asAddr)}`);
             return;
           } catch {
-            setLoadError("Address is not a GRAAV market (token() failed)");
+            setLoadError("That address is not a GRAAV market.");
             return;
           }
         }
 
-        // Dual-factory: M22 (V2 swap path) first, then M2 meme/T589 factory,
-        // then the Attribution V1 tip (stack2) for markets created there.
+        // M2.2 (DEX-wired) first, then M2, then the Attribution V1 tip (stack2).
         let info: MarketInfo | null = null;
-        let factoryUsed: Address = M22_FACTORY_ADDRESS;
         for (const fac of [
           M22_FACTORY_ADDRESS,
           FACTORY_ADDRESS,
@@ -220,7 +151,6 @@ export function TradeTab({
             })) as MarketInfo;
             if (cand && cand.market !== ZERO_ADDRESS) {
               info = cand;
-              factoryUsed = fac;
               break;
             }
           } catch {
@@ -229,23 +159,15 @@ export function TradeTab({
         }
 
         if (!info || info.market === ZERO_ADDRESS) {
-          setLoadError(`No market found for symbol "${q}"`);
+          setLoadError(`No market found for "${q}".`);
           setMarketAddr(null);
           setTokenAddr(null);
           return;
         }
-        skipInitialT589.current = true;
+        skipInitialLoad.current = true;
         setMarketAddr(info.market);
         setTokenAddr(info.token);
-        setFactoryGraduated(info.graduated);
-        const facTag =
-          factoryUsed.toLowerCase() === M22_FACTORY_ADDRESS.toLowerCase()
-            ? "M22"
-            : factoryUsed.toLowerCase() ===
-                ATTRIBUTION_V1_FACTORY_ADDRESS.toLowerCase()
-              ? "Attribution V1"
-              : "M2";
-        setStatusMsg(`Loaded ${q} → ${info.market} (${facTag} factory)`);
+        setStatusMsg(null);
       } catch (e) {
         setLoadError(String(e));
       }
@@ -261,11 +183,9 @@ export function TradeTab({
     [loadMarketByQuery, loadQuery, setStatusMsg]
   );
 
-  // Apply Chat → Trade prefill (fields only; never sends tx)
+  // Apply Chat / deep-link prefill (fields only; never sends a tx).
   useEffect(() => {
     if (!prefill) return;
-    if (prefill.createName) setCreateName(prefill.createName);
-    if (prefill.createSymbol) setCreateSymbol(prefill.createSymbol);
     if (prefill.buyXrp) {
       setBuyXrp(prefill.buyXrp);
       setSwapAmount(prefill.buyXrp);
@@ -276,32 +196,28 @@ export function TradeTab({
       setSwapAmount(prefill.sellAmount);
       setSwapSide("tokenToXrp");
     }
-    if (prefill.side === "buy") setSwapSide("xrpToToken");
-    if (prefill.side === "sell") setSwapSide("tokenToXrp");
+    if (prefill.side === "buy" || prefill.action === "buy") {
+      setSwapSide("xrpToToken");
+      setTradeSide("buy");
+    }
+    if (prefill.side === "sell" || prefill.action === "sell") {
+      setSwapSide("tokenToXrp");
+      setTradeSide("sell");
+    }
     if (prefill.loadQuery || prefill.symbol) {
       const q = prefill.loadQuery || prefill.symbol || "";
       setLoadQuery(q);
       void loadMarketByQuery(q);
     }
-    if (prefill.action === "launch" && prefill.createSymbol) {
-      setStatusMsg(
-        `Chat handed off LAUNCH ${prefill.createSymbol} — review fields, then sign in wallet on Trade.`
-      );
-    } else if (prefill.action === "buy" || prefill.action === "swap") {
-      setStatusMsg(
-        `Chat handed off ${prefill.action.toUpperCase()} — review amount/symbol on Trade. If graduated, use Swap (DEX/LP); wallet still signs.`
-      );
-    } else if (prefill.action === "sell") {
-      setStatusMsg(
-        `Chat handed off SELL — review amount on Trade. If graduated, use Swap (token→XRP); Approve if needed, then sign in wallet.`
-      );
+    if (prefill.action === "buy" || prefill.action === "sell" || prefill.action === "swap") {
+      setStatusMsg("Review the amount, then sign in your wallet. Graduated markets trade through Swap.");
     }
     onPrefillConsumed();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [prefill]);
 
   useEffect(() => {
-    if (publicClient && !marketAddr && !skipInitialT589.current) {
+    if (publicClient && !marketAddr && !skipInitialLoad.current) {
       void loadMarketByQuery("gSWAP");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -357,13 +273,7 @@ export function TradeTab({
     functionName: "symbol",
     query: { enabled: !!tokenAddr },
   });
-  const { data: marketCount } = useReadContract({
-    address: FACTORY_ADDRESS,
-    abi: factoryAbi,
-    functionName: "marketCount",
-  });
 
-  // V2 pool reserves — only when V2 address configured
   const { data: v2Reserves, refetch: refetchV2, isError: v2ReservesError } =
     useReadContract({
       address: v2Configured ? TEST_DEX_V2_ADDRESS : undefined,
@@ -403,16 +313,16 @@ export function TradeTab({
     v2XrpReserve > BigInt(0) &&
     v2TokReserve > BigInt(0);
 
-  const swapScarReason = useMemo(() => {
-    if (!isGraduated) return null;
+  const swapUnavailableReason = useMemo(() => {
+    if (!isGraduated) return "Swap opens after this market graduates. Use Buy or Sell on the curve.";
     if (isT589 && !hasProvenV2Pool) {
-      return "TestDex v1 has no swap — LP accounting only. T589 reserves sit on v1 (0x6033…A874). No migrate/withdraw in this slice. Protocol must deploy V2 + new graduation (or approved migrate) before Swap is enabled.";
+      return "This market graduated to a legacy pool. Swaps are not available here.";
     }
     if (!v2Configured) {
-      return "TestDex V2 address not configured yet (Protocol deploy pending). Swap disabled fail-closed — no fake routes.";
+      return "The DEX is not configured yet. Swaps are disabled.";
     }
     if (!hasProvenV2Pool) {
-      return "No proven V2 pool/reserves for this token. Swap disabled fail-closed. New graduations need GM→V2 wiring after Protocol ships V2.";
+      return "No liquidity pool found for this token yet. Swaps are disabled.";
     }
     return null;
   }, [isGraduated, isT589, v2Configured, hasProvenV2Pool]);
@@ -427,11 +337,9 @@ export function TradeTab({
       if (amt <= BigInt(0)) return null;
       // Local CPMM quote (matches expected V2 getAmountOut) — display only
       if (swapSide === "xrpToToken") {
-        const out = (amt * v2TokReserve) / (v2XrpReserve + amt);
-        return out;
+        return (amt * v2TokReserve) / (v2XrpReserve + amt);
       }
-      const out = (amt * v2XrpReserve) / (v2TokReserve + amt);
-      return out;
+      return (amt * v2XrpReserve) / (v2TokReserve + amt);
     } catch {
       return null;
     }
@@ -452,6 +360,13 @@ export function TradeTab({
     if (isConfirmed) refreshMarket();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isConfirmed]);
+
+  // Graduated markets trade through Swap; keep the visible form consistent with that.
+  useEffect(() => {
+    if (graduated === true && tradeSide !== "swap") setTradeSide("swap");
+    if (graduated === false && tradeSide === "swap") setTradeSide("buy");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [graduated]);
 
   const buyDisabled =
     !canTrade || isWriting || isConfirming || !marketAddr || isGraduated;
@@ -482,33 +397,10 @@ export function TradeTab({
     }
   };
 
-  const createMarket = async () => {
-    if (!canTrade) return;
-    const name = createName.trim();
-    const symbol = createSymbol.trim();
-    if (!name || !symbol) {
-      setStatusMsg("Name and symbol required");
-      return;
-    }
-    resetWrite();
-    setPendingCreate(true);
-    const hash = await safeWrite("Creating market", () =>
-      writeContractAsync({
-        address: FACTORY_ADDRESS,
-        abi: factoryAbi,
-        functionName: "createMarket",
-        args: [name, symbol, createUri.trim(), zeroHash as Hex],
-      })
-    );
-    if (!hash) setPendingCreate(false);
-  };
-
   const doBuy = async () => {
     if (!canTrade || !marketAddr) return;
     if (isGraduated) {
-      setStatusMsg(
-        "Buy disabled — market graduated. Use Swap (DEX/LP) when a proven V2 pool exists."
-      );
+      setStatusMsg("This market graduated. Use Swap.");
       return;
     }
     resetWrite();
@@ -557,9 +449,7 @@ export function TradeTab({
   const doSell = async () => {
     if (!canTrade || !marketAddr) return;
     if (isGraduated) {
-      setStatusMsg(
-        "Sell disabled — market graduated. Use Swap (DEX/LP) when a proven V2 pool exists."
-      );
+      setStatusMsg("This market graduated. Use Swap.");
       return;
     }
     resetWrite();
@@ -594,7 +484,7 @@ export function TradeTab({
       setStatusMsg("Invalid token amount");
       return;
     }
-    await safeWrite(`Approve V2 for ${swapAmount}`, () =>
+    await safeWrite(`Approving ${swapAmount} for swap`, () =>
       writeContractAsync({
         address: tokenAddr,
         abi: erc20Abi,
@@ -606,7 +496,7 @@ export function TradeTab({
 
   const doSwap = async () => {
     if (!swapEnabled || !tokenAddr) {
-      setStatusMsg(swapScarReason ?? "Swap not available");
+      setStatusMsg(swapUnavailableReason ?? "Swap not available");
       return;
     }
     resetWrite();
@@ -623,7 +513,7 @@ export function TradeTab({
     }
     const minOut = quoteOut ? (quoteOut * BigInt(995)) / BigInt(1000) : BigInt(0);
     if (swapSide === "xrpToToken") {
-      await safeWrite(`Swap ${swapAmount} XRP → token`, () =>
+      await safeWrite(`Swap ${swapAmount} XRP → ${tokenSymbol || "token"}`, () =>
         writeContractAsync({
           address: TEST_DEX_V2_ADDRESS,
           abi: testDexV2Abi,
@@ -633,7 +523,7 @@ export function TradeTab({
         })
       );
     } else {
-      await safeWrite(`Swap ${swapAmount} token → XRP`, () =>
+      await safeWrite(`Swap ${swapAmount} ${tokenSymbol || "token"} → XRP`, () =>
         writeContractAsync({
           address: TEST_DEX_V2_ADDRESS,
           abi: testDexV2Abi,
@@ -656,7 +546,6 @@ export function TradeTab({
       })) as Address;
       if (fromMarket && fromMarket !== ZERO_ADDRESS) gm = fromMarket;
     } catch {
-      // fallback: M22 if loading gSWAP path else M2
       if (
         tokenAddr &&
         tokenAddr.toLowerCase() === GSWAP_TOKEN_ADDRESS.toLowerCase()
@@ -695,110 +584,101 @@ export function TradeTab({
     }
   }, [v2Allowance, swapAmount, swapSide]);
 
-  // The selected mode controls the visible form; availability only gates actions.
   const activeSide = tradeSide;
+  const symbol = typeof tokenSymbol === "string" ? tokenSymbol : "";
+  const knownOnX = symbol ? resolveKnown(symbol) : null;
+  const xSide: "buy" | "sell" =
+    activeSide === "sell" || (activeSide === "swap" && swapSide === "tokenToXrp") ? "sell" : "buy";
+  const xAmount =
+    activeSide === "buy" ? buyXrp : activeSide === "sell" ? sellAmount : swapAmount;
+  const quickPicks = homeMarkets();
+  const walletHint = !isConnected
+    ? "Connect your wallet to sign here."
+    : !onCorrectChain
+      ? "Switch your wallet to XRPL EVM to sign here."
+      : null;
 
   return (
     <div className="space-y-5">
-      {!onCorrectChain && isConnected && (
-        <div className="g-alert bad">
-          Fail-closed: create / buy / sell / swap / graduate disabled until
-          chainId === {XRPL_EVM_TESTNET_ID}.
-        </div>
-      )}
-
-      {RLUSD.profile === "testnet-clone" && (
-        <div className="g-alert" style={{ marginBottom: 16 }}>
-          RLUSD Coin V1 factory is pinned. Daily launch is on X. In-app trade here is fallback until a signed createCoin binds a coin and curve.
-          <span className="flex flex-wrap gap-2" style={{ marginTop: 10 }}>
-            <Link href="/launch" className="g-btn sm" style={{ textDecoration: "none" }}>Launch on X</Link>
-            <Link href="/" className="g-btn sm" style={{ textDecoration: "none" }}>Charts</Link>
-          </span>
-        </div>
-      )}
-      <XPrimaryNote />
-      <div className="flex items-center justify-between" style={{ marginBottom: 8 }}>
-        <h1 className="g-title">Trade · fallback</h1>
-        <Link
-          href="/new"
-          className="g-btn sm"
-          style={{ background: "var(--x)", color: "#fff", border: 0, fontWeight: 650, textDecoration: "none" }}
-        >
-          Advanced · new market
-        </Link>
-      </div>
-      <section aria-labelledby="rlusd-markets">
-        <div className="flex items-center justify-between" style={{ marginBottom: 8 }}>
-          <div>
-            <h2 id="rlusd-markets" className="g-title">RLUSD Markets</h2>
-            <p className="g-hint" style={{ marginTop: 6 }}>Registry-first rail · quote RLUSD · chain {RLUSD.chainId}</p>
-          </div>
-        </div>
-        <div style={{ borderTop: "1px solid var(--line)" }}>
-          {RLUSD_MARKET_REGISTRY.map((market) => (
-            <Link key={market.id} href={`/m/${market.sourcePostId}`} className="g-mkt" style={{ textDecoration: "none", color: "inherit" }}>
-              <TokenPfp ticker={market.symbol} size="sm" />
-              <div>
-                <div className="g-tick">{market.symbol}</div>
-                <div className="g-sub">
-                  <span className="g-dot" />
-                  {market.status === "not-launched" ? "Not launched" : "Not launched"} · RLUSD
-                </div>
-              </div>
-              <div className="g-sub">Open →</div>
-            </Link>
-          ))}
-        </div>
-        <p className="g-hint" style={{ marginTop: 12 }}>Only the verified clone row enables wallet-signed actions.</p>
+      <section>
+        <h1 className="g-title">Trade</h1>
+        <p className="g-sub" style={{ marginTop: 8 }}>
+          Daily trading happens on X — post or DM {GRAAV_X_HANDLE_AT} and sign the link it sends.
+          This in-app rail is the fallback. Your wallet signs either way.
+        </p>
       </section>
 
-      <RlusdTradePanel />
-
-      <details className="g-details" style={{ marginTop: 16 }}>
-        <summary>Search existing XRP markets</summary>
-        <section style={{ marginTop: 14 }}>
-          <div className="flex gap-2">
-            <input className="g-search" value={loadQuery} onChange={(e) => setLoadQuery(e.target.value)} onFocus={() => setShowSearchExtras(true)} placeholder="Search XRP markets" />
-            <button type="button" onClick={() => void loadMarket()} className="g-btn" style={{ background: "var(--x)", color: "#fff", border: 0, fontWeight: 650, whiteSpace: "nowrap" }}>Load</button>
-          </div>
-          <div style={{ borderTop: "1px solid var(--line)", marginTop: 12 }}>
-            <Link href="/t/gSWAP" className="g-mkt" style={{ textDecoration: "none", color: "inherit" }}><TokenPfp ticker="gSWAP" size="sm" /><div><div className="g-tick">gSWAP</div><div className="g-sub"><span className="g-dot grad" />Graduated · V2 · XRP</div></div><div className="g-sub">Open →</div></Link>
-            <Link href="/t/g589" className="g-mkt" style={{ textDecoration: "none", color: "inherit" }}><TokenPfp ticker="g589" size="sm" /><div><div className="g-tick">g589</div><div className="g-sub"><span className="g-dot" />On curve · M2 · XRP</div></div><div className="g-sub">Open →</div></Link>
-          </div>
-          {showSearchExtras && (
-            <details className="g-details" open>
-              <summary>More XRP markets</summary>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <button type="button" onClick={() => { setLoadQuery(GSWAP_MARKET_ADDRESS); void loadMarketByQuery(GSWAP_MARKET_ADDRESS); }} className="g-btn sm">gSWAP</button>
-                <button type="button" onClick={() => { setLoadQuery(G589_MARKET_ADDRESS); void loadMarketByQuery(G589_MARKET_ADDRESS); }} className="g-btn sm" title="Preferred M2 bonding-curve">g589</button>
-                <button type="button" onClick={() => { setLoadQuery(MARKET2_ADDRESS); void loadMarketByQuery(MARKET2_ADDRESS); }} className="g-btn sm">Market #2</button>
-                <button type="button" onClick={() => { setLoadQuery(T589_MARKET_ADDRESS); void loadMarketByQuery(T589_MARKET_ADDRESS); }} className="g-btn sm" style={{ color: "var(--dim)" }} title="Scar · v1 no swap">T589 · scar</button>
-                {MEME_TESTNET_MARKETS.map((m) => <button key={m.symbol} type="button" onClick={() => { setLoadQuery(m.symbol); void loadMarketByQuery(m.symbol); }} className="g-btn sm" title={m.name}>{m.symbol}</button>)}
-              </div>
-            </details>
-          )}
+      <section aria-label="Find a market">
+        <div className="flex gap-2">
+          <input
+            className="g-search"
+            value={loadQuery}
+            onChange={(e) => setLoadQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") void loadMarket();
+            }}
+            placeholder="Ticker or market address"
+            aria-label="Ticker or market address"
+          />
+          <button
+            type="button"
+            onClick={() => void loadMarket()}
+            className="g-btn"
+            style={{ background: "var(--cta-bg)", color: "var(--cta-fg)", border: 0, fontWeight: 650, whiteSpace: "nowrap" }}
+          >
+            Load
+          </button>
+        </div>
+        <div className="g-chip-row" aria-label="Listed markets">
+          {quickPicks.map((m) => (
+            <button
+              key={m.ticker}
+              type="button"
+              className="g-btn sm"
+              title={m.name}
+              aria-pressed={symbol.toLowerCase() === m.ticker.toLowerCase()}
+              style={symbol.toLowerCase() === m.ticker.toLowerCase() ? { borderColor: "var(--text)" } : undefined}
+              onClick={() => {
+                setLoadQuery(m.ticker);
+                void loadMarketByQuery(m.ticker);
+              }}
+            >
+              {m.ticker}
+            </button>
+          ))}
+        </div>
         {loadError && (
           <p className="g-sub mt-2" style={{ color: "var(--bad)" }}>
             {loadError}
           </p>
         )}
       </section>
-      </details>
 
       {marketAddr && (
-        <section>
-          <div className="g-sub">
-            Market · {isGraduated ? "graduated" : "on curve"}
-            {isT589 ? " · scar" : ""}
+        <section aria-labelledby="trade-market-heading">
+          <div className="g-trade-head" style={{ marginBottom: 12 }}>
+            <TokenPfp ticker={symbol || "?"} size="md" />
+            <div>
+              <div className="g-sub">
+                <span className={`g-dot${isGraduated ? " grad" : " live"}`} />
+                {graduated === undefined ? "Loading…" : isGraduated ? "Graduated" : "On curve"}
+              </div>
+              <h2 id="trade-market-heading" className="g-display" style={{ marginTop: 4 }}>
+                {symbol || "…"}
+              </h2>
+              <div className="g-sub" style={{ marginTop: 6 }}>
+                {price !== undefined
+                  ? `${Number(formatEther(price)).toPrecision(4)} XRP / token`
+                  : "—"}
+              </div>
+            </div>
           </div>
-          <h1 className="g-display" style={{ marginTop: 4 }}>
-            {tokenSymbol || "…"}
-          </h1>
-          <div className="g-sub" style={{ marginTop: 6 }}>
-            {price !== undefined
-              ? `${Number(formatEther(price)).toPrecision(4)} XRP / token`
-              : "—"}
-          </div>
+
+          {knownOnX && <XTradeCta side={xSide} ticker={knownOnX.symbol} amount={xAmount} />}
+
+          <div className="g-or">{knownOnX ? "or sign here" : "sign here"}</div>
+
+          {walletHint && <div className="g-alert" style={{ marginTop: 12 }}>{walletHint}</div>}
 
           <div className="g-seg" role="tablist" aria-label="Trade side">
             <button
@@ -826,6 +706,11 @@ export function TradeTab({
 
           {activeSide === "buy" && (
             <>
+              {isGraduated && (
+                <div className="g-alert warn" style={{ marginBottom: 12 }}>
+                  This market graduated. Buy through Swap.
+                </div>
+              )}
               <div className="g-field">
                 <label>You pay</label>
                 <input
@@ -833,10 +718,11 @@ export function TradeTab({
                   onChange={(e) => setBuyXrp(e.target.value)}
                   inputMode="decimal"
                   placeholder="0.1"
+                  aria-label="XRP to spend"
                 />
                 <div className="g-pct">
                   {["0.05", "0.1", "0.5", "1"].map((v) => (
-                    <button key={v} type="button" onClick={() => setBuyXrp(v)}>
+                    <button key={v} type="button" className={buyXrp === v ? "on" : undefined} onClick={() => setBuyXrp(v)}>
                       {v}
                     </button>
                   ))}
@@ -848,14 +734,19 @@ export function TradeTab({
                 disabled={buyDisabled}
                 className="g-cta"
               >
-                Buy {tokenSymbol || "token"}
+                Buy {symbol || "token"}
               </button>
-              <p className="g-hint">You sign in wallet. GRAAV never holds the key.</p>
+              <p className="g-hint">You sign in your wallet. GRAAV never holds your key.</p>
             </>
           )}
 
           {activeSide === "sell" && (
             <>
+              {isGraduated && (
+                <div className="g-alert warn" style={{ marginBottom: 12 }}>
+                  This market graduated. Sell through Swap.
+                </div>
+              )}
               <div className="g-field">
                 <label>You sell</label>
                 <input
@@ -863,13 +754,14 @@ export function TradeTab({
                   onChange={(e) => setSellAmount(e.target.value)}
                   inputMode="decimal"
                   placeholder="1"
+                  aria-label="Tokens to sell"
                 />
               </div>
               <div className="mt-3 flex gap-2">
                 <button
                   type="button"
                   onClick={() => void doApprove()}
-                  disabled={tradeDisabled || !marketAddr || !needsApprove}
+                  disabled={tradeDisabled || !marketAddr || !needsApprove || isGraduated}
                   className="g-cta ghost"
                   style={{ marginTop: 0 }}
                 >
@@ -893,9 +785,9 @@ export function TradeTab({
 
           {activeSide === "swap" && (
             <>
-              {swapScarReason ? (
+              {swapUnavailableReason ? (
                 <div className="g-alert warn">
-                  <strong>Swap disabled.</strong> {swapScarReason}
+                  <strong>Swap unavailable.</strong> {swapUnavailableReason}
                 </div>
               ) : (
                 <>
@@ -908,7 +800,7 @@ export function TradeTab({
                         setSwapAmount(buyXrp || "0.1");
                       }}
                     >
-                      XRP → {tokenSymbol || "token"}
+                      XRP → {symbol || "token"}
                     </button>
                     <button
                       type="button"
@@ -918,20 +810,21 @@ export function TradeTab({
                         setSwapAmount(sellAmount || "1");
                       }}
                     >
-                      {tokenSymbol || "token"} → XRP
+                      {symbol || "token"} → XRP
                     </button>
                   </div>
                   <div className="g-field">
                     <label>
                       {swapSide === "xrpToToken"
                         ? "You pay"
-                        : `${tokenSymbol || "Token"} in`}
+                        : `${symbol || "Token"} in`}
                     </label>
                     <input
                       value={swapAmount}
                       onChange={(e) => setSwapAmount(e.target.value)}
                       inputMode="decimal"
                       placeholder="0.1"
+                      aria-label="Swap amount"
                     />
                   </div>
                   <p className="g-hint">
@@ -939,7 +832,7 @@ export function TradeTab({
                     {quoteOut !== null
                       ? `${formatEther(quoteOut)} ${
                           swapSide === "xrpToToken"
-                            ? tokenSymbol || "token"
+                            ? symbol || "token"
                             : "XRP"
                         }`
                       : "—"}
@@ -951,7 +844,7 @@ export function TradeTab({
                       disabled={tradeDisabled || !needsV2Approve || !swapEnabled}
                       className="g-cta ghost"
                     >
-                      {needsV2Approve ? "Approve V2" : "V2 approved"}
+                      {needsV2Approve ? "Approve" : "Approved"}
                     </button>
                   )}
                   <button
@@ -965,9 +858,9 @@ export function TradeTab({
                     }
                     className="g-cta"
                   >
-                    Swap (wallet signs)
+                    Swap
                   </button>
-                  <p className="g-hint">You sign in wallet. GRAAV never holds the key.</p>
+                  <p className="g-hint">You sign in your wallet. GRAAV never holds your key.</p>
                 </>
               )}
             </>
@@ -975,10 +868,6 @@ export function TradeTab({
 
           <details className="g-details">
             <summary>Details</summary>
-            <div className="g-kv">
-              <span>Chain</span>
-              <span className="g-mono">{XRPL_EVM_TESTNET_ID}</span>
-            </div>
             <div className="g-kv">
               <span>Market</span>
               <span className="g-mono">
@@ -1010,15 +899,23 @@ export function TradeTab({
               </span>
             </div>
             <div className="g-kv">
-              <span>realXrp</span>
+              <span>Curve reserve</span>
               <span>
                 {realXrp !== undefined ? formatEther(realXrp) + " XRP" : "…"}
               </span>
             </div>
             <div className="g-kv">
-              <span>tokenReserve</span>
+              <span>Tokens on curve</span>
               <span>
                 {tokenReserve !== undefined ? formatEther(tokenReserve) : "…"}
+              </span>
+            </div>
+            <div className="g-kv">
+              <span>Graduation threshold</span>
+              <span>
+                {threshold !== undefined
+                  ? formatEther(threshold) + " XRP"
+                  : "…"}
               </span>
             </div>
             <div className="g-kv">
@@ -1028,11 +925,11 @@ export function TradeTab({
                   ? formatEther(tokenBalance)
                   : isConnected
                     ? "…"
-                    : "connect wallet"}
+                    : "Connect wallet"}
               </span>
             </div>
             <div className="g-kv">
-              <span>TestDex V2</span>
+              <span>DEX</span>
               <span className="g-mono">
                 {v2Configured ? (
                   <a
@@ -1044,14 +941,14 @@ export function TradeTab({
                     {shortAddr(TEST_DEX_V2_ADDRESS)}
                   </a>
                 ) : (
-                  "not wired"
+                  "Not configured"
                 )}
               </span>
             </div>
             {hasProvenV2Pool && (
               <>
                 <div className="g-kv">
-                  <span>V2 XRP</span>
+                  <span>Pool XRP</span>
                   <span>
                     {v2XrpReserve !== undefined
                       ? formatEther(v2XrpReserve)
@@ -1059,7 +956,7 @@ export function TradeTab({
                   </span>
                 </div>
                 <div className="g-kv">
-                  <span>V2 token</span>
+                  <span>Pool {symbol || "token"}</span>
                   <span>
                     {v2TokReserve !== undefined
                       ? formatEther(v2TokReserve)
@@ -1069,110 +966,78 @@ export function TradeTab({
               </>
             )}
             <div className="g-kv">
-              <span>Factory.graduated</span>
-              <span>
-                {factoryGraduated === null
-                  ? "n/a"
-                  : String(factoryGraduated)}
-              </span>
-            </div>
-            <div className="g-kv">
-              <span>threshold</span>
-              <span>
-                {threshold !== undefined
-                  ? formatEther(threshold) + " XRP"
-                  : "…"}
-              </span>
-            </div>
-            <div className="g-kv">
-              <span>Factory markets</span>
-              <span>{String(marketCount ?? "…")}</span>
+              <span>Chain</span>
+              <span className="g-mono">XRPL EVM · {XRPL_EVM_TESTNET_ID}</span>
             </div>
           </details>
+
+          {!isGraduated && (
+            <details className="g-details">
+              <summary>Advanced · graduate</summary>
+              <p className="g-sub" style={{ margin: "8px 0 0" }}>
+                Graduation moves a market from its curve to the DEX once the threshold is met.
+                Your wallet signs; the call reverts if the market is not ready.
+              </p>
+              <button
+                type="button"
+                onClick={() => void doGraduate()}
+                disabled={tradeDisabled || !marketAddr || isGraduated}
+                className="g-cta ghost"
+              >
+                Graduate market
+              </button>
+            </details>
+          )}
         </section>
       )}
 
-      <details className="g-details">
-        <summary>New market</summary>
-        <p className="g-sub" style={{ margin: "8px 0 12px" }}>
-          Origin optional. Signature required. Chat is not authorization.
-        </p>
-        <div className="space-y-2">
-          <Field
-            label="Name"
-            value={createName}
-            onChange={setCreateName}
-            placeholder="GRAAV"
-          />
-          <Field
-            label="Ticker · one cashtag"
-            value={createSymbol}
-            onChange={setCreateSymbol}
-            placeholder="MYTK"
-          />
-          <Field
-            label="metadataURI (optional)"
-            value={createUri}
-            onChange={setCreateUri}
-            placeholder="ipfs://… or https://x.com/…"
-          />
-        </div>
-        <button
-          type="button"
-          onClick={() => void createMarket()}
-          disabled={tradeDisabled}
-          className="g-cta"
-        >
-          Create on testnet
-        </button>
-        <p className="g-hint">Creates on M2 factory. gSWAP never on M2.</p>
-      </details>
-
-      <details className="g-details">
-        <summary>Graduate</summary>
-        <button
-          type="button"
-          onClick={() => void doGraduate()}
-          disabled={tradeDisabled || !marketAddr || isGraduated}
-          className="g-cta ghost"
-        >
-          Graduate market
-        </button>
-        <p className="g-hint">
-          M2 GM → TestDex v1 (scar). M22 GM → TestDex V2 (gSWAP). Prefer gSWAP then
-          g589 (M2 curve). T589 is a scar — do not feature.
-        </p>
-      </details>
-
       <section className="g-card text-sm">
-        <div className="g-micro" style={{ marginBottom: 8 }}>
-          STATUS
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div>
+            <div style={{ fontWeight: 650 }}>New market</div>
+            <p className="g-hint" style={{ marginTop: 4 }}>
+              Launch from a post, repost, or DM on X. The in-app form is the fallback.
+            </p>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <Link href="/launch" className="g-btn sm" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
+              Launch on X
+            </Link>
+            <Link href="/new" className="g-btn sm" style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}>
+              In-app form
+            </Link>
+          </div>
         </div>
-        {statusMsg && <p style={{ color: "var(--text)" }}>{statusMsg}</p>}
-        {txHash && (
-          <p className="mt-1">
-            Tx:{" "}
-            <a
-              className="link-x"
-              href={`${EXPLORER_URL}/tx/${txHash}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              {shortAddr(txHash)}
-            </a>
-            {isConfirming && " (confirming…)"}
-            {isConfirmed && " ✓"}
-          </p>
-        )}
-        {writeError && (
-          <p className="mt-2 break-all" style={{ color: "var(--bad)" }}>
-            {String(writeError.message)}
-          </p>
-        )}
-        {!statusMsg && !txHash && !writeError && (
-          <p style={{ color: "var(--dim)" }}>Ready.</p>
-        )}
       </section>
+
+      {(statusMsg || txHash || writeError) && (
+        <section className="g-card text-sm" aria-live="polite">
+          <div className="g-micro" style={{ marginBottom: 8 }}>
+            STATUS
+          </div>
+          {statusMsg && <p style={{ color: "var(--text)" }}>{statusMsg}</p>}
+          {txHash && (
+            <p className="mt-1">
+              Tx:{" "}
+              <a
+                className="link-x"
+                href={`${EXPLORER_URL}/tx/${txHash}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {shortAddr(txHash)}
+              </a>
+              {isConfirming && " (confirming…)"}
+              {isConfirmed && " ✓"}
+            </p>
+          )}
+          {writeError && (
+            <p className="mt-2 break-all" style={{ color: "var(--bad)" }}>
+              {String(writeError.message)}
+            </p>
+          )}
+        </section>
+      )}
     </div>
   );
 }

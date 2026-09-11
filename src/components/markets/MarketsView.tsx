@@ -4,10 +4,10 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { TokenPfp } from "@/components/pfp/TokenPfp";
 import { ArrowRightIcon, SearchIcon } from "@/components/shell/Icons";
-import { XPrimaryNote } from "@/components/XPrimaryNote";
 import { homeMarkets } from "@/lib/marketsRegistry";
 import { registryRowAvailability } from "@/lib/rlusd-v1/availability";
 import { RLUSD_MARKET_REGISTRY } from "@/lib/rlusd-v1/marketRegistry";
+import { GRAAV_X_HANDLE_AT } from "@/lib/xLaunchComposer";
 
 type Filter = "all" | "new" | "graduated";
 
@@ -16,15 +16,14 @@ type Row = {
   href: string;
   ticker: string;
   name: string;
-  description: string;
   quote: string;
-  statusLabel: string;
-  statusKind: "neutral" | "live";
+  statusLabel: "Graduated" | "On curve" | "Configured" | "Not launched";
+  tradable: boolean;
   group: "new" | "graduated";
 };
 
 function rows(): Row[] {
-  const rlusd = RLUSD_MARKET_REGISTRY.map((market) => {
+  const rlusd: Row[] = RLUSD_MARKET_REGISTRY.map((market) => {
     const availability = registryRowAvailability(market);
     const launched = availability.state === "tradable" || availability.state === "configured";
     return {
@@ -32,33 +31,33 @@ function rows(): Row[] {
       href: `/m/${encodeURIComponent(market.sourcePostId)}`,
       ticker: market.symbol,
       name: market.name,
-      description: market.description,
-      quote: "Test RLUSD",
+      quote: "RLUSD",
       statusLabel: launched ? "Configured" : "Not launched",
-      statusKind: "neutral" as const,
-      group: "new" as const,
+      tradable: launched,
+      group: "new",
     };
   });
-  const xrp = homeMarkets().map((market) => ({
+  const xrp: Row[] = homeMarkets().map((market) => ({
     key: market.ticker,
     href: `/t/${encodeURIComponent(market.ticker)}`,
     ticker: market.ticker,
     name: market.name,
-    description: market.tag || "XRPL EVM Testnet market",
     quote: "XRP",
     statusLabel: market.graduatedHint ? "Graduated" : "On curve",
-    statusKind: market.graduatedHint ? ("live" as const) : ("neutral" as const),
-    group: market.graduatedHint ? ("graduated" as const) : ("new" as const),
+    tradable: true,
+    group: market.graduatedHint ? "graduated" : "new",
   }));
-  return [...rlusd, ...xrp];
+  // Tradable markets lead; listings that have not launched follow.
+  return [...rlusd, ...xrp].sort((a, b) => Number(b.tradable) - Number(a.tradable));
 }
 
 export function MarketsView() {
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
   const all = useMemo(() => rows(), []);
+  const tradableCount = all.filter((row) => row.tradable).length;
   const visible = all.filter((row) => {
-    const hay = `${row.ticker} ${row.name} ${row.description} ${row.quote}`.toLowerCase();
+    const hay = `${row.ticker} ${row.name} ${row.quote} ${row.statusLabel}`.toLowerCase();
     const matchesQuery = !query.trim() || hay.includes(query.trim().toLowerCase());
     const matchesFilter =
       filter === "all" ||
@@ -73,7 +72,8 @@ export function MarketsView() {
         <div>
           <h1 className="g-hero-title">Ideas become markets.</h1>
           <p className="g-hero-sub">
-            Charts on graav.xyz. Daily launch, trade, and share happen on X — posts, reposts, or DMs.
+            Launch, trade, and share from a post, repost, or DM to {GRAAV_X_HANDLE_AT}.
+            Charts, portfolio, and account live here. Your wallet signs every transaction.
           </p>
         </div>
         <Link href="/launch" className="g-cta g-cta-inline">
@@ -81,13 +81,11 @@ export function MarketsView() {
         </Link>
       </section>
 
-      <XPrimaryNote />
-
       <div className="g-network-bar">
-        <span>XRPL EVM Testnet · Test RLUSD / XRP · test assets only</span>
+        <span>XRPL EVM · RLUSD / XRP</span>
         <span className="g-network-status">
-          <span className="g-dot" />
-          New coin launches are being connected
+          <span className="g-dot live" />
+          {tradableCount} tradable · {all.length} listed
         </span>
       </div>
 
@@ -121,12 +119,12 @@ export function MarketsView() {
       <div className="g-table" role="table" aria-label="Markets">
         <div className="g-table-head" role="row">
           <span>Coin</span>
-          <span>Quote asset</span>
+          <span>Quote</span>
           <span>Status</span>
           <span className="g-sr-only">Open</span>
         </div>
         {visible.length === 0 ? (
-          <div className="g-empty">No markets match that search.</div>
+          <div className="g-empty">No coins match that search.</div>
         ) : (
           visible.map((row) => (
             <Link key={row.key} href={row.href} className="g-table-row" role="row">
@@ -134,12 +132,12 @@ export function MarketsView() {
                 <TokenPfp ticker={row.ticker} size="sm" />
                 <span>
                   <strong>{row.ticker}</strong>
-                  <em>{row.description}</em>
+                  <em>{row.name}</em>
                 </span>
               </span>
               <span className="g-table-quote">{row.quote}</span>
               <span className="g-table-status">
-                <span className={`g-dot${row.statusKind === "live" ? " live" : ""}`} />
+                <span className={`g-dot${row.tradable ? " live" : ""}`} />
                 {row.statusLabel}
               </span>
               <span className="g-table-go" aria-hidden="true">
@@ -151,11 +149,11 @@ export function MarketsView() {
       </div>
 
       <footer className="g-launch-progress">
-        <span>Daily on X</span>
+        <span>How it works</span>
         <ol>
-          <li>Post · repost · DM</li>
-          <li>Open /s · optional seed</li>
-          <li>Sign in wallet</li>
+          <li>Post, repost, or DM {GRAAV_X_HANDLE_AT}</li>
+          <li>Open your signing link</li>
+          <li>Sign in your wallet</li>
         </ol>
       </footer>
     </main>

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   useCallback,
   useEffect,
@@ -117,7 +118,7 @@ export function AccountMenu({ onStatus }: Props) {
   const handleWalletConnect = async () => {
     setStatus(null);
     if (!walletConnectConnector) {
-      setStatus("WalletConnect is unavailable until NEXT_PUBLIC_WC_PROJECT_ID is configured.");
+      setStatus("Wallet connection isn't available on this deployment yet.");
       return;
     }
     try {
@@ -221,7 +222,7 @@ export function AccountMenu({ onStatus }: Props) {
         className={`g-btn g-wallet-pill g-account-provider${walletConnectConnector ? "" : " is-muted"}`}
         disabled={!walletConnectConnector || isConnecting}
         onClick={() => void handleWalletConnect()}
-        title={walletConnectConnector ? "Connect with WalletConnect" : "WalletConnect unavailable — configure NEXT_PUBLIC_WC_PROJECT_ID"}
+        title={walletConnectConnector ? "Connect with WalletConnect" : "Wallet connection isn't available on this deployment yet"}
       >
         <WalletConnectMark size={24} />
         <span className="g-account-provider-label">
@@ -261,7 +262,7 @@ export function AccountMenu({ onStatus }: Props) {
 
       {!walletReady && !walletConnectConnector && (
         <p className="g-micro g-account-provider-hint" role="status">
-          WalletConnect unavailable — configure NEXT_PUBLIC_WC_PROJECT_ID to connect.
+          Wallet connection isn&apos;t available on this deployment yet.
         </p>
       )}
       {!xBound && !hint.configured && (
@@ -300,7 +301,7 @@ export function AccountMenu({ onStatus }: Props) {
               disabled={isSwitching}
               onClick={() => void handleSwitch()}
             >
-              {isSwitching ? "Switching…" : "Switch to XRPL EVM Testnet"}
+              {isSwitching ? "Switching…" : "Switch to XRPL EVM"}
             </button>
           )}
           <button
@@ -335,6 +336,16 @@ export function AccountMenu({ onStatus }: Props) {
           </button>
         </div>
       )}
+
+      <div className="g-account-divider" />
+      <Link
+        href="/you"
+        role="menuitem"
+        className="g-menu-item"
+        onClick={() => setOpen(false)}
+      >
+        Account &amp; rewards
+      </Link>
         </div>
       )}
     </div>
