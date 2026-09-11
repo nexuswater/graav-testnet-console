@@ -2,14 +2,16 @@
 
 
 import Link from "next/link";
-import { FAUCET_URL, XRPL_EVM_TESTNET_ID } from "@/lib/chain";
+import { XRPL_EVM_TESTNET_ID } from "@/lib/chain";
 import { AccountMenu } from "@/components/AccountMenu";
 import { PrimaryMenu } from "@/components/PrimaryMenu";
 import { GraavLogo } from "@/components/GraavLogo";
+import { XMark } from "@/components/XMark";
 import {
   isPlaceholderOrBogusSessionId,
   XRPL_EVM_TESTNET_HEX,
 } from "@/lib/signingSession";
+import { GRAAV_X_HANDLE_AT, xDmDeepLinkAvailable, xDmUrl } from "@/lib/xLaunchComposer";
 
 type Props = {
   sessionId?: string;
@@ -31,17 +33,13 @@ export function InvalidSessionHelp({ sessionId }: Props) {
       <header className="g-top">
         <div className="g-top-brand">
           <GraavLogo height={30} />
-          <span className="g-pill">TESTNET</span>
+          <span className="g-pill g-testnet" title="XRPL EVM Testnet · test assets only">TESTNET</span>
         </div>
         <div className="g-top-actions">
           <AccountMenu />
           <PrimaryMenu />
         </div>
       </header>
-
-      <p className="g-micro-warn px-4 pt-3">
-        Nothing is sent until you sign in your wallet. GRAAV never holds your key.
-      </p>
 
       <main
         className="g-main"
@@ -69,22 +67,23 @@ export function InvalidSessionHelp({ sessionId }: Props) {
             </span>
           </div>
 
+          <a
+            href={xDmUrl("")}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="g-cta"
+            style={{ textDecoration: "none" }}
+            title={xDmDeepLinkAvailable() ? `Opens a DM to ${GRAAV_X_HANDLE_AT}` : `Opens ${GRAAV_X_HANDLE_AT} — tap Message`}
+          >
+            <XMark size={14} /> Ask {GRAAV_X_HANDLE_AT} for a new link
+          </a>
           <Link
             href="/?tab=Trade"
-            className="g-cta"
+            className="g-cta ghost"
             style={{ display: "block", textAlign: "center", textDecoration: "none" }}
           >
             Open Trade
           </Link>
-          <a
-            href={FAUCET_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="g-cta ghost"
-            style={{ display: "block", textAlign: "center", textDecoration: "none" }}
-          >
-            Get XRP (faucet)
-          </a>
           <p className="g-hint">
             No signing request was created from this link, and nothing was sent.
           </p>

@@ -13,6 +13,7 @@ import { RLUSD_CLONE_INFRA, RLUSD_V1 as C } from "@/lib/rlusd-v1/config";
 import { rlusdFactoryAbi } from "@/lib/rlusd-v1/contracts";
 import { buildCreateCoinParams } from "@/lib/rlusd-v1/createCoin";
 import type { PfpProfile } from "@/lib/pfpTypes";
+import { useWalletActions } from "@/lib/useWalletActions";
 import { XMark } from "@/components/XMark";
 import {
   GRAAV_X_HANDLE_AT,
@@ -61,6 +62,12 @@ export default function LaunchPage() {
   const [created, setCreated] = useState<{ token: string; curve: string } | null>(null);
 
   const onCorrectChain = chainId === XRPL_EVM_TESTNET_ID;
+  const { connect, switchToXrplEvm, walletConnectConnector, isConnecting, isSwitching } = useWalletActions();
+  const walletStep = async () => {
+    setError(null);
+    const res = !isConnected ? await connect() : await switchToXrplEvm();
+    if (!res.ok) setError(res.error ?? "Wallet action failed.");
+  };
   const factory = C.factoryAddress as Address | null;
   const cleanName = name.trim();
   const cleanTicker = sanitizeLaunchTicker(ticker);
@@ -230,8 +237,8 @@ export default function LaunchPage() {
         <Link href="/" className="g-back">← Markets</Link>
         <h1 className="g-hero-title">Launch on X.</h1>
         <p className="g-hero-sub">
-          Post, repost, or DM <strong>Launch $TICKER</strong> to {GRAAV_X_HANDLE_AT}. GRAAV replies
-          with a signing link; you review the seed and sign in your wallet. Quoted in RLUSD.
+          Post, repost, or DM <strong>Launch $TICKER</strong> to {GRAAV_X_HANDLE_AT}. Quoted in RLUSD;
+          your wallet signs.
         </p>
 
         {step === "details" && (
@@ -331,19 +338,34 @@ export default function LaunchPage() {
 
             {step === "review" && (
               <>
-                <button
-                  type="button"
-                  className="g-cta"
-                  disabled={!params || busy || !isConnected || !onCorrectChain}
-                  onClick={() => void requestAuth()}
-                >
-                  {busy ? "Requesting authorization…" : "Continue to sign"}
-                </button>
+                {!isConnected || !onCorrectChain ? (
+                  <button
+                    type="button"
+                    className="g-cta"
+                    disabled={busy || isConnecting || isSwitching || (!isConnected && !walletConnectConnector)}
+                    onClick={() => void walletStep()}
+                  >
+                    {!isConnected
+                      ? isConnecting ? "Connecting…" : "Connect wallet"
+                      : isSwitching ? "Switching…" : "Switch to XRPL EVM"}
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="g-cta"
+                    disabled={!params || busy}
+                    onClick={() => void requestAuth()}
+                  >
+                    {busy ? "Requesting authorization…" : "Continue to sign"}
+                  </button>
+                )}
                 <p className="g-hint">
                   {!isConnected
-                    ? "Connect your wallet to continue."
+                    ? walletConnectConnector
+                      ? "Connect the wallet that will sign the create. Nothing is spent by connecting."
+                      : "Wallet connection isn't available on this deployment yet. Launch from X instead."
                     : !onCorrectChain
-                      ? "Switch your wallet to XRPL EVM to continue."
+                      ? "Your wallet is on another network."
                       : "GRAAV authorizes the launch first. If authorization is unavailable, Sign stays disabled."}
                 </p>
                 <button type="button" className="g-cta ghost" onClick={() => setStep("details")}>Back</button>

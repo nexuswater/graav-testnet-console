@@ -27,6 +27,7 @@ import { formatPrice, poolPrice } from "@/lib/formatNumber";
 import { MarketChart } from "@/components/market/MarketChart";
 import { XTradeCta } from "@/components/XTradeCta";
 import { resolveKnown } from "@/lib/chatIntent";
+import { useWalletActions } from "@/lib/useWalletActions";
 
 type Props = { ticker: string };
 
@@ -40,6 +41,8 @@ export function MarketClient({ ticker }: Props) {
   const publicClient = usePublicClient();
   const router = useRouter();
   const onCorrectChain = chainId === XRPL_EVM_TESTNET_ID;
+  const { connect, switchToXrplEvm, walletConnectConnector, isConnecting, isSwitching } = useWalletActions();
+  const connectUnavailable = !isConnected && !walletConnectConnector;
 
   const marketAddr = known?.market as Address | undefined;
   const factoryAddr = known?.factory;
@@ -121,22 +124,11 @@ export function MarketClient({ ticker }: Props) {
     if (side === "sell" && !sellEnabled && swapEnabled) setSide("swap");
   }, [side, buyEnabled, sellEnabled, swapEnabled]);
 
+  // Sell is the only side priced in the coin; Buy and Swap (XRP → coin) use the XRP presets.
   const applyPct = (p: number) => {
-    if (side === "sell" || (side === "swap" && amount)) {
-      if (tokenBal != null) {
-        const full = Number(formatEther(tokenBal as bigint));
-        setAmount(String(+(full * (p / 100)).toPrecision(6)));
-        return;
-      }
-    }
-    // XRP presets map roughly
-    const map: Record<number, string> = {
-      25: "0.05",
-      50: "0.1",
-      75: "0.5",
-      100: "1",
-    };
-    setAmount(map[p] || "0.1");
+    if (tokenBal == null) return;
+    const full = Number(formatEther(tokenBal as bigint));
+    setAmount(String(+(full * (p / 100)).toPrecision(6)));
   };
 
   const mintSession = useCallback(async () => {
@@ -145,12 +137,15 @@ export function MarketClient({ ticker }: Props) {
       setErr("This market isn't listed here. Open Trade and load it by symbol.");
       return;
     }
+    // The CTA does the wallet step itself instead of describing it.
     if (!isConnected) {
-      setErr("Connect your wallet first.");
+      const res = await connect();
+      if (!res.ok) setErr(res.error ?? "Could not connect a wallet.");
       return;
     }
     if (!onCorrectChain) {
-      setErr("Switch your wallet to XRPL EVM.");
+      const res = await switchToXrplEvm();
+      if (!res.ok) setErr(res.error ?? "Could not switch network.");
       return;
     }
     if (side === "swap" && !swapEnabled) {
@@ -202,6 +197,8 @@ export function MarketClient({ ticker }: Props) {
     graduated,
     amount,
     router,
+    connect,
+    switchToXrplEvm,
   ]);
 
   const priceXrp = useMemo<number | null>(() => {
@@ -220,9 +217,13 @@ export function MarketClient({ ticker }: Props) {
   const priceLabel = priceXrp !== null ? `${formatPrice(priceXrp)} XRP` : "—";
 
   const ctaLabel = !isConnected
-    ? "Connect wallet to sign here"
+    ? isConnecting
+      ? "Connecting…"
+      : "Connect wallet"
     : !onCorrectChain
-      ? "Switch to XRPL EVM"
+      ? isSwitching
+        ? "Switching…"
+        : "Switch to XRPL EVM"
       : busy
         ? "Opening signing session…"
         : side === "buy"
@@ -230,6 +231,8 @@ export function MarketClient({ ticker }: Props) {
           : side === "sell"
             ? `Sell ${amount} $${ticker}`
             : `Swap ${amount} XRP`;
+  const sideAvailable =
+    side === "swap" ? swapEnabled : side === "buy" ? buyEnabled : sellEnabled;
 
   const knownOnX = resolveKnown(ticker);
   const statusLabel = scar
@@ -287,6 +290,8 @@ export function MarketClient({ ticker }: Props) {
         <div className="g-seg" role="tablist" aria-label="Trade side">
           <button
             type="button"
+            role="tab"
+            aria-selected={side === "buy"}
             className={side === "buy" ? "on" : undefined}
             disabled={!buyEnabled}
             title={!buyEnabled ? (graduated ? "Graduated — use Swap" : "Unavailable") : "Buy on the curve"}
@@ -296,6 +301,8 @@ export function MarketClient({ ticker }: Props) {
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={side === "sell"}
             className={side === "sell" ? "on" : undefined}
             disabled={!sellEnabled}
             title={!sellEnabled ? (graduated ? "Graduated — use Swap" : "Unavailable") : "Sell on the curve"}
@@ -305,6 +312,8 @@ export function MarketClient({ ticker }: Props) {
           </button>
           <button
             type="button"
+            role="tab"
+            aria-selected={side === "swap"}
             className={side === "swap" ? "on" : undefined}
             disabled={!swapEnabled}
             title={
@@ -334,20 +343,29 @@ export function MarketClient({ ticker }: Props) {
             inputMode="decimal"
             placeholder="0.1"
           />
-          <div className="g-pct">
-            {PRESETS.map((v) => (
-              <button key={v} type="button" onClick={() => setAmount(v)}>
-                {v}
-              </button>
-            ))}
-          </div>
-          <div className="g-pct" style={{ marginTop: 8 }}>
-            {PCT.map((p) => (
-              <button key={p} type="button" onClick={() => applyPct(p)}>
-                {p}%
-              </button>
-            ))}
-          </div>
+          {side === "sell" ? (
+            <div className="g-pct" aria-label="Portion of your balance">
+              {PCT.map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  disabled={tokenBal == null}
+                  title={tokenBal == null ? "Connect a wallet to sell a share of your balance" : `${p}% of your ${ticker}`}
+                  onClick={() => applyPct(p)}
+                >
+                  {p}%
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="g-pct" aria-label="XRP presets">
+              {PRESETS.map((v) => (
+                <button key={v} type="button" className={amount === v ? "on" : undefined} aria-pressed={amount === v} onClick={() => setAmount(v)}>
+                  {v}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {err && (
@@ -359,13 +377,20 @@ export function MarketClient({ ticker }: Props) {
         <button
           type="button"
           className="g-cta"
-          disabled={busy || !known || (side === "swap" ? !swapEnabled : !buyEnabled && !sellEnabled) || (side === "buy" && !buyEnabled) || (side === "sell" && !sellEnabled)}
+          disabled={busy || isConnecting || isSwitching || !known || !sideAvailable || connectUnavailable}
+          title={connectUnavailable ? "Wallet connection isn't available on this deployment yet" : undefined}
           onClick={() => void mintSession()}
         >
           {ctaLabel}
         </button>
         <p className="g-hint">
-          Opens a signing session. You sign in your wallet; GRAAV never holds your key.
+          {connectUnavailable
+            ? knownOnX && !scar
+              ? "Wallet connection isn't available on this deployment yet — trade from X above."
+              : "Wallet connection isn't available on this deployment yet."
+            : !isConnected
+              ? "Connect to review this trade as a signing request. Nothing is sent until your wallet signs."
+              : "Opens a signing request you review and sign in your wallet. GRAAV never holds your key."}
         </p>
 
         {known && (

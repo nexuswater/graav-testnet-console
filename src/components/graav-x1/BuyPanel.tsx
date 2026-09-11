@@ -53,6 +53,8 @@ export function BuyPanel(props:WalletProps & {sessionId:string;via?:string}) {
     setError('');setPhase('busy');
     try {
       need(props.connectedWallet,'Connect your wallet first.');const wallet=props.connectedWallet;
+      // This rail pins the transaction nonce and sends through the browser wallet; WalletConnect is not wired here yet.
+      need(props.getProvider(),'This buy signs through a browser wallet such as MetaMask. Open this link in your wallet’s browser.');
       const provider=await requireWallet(props.getProvider,wallet);await ensureChain(provider);
       let o=order;
       if(!o || o.expiresAt<=Date.now()/1000){

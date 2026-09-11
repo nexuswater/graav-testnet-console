@@ -8,7 +8,6 @@ import {
   useChainId,
   usePublicClient,
   useReadContract,
-  useSwitchChain,
 } from "wagmi";
 import type { Address } from "viem";
 import { formatTokenAmount } from "@/lib/formatNumber";
@@ -24,11 +23,8 @@ import {
   ZERO_ADDRESS,
   type MarketInfo,
 } from "@/lib/chain";
-import {
-  ensureXrplEvmTestnet,
-  shortAddr,
-  watchTokenAsset,
-} from "@/lib/wallet";
+import { shortAddr } from "@/lib/wallet";
+import { useWalletActions } from "@/lib/useWalletActions";
 import { XMark } from "@/components/XMark";
 import { portfolioCommandText, xDmUrl, xPostIntentUrl } from "@/lib/xLaunchComposer";
 
@@ -50,7 +46,7 @@ export function PortfolioTab({ setStatusMsg }: Props) {
   const { address, isConnected } = useAccount();
   const chainId = useChainId();
   const publicClient = usePublicClient({ chainId: XRPL_EVM_TESTNET_ID });
-  const { switchChainAsync } = useSwitchChain();
+  const { connect, switchToXrplEvm, trackToken, walletConnectConnector, isConnecting } = useWalletActions();
   const onCorrectChain = chainId === XRPL_EVM_TESTNET_ID;
 
   const {
@@ -186,32 +182,25 @@ export function PortfolioTab({ setStatusMsg }: Props) {
     void refresh();
   }, [refresh]);
 
-  // Connected wallet first (works for WalletConnect); injected add/switch as the fallback.
+  const connectWallet = async () => {
+    const res = await connect();
+    if (!res.ok) setStatusMsg(res.error ?? "Could not connect a wallet.");
+  };
+
   const addNetwork = async () => {
-    try {
-      await switchChainAsync({ chainId: XRPL_EVM_TESTNET_ID });
-      setStatusMsg("XRPL EVM is set in your wallet.");
-      return;
-    } catch {
-      /* wallet may not know the chain yet — try the injected add-chain path */
-    }
-    const res = await ensureXrplEvmTestnet();
+    const res = await switchToXrplEvm();
     if (!res.ok) setStatusMsg(res.error ?? "Could not switch network.");
     else setStatusMsg("XRPL EVM is set in your wallet.");
   };
 
   const addToken = async (h: Holding) => {
-    const res = await watchTokenAsset({
-      address: h.token,
-      symbol: h.symbol,
-      decimals: 18,
-    });
+    const res = await trackToken({ address: h.token, symbol: h.symbol, decimals: 18 });
     if (!res.ok) setStatusMsg(res.error ?? "Your wallet declined to track this token.");
     else setStatusMsg(`Asked your wallet to track ${h.symbol} (${shortAddr(h.token)}).`);
   };
 
   const trackRlusd = async () => {
-    const res = await watchTokenAsset({ address: quoteAddress, symbol: RLUSD_V1.quoteSymbol, decimals: RLUSD_V1.quoteDecimals });
+    const res = await trackToken({ address: quoteAddress, symbol: RLUSD_V1.quoteSymbol, decimals: RLUSD_V1.quoteDecimals });
     if (!res.ok) setStatusMsg(res.error ?? "Your wallet declined to track RLUSD.");
     else setStatusMsg(`Asked your wallet to track RLUSD (${shortAddr(quoteAddress)}).`);
   };
@@ -327,8 +316,15 @@ export function PortfolioTab({ setStatusMsg }: Props) {
         {loading && markets.length === 0 ? (
           <p className="g-sub">Scanning markets…</p>
         ) : !address ? (
-          <div className="empty g-sub" style={{ padding: "40px 8px" }}>
-            Connect a wallet from the account menu to see your holdings.
+          <div className="empty g-sub" style={{ padding: "32px 8px", display: "grid", gap: 12, justifyItems: "start" }}>
+            <span>Holdings appear here once a wallet is connected.</span>
+            {walletConnectConnector ? (
+              <button type="button" className="g-cta" style={{ width: "auto", marginTop: 0 }} disabled={isConnecting} onClick={() => void connectWallet()}>
+                {isConnecting ? "Connecting…" : "Connect wallet"}
+              </button>
+            ) : (
+              <span className="g-hint" style={{ marginTop: 0 }}>Wallet connection isn&apos;t available on this deployment yet.</span>
+            )}
           </div>
         ) : markets.length === 0 ? (
           <div className="empty g-sub" style={{ padding: "40px 8px" }}>

@@ -306,7 +306,8 @@ a.link-x:hover {
 }
 
 .g-field label:not(.g-upload),
-.g-field-label {
+.g-field-label,
+label.g-field > span:first-child {
   display: block;
   position: static;
   color: var(--muted);
@@ -1644,6 +1645,10 @@ details.g-details summary {
   line-height: 1.45;
   white-space: pre-wrap;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+/* Until a ticker is typed the draft is only an example. */
+.g-launch-draft[data-example="true"] {
+  color: var(--secondary);
 }
 .g-launch-cta-row {
   display: grid;
