@@ -87,7 +87,6 @@ export function BaseSepoliaCorridorCard() {
             <span className="g-micro">{verdictMark(g.verdict)}</span>
             <span>
               <strong>{GATE_LABEL[g.id] ?? g.label}</strong>
-              <em>{g.detail}</em>
             </span>
           </li>
         ))}
@@ -130,7 +129,17 @@ export function BaseSepoliaCorridorCard() {
 
       {report && (
         <details className="g-details" style={{ marginTop: 12 }}>
-          <summary>Provider lanes</summary>
+          <summary>Details</summary>
+          <ul className="space-y-2" style={{ listStyle: "none", padding: 0, margin: "8px 0 4px" }}>
+            {gates.map((g) => (
+              <li key={`d-${g.id}`}>
+                <div className="g-micro" style={{ color: "var(--text)" }}>
+                  {GATE_LABEL[g.id] ?? g.label} · {g.verdict}
+                </div>
+                <p className="g-micro" style={{ color: "var(--muted)", overflowWrap: "anywhere" }}>{g.detail}</p>
+              </li>
+            ))}
+          </ul>
           <div className="g-kv">
             <span>Squid</span>
             <span>{report.lanes.squid}</span>

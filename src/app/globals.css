@@ -101,8 +101,14 @@ body {
   color: var(--text);
   font-family: -apple-system, "SF Pro Text", var(--font-geist-sans), ui-sans-serif,
     system-ui, sans-serif;
-  overflow-x: hidden;
   max-width: 100vw;
+}
+
+/* Clip the x-axis at the viewport only. Putting overflow-x on <body> makes body
+   the scroll container and silently disables position: sticky for the header
+   and the mobile bottom nav. */
+html {
+  overflow-x: hidden;
 }
 
 :focus-visible {
