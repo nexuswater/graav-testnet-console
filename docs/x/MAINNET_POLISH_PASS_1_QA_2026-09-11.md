@@ -84,7 +84,7 @@ Legend: **✓** works · **⊘** disabled with a visible reason · **ℹ** infor
 | Heading copy | ✓ "Connect a wallet to see your XRP and coin balances." / "Holdings for 0x… on XRPL EVM." |
 | Refresh | ✓ "Refreshing…" while scanning |
 | Wrong-network alert | ✓ **Switch network** (connected wallet first, injected fallback) |
-| Summary XRP · Coins held · Markets | ✓ `—` while disconnected / unknown, never zero; faucet hint only when XRP is 0 |
+| Summary XRP · RLUSD · Coins held · Markets | ✓ `—` while disconnected, `…` while reading, `Unknown` on a failed read — never zero; RLUSD read from the pinned `0x04B9…913F` and labelled RLUSD; faucet hint only when XRP is 0; **Track RLUSD in your wallet** |
 | Holdings | ✓ "Scanning markets…" → "Connect a wallet from the account menu…" / "No markets found yet." / "No coins held yet. Buy from a post or DM on X, or open Trade." / rows with **Open** (→ `/t/<ticker>`) and **Track** (wallet `watchAsset`; honest error without a browser wallet) |
 | Unreadable balances | ✓ "n balance(s) could not be read and are not shown as zero." |
 | Check from X | ✓ `@graav_xyz portfolio` **Post** / **DM** |
