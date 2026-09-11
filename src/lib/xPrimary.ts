@@ -3,9 +3,19 @@
  * SoT: docs/x/X_PRIMARY_ARCHITECTURE_2026-09-10.md
  * FEATURE_PUBLIC_X_WRITE stays closed.
  */
+import {
+  ATTRIBUTION_HOP_DEPTH,
+  ATTRIBUTION_V1_STACK,
+  BUY_WITH_ATTRIBUTION_SELECTOR,
+} from "@/lib/chain";
 
 export const X_PRIMARY_SOT_PATH = "docs/x/X_PRIMARY_ARCHITECTURE_2026-09-10.md";
+export const ATTRIBUTION_V1_TIP_PIN_PATH = "docs/x/ATTRIBUTION_V1_TIP_PIN_STACK2_1449000.md";
 export const GRAAV_APP = "graav.xyz";
+
+function shortHex(value: string): string {
+  return `${value.slice(0, 6)}…${value.slice(-4)}`;
+}
 
 /** 60 creator / 25 protocol / 15 distributor. Not a live splitter in this console. */
 export const ATTRIBUTION_V1 = {
@@ -25,15 +35,27 @@ export const ATTRIBUTION_V1_RULE =
 
 export const ATTRIBUTION_V1_LINE = `RT/share attribution V1: ${ATTRIBUTION_V1_RULE}`;
 
-/** Reference only. No tip redeploy in this PR; no tip addresses invented here. */
+/**
+ * Attribution V1 tip — remint stack2 pinned (chain.ts ATTRIBUTION_V1_STACK).
+ * Addresses come from the Exec deployment record, never invented here.
+ * Exec smoke PASS on 1449000: createMarket + buy + buyWithAttribution (attributed=true).
+ */
 export const KERNEL_LAB_REF = {
   fn: "buyWithAttribution",
-  selector: "0xada7290b",
+  selector: BUY_WITH_ATTRIBUTION_SELECTOR,
   forge: "20/20",
-  status: "CODE READY",
+  status: "PINNED",
+  stack: ATTRIBUTION_V1_STACK.stack,
+  templateVersion: ATTRIBUTION_V1_STACK.templateVersion,
+  chainId: ATTRIBUTION_V1_STACK.chainId,
+  factory: ATTRIBUTION_V1_STACK.factory,
+  hopDepth: ATTRIBUTION_HOP_DEPTH,
+  smoke: "createMarket + buy + buyWithAttribution attributed=true PASS (Exec)",
 } as const;
 
-export const KERNEL_LAB_LINE = `Kernel lab ${KERNEL_LAB_REF.status}: ${KERNEL_LAB_REF.fn} ${KERNEL_LAB_REF.selector} · forge ${KERNEL_LAB_REF.forge} · no tip redeploy in this PR.`;
+export const ATTRIBUTION_V1_TIP_LINE = `Attribution V1 tip pinned on ${KERNEL_LAB_REF.chainId}: Factory ${shortHex(KERNEL_LAB_REF.factory)} (stack${KERNEL_LAB_REF.stack}, TEMPLATE_VERSION ${KERNEL_LAB_REF.templateVersion}) · ${KERNEL_LAB_REF.fn} ${KERNEL_LAB_REF.selector} · depth-${KERNEL_LAB_REF.hopDepth} hops · Exec smoke PASS.`;
+
+export const KERNEL_LAB_LINE = `${ATTRIBUTION_V1_TIP_LINE} Kernel lab forge ${KERNEL_LAB_REF.forge}. This console never signs attribution proofs.`;
 
 export type CrossChainStage = "home" | "first" | "next" | "later";
 

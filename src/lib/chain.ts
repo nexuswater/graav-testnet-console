@@ -68,6 +68,39 @@ export const G589_MARKET_ADDRESS =
 export const G589_TOKEN_ADDRESS =
   "0x2C255Aa2DE80f1ed213F223CaBb71f4c5a56DC5e" as Address;
 
+/**
+ * Attribution V1 tip — remint stack2 (TEMPLATE_VERSION 2) on 1449000.
+ * Exec smoke PASS: createMarket + buy + buyWithAttribution (attributed=true).
+ * Separate lane from the Coin Soft Factory 0xd2b7… (RLUSD quote); never collapse them.
+ * The orphan/retired stack1 Factory (0xc5D6…) is intentionally absent — do not pin it.
+ */
+export const ATTRIBUTION_V1_FACTORY_ADDRESS =
+  "0x3d826B1495d517bA9fa1721b7e0CDB0513461e68" as Address;
+export const ATTRIBUTION_V1_GUARDIAN_ADDRESS =
+  "0x8c78Ff4462dBDDEeB4eEDdc92e739101e82217e0" as Address;
+export const ATTRIBUTION_V1_VERIFIER_ADDRESS =
+  "0xE04763CdC4779deBc2293bacd4F98d5D7B82f322" as Address;
+export const ATTRIBUTION_V1_GRADUATION_MANAGER_ADDRESS =
+  "0x5eD78c0ac98aEA25dd3f123a5654Ac5531220211" as Address;
+export const ATTRIBUTION_V1_LIQUIDITY_VAULT_ADDRESS =
+  "0xF9E6E3D238a7AA4304229aB527a3e4c2d131bc49" as Address;
+export const ATTRIBUTION_V1_TEMPLATE_VERSION = 2;
+/** Distributor share decays over four hops (40/25/20/15). Matches address[4] hops on-chain. */
+export const ATTRIBUTION_HOP_DEPTH = 4;
+/** buyWithAttribution(uint256,(bytes32,address,address[4],address,uint64,uint64),bytes) */
+export const BUY_WITH_ATTRIBUTION_SELECTOR = "0xada7290b" as const;
+
+export const ATTRIBUTION_V1_STACK = {
+  stack: 2,
+  chainId: XRPL_EVM_TESTNET_ID,
+  templateVersion: ATTRIBUTION_V1_TEMPLATE_VERSION,
+  factory: ATTRIBUTION_V1_FACTORY_ADDRESS,
+  guardian: ATTRIBUTION_V1_GUARDIAN_ADDRESS,
+  attributionVerifier: ATTRIBUTION_V1_VERIFIER_ADDRESS,
+  graduationManager: ATTRIBUTION_V1_GRADUATION_MANAGER_ADDRESS,
+  liquidityVault: ATTRIBUTION_V1_LIQUIDITY_VAULT_ADDRESS,
+} as const;
+
 export const FAUCET_URL = "https://faucet.xrplevm.org";
 export const EXPLORER_URL = "https://explorer.testnet.xrplevm.org";
 export const RPC_URL = "https://rpc.testnet.xrplevm.org";
@@ -98,6 +131,50 @@ export const marketAbi = parseAbi([
 export const graduationManagerAbi = parseAbi([
   "function graduate(address market)",
   "function tryGraduate(address market)",
+]);
+
+/**
+ * Attribution V1 Factory (TEMPLATE_VERSION 2). Same createMarket / getMarket surface as M2;
+ * MarketCreated indexes (marketId, market, creator) and carries name + symbol.
+ */
+export const attributionFactoryAbi = parseAbi([
+  "event MarketCreated(uint256 indexed marketId, address indexed market, address indexed creator, address token, string name, string symbol, bytes32 originHash)",
+  "function createMarket(string name, string symbol, string metadataURI, bytes32 originHash) returns (uint256 marketId, address token, address market)",
+  "function getMarket(uint256 marketId) view returns ((address token, address market, address creator, bytes32 originHash, uint64 createdAt, uint32 templateVersion, bool graduated))",
+  "function getMarketBySymbol(string symbol) view returns ((address token, address market, address creator, bytes32 originHash, uint64 createdAt, uint32 templateVersion, bool graduated))",
+  "function marketCount() view returns (uint256)",
+  "function TEMPLATE_VERSION() view returns (uint32)",
+  "function guardian() view returns (address)",
+  "function attributionVerifier() view returns (address)",
+  "function graduationManager() view returns (address)",
+]);
+
+/**
+ * Attribution V1 market (template v2): marketAbi surface plus the attributed buy.
+ * buyWithAttribution selector 0xada7290b; hops are depth-4 (address[4]), unfilled hops are zero.
+ * Tuple field labels are console-side; the selector and calldata layout are what is verified on-chain.
+ * Fee return labels mirror marketAbi (M2 SoT); the template v2 fee-bucket order is not verified here.
+ * The console never signs attribution proofs — AttributionVerifier.signer does.
+ */
+export const attributionMarketAbi = parseAbi([
+  "function buy(uint256 minTokensOut) payable returns (uint256 tokensOut)",
+  "function buyWithAttribution(uint256 minTokensOut, (bytes32 postId, address market, address[4] hops, address buyer, uint64 deadline, uint64 nonce) attribution, bytes signature) payable returns (uint256 tokensOut)",
+  "function sell(uint256 tokenAmount, uint256 minXrpOut) returns (uint256 xrpOut)",
+  "function realXrp() view returns (uint256)",
+  "function tokenReserve() view returns (uint256)",
+  "function graduated() view returns (bool)",
+  "function token() view returns (address)",
+  "function price() view returns (uint256)",
+  "function previewBuy(uint256 xrpIn) view returns (uint256 tokensOut, uint256 creatorFee, uint256 protocolFee, uint256 distributorFee)",
+  "function previewSell(uint256 tokenAmount) view returns (uint256 xrpOut, uint256 creatorFee, uint256 protocolFee, uint256 distributorFee)",
+  "function graduationThresholdXrp() view returns (uint256)",
+  "function virtualXrp() view returns (uint256)",
+  "function graduationManager() view returns (address)",
+  "function attributionVerifier() view returns (address)",
+  "function guardian() view returns (address)",
+  "function feeVault() view returns (address)",
+  "function factory() view returns (address)",
+  "event AttributionApplied(bytes32 indexed postId, address indexed distributor)",
 ]);
 
 export const erc20Abi = parseAbi([

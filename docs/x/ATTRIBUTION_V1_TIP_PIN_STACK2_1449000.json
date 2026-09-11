@@ -1,0 +1,67 @@
+{
+  "profile": "GRAAV_ATTRIBUTION_V1_TIP",
+  "status": "PINNED",
+  "stack": 2,
+  "templateVersion": 2,
+  "chainId": 1449000,
+  "rpc": "https://rpc.testnet.xrplevm.org",
+  "explorer": "https://explorer.testnet.xrplevm.org",
+  "contracts": {
+    "factory": "0x3d826B1495d517bA9fa1721b7e0CDB0513461e68",
+    "guardian": "0x8c78Ff4462dBDDEeB4eEDdc92e739101e82217e0",
+    "attributionVerifier": "0xE04763CdC4779deBc2293bacd4F98d5D7B82f322",
+    "graduationManager": "0x5eD78c0ac98aEA25dd3f123a5654Ac5531220211",
+    "liquidityVault": "0xF9E6E3D238a7AA4304229aB527a3e4c2d131bc49"
+  },
+  "wiringReads": {
+    "factory.TEMPLATE_VERSION": 2,
+    "factory.guardian": "0x8c78Ff4462dBDDEeB4eEDdc92e739101e82217e0",
+    "factory.attributionVerifier": "0xE04763CdC4779deBc2293bacd4F98d5D7B82f322",
+    "factory.graduationManager": "0x5eD78c0ac98aEA25dd3f123a5654Ac5531220211",
+    "graduationManager.factory": "0x3d826B1495d517bA9fa1721b7e0CDB0513461e68",
+    "liquidityVault.factory": "0x3d826B1495d517bA9fa1721b7e0CDB0513461e68",
+    "liquidityVault.graduationManager": "0x5eD78c0ac98aEA25dd3f123a5654Ac5531220211"
+  },
+  "abi": {
+    "buyWithAttribution": {
+      "selector": "0xada7290b",
+      "signature": "buyWithAttribution(uint256,(bytes32,address,address[4],address,uint64,uint64),bytes)",
+      "hopDepth": 4,
+      "note": "Tuple field labels (postId, market, hops, buyer, deadline, nonce) are console-side; selector and calldata layout verified against the Exec smoke tx."
+    },
+    "marketCreatedTopic0": "0x6d3acc852a3534345730966344acb1cb72db165c80722aae68899b9942bde5bb",
+    "attributionAppliedTopic0": "0x0e0c19690de9a2c7ae58126e234ebb1a7fff576a06e41dbf97bb585dfa5db145"
+  },
+  "smoke": {
+    "by": "Exec",
+    "result": "PASS",
+    "execEvidenceFile": "attribution-v1-tip-remint-smoke.json (Exec box; not in this repo — txs below re-verified via public RPC)",
+    "createMarket": "0xc7af058c1a4f0631502fbb154952c4ec0e1cd539e3a9be5a64f0976d307e6f70",
+    "buy": "0x7862e0ea2b4a1c7607573cf1c7eaa4076bcc656b07ad84cbc3eb8303c1038299",
+    "buyWithAttribution": "0x2f916ad81c57fa07e8fb2cec3ce34cc769d6aaa777603d6261313c47d06a661f",
+    "attributed": true,
+    "smokeMarket": {
+      "marketId": 1,
+      "market": "0x524345C500998CE51627474CD5FB9F9D221C63C1",
+      "token": "0x9E5ea83C7c9b15eEB3D29BB5EE35f8b681388ab3",
+      "symbol": "SMK3713",
+      "pinned": false,
+      "note": "Exec smoke market only. Not a product market; not allowlisted."
+    }
+  },
+  "separateLanes": {
+    "coinSoftFactory": "0xd2b7C9D3df75b081c4CB01F711D31D06263EbA20",
+    "note": "Coin V1 / RLUSD lane. UNTOUCHED by this pin."
+  },
+  "retiredNotPinned": {
+    "stack1Factory": "0xc5D6eb56A0776C6215589Be49DD100763C4346EF",
+    "note": "Orphan / retired stack1. Listed for audit context only. Never allowlisted, never pinned."
+  },
+  "displayQuote": {
+    "symbol": "RLUSD",
+    "mockRlusd": "0x04B9eF8Fa40E6336e8404a18cC4F6a5a852e913F",
+    "note": "Coin Soft lane quote. Display RLUSD, never mRLUSD. Attribution V1 markets are XRP-quoted."
+  },
+  "remint": "NONE — this pin reads the live stack2; no deploy, no spend",
+  "production": "NOT DEPLOYED — reviewable PR only"
+}

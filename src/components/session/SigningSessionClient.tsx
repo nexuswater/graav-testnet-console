@@ -23,6 +23,7 @@ import {
   type Hex,
 } from "viem";
 import {
+  ATTRIBUTION_V1_FACTORY_ADDRESS,
   FACTORY_ADDRESS,
   M22_FACTORY_ADDRESS,
   TEST_DEX_V2_ADDRESS,
@@ -891,7 +892,8 @@ export function SigningSessionClient({ initial }: Props) {
           </Link>
           {" · "}
           M2 {shortAddr(FACTORY_ADDRESS)} / M2.2 {shortAddr(M22_FACTORY_ADDRESS)} · V2{" "}
-          {shortAddr(TEST_DEX_V2_ADDRESS)}
+          {shortAddr(TEST_DEX_V2_ADDRESS)} · Attribution V1 tip{" "}
+          {shortAddr(ATTRIBUTION_V1_FACTORY_ADDRESS)}
         </p>
       </main>
     </div>

@@ -21,6 +21,7 @@ import {
   type Log,
 } from "viem";
 import {
+  ATTRIBUTION_V1_FACTORY_ADDRESS,
   FACTORY_ADDRESS,
   GRADUATION_MANAGER_ADDRESS,
   M22_FACTORY_ADDRESS,
@@ -201,10 +202,15 @@ export function TradeTab({
           }
         }
 
-        // Dual-factory: M22 (V2 swap path) first, then M2 meme/T589 factory.
+        // Dual-factory: M22 (V2 swap path) first, then M2 meme/T589 factory,
+        // then the Attribution V1 tip (stack2) for markets created there.
         let info: MarketInfo | null = null;
         let factoryUsed: Address = M22_FACTORY_ADDRESS;
-        for (const fac of [M22_FACTORY_ADDRESS, FACTORY_ADDRESS] as Address[]) {
+        for (const fac of [
+          M22_FACTORY_ADDRESS,
+          FACTORY_ADDRESS,
+          ATTRIBUTION_V1_FACTORY_ADDRESS,
+        ] as Address[]) {
           try {
             const cand = (await publicClient.readContract({
               address: fac,
@@ -235,7 +241,10 @@ export function TradeTab({
         const facTag =
           factoryUsed.toLowerCase() === M22_FACTORY_ADDRESS.toLowerCase()
             ? "M22"
-            : "M2";
+            : factoryUsed.toLowerCase() ===
+                ATTRIBUTION_V1_FACTORY_ADDRESS.toLowerCase()
+              ? "Attribution V1"
+              : "M2";
         setStatusMsg(`Loaded ${q} → ${info.market} (${facTag} factory)`);
       } catch (e) {
         setLoadError(String(e));
