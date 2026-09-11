@@ -87,10 +87,12 @@ export async function processUploadImage(
 }
 
 /** Rasterize any pfp to 1200×1200 PNG for OG. */
+/** 1200×1200 JPEG for social unfurls — a lossless PNG at this size was ~2.6 MB. */
 export async function rasterizeOg(input: Buffer): Promise<Buffer> {
   return sharp(input, { failOn: "none" })
     .resize(1200, 1200, { fit: "cover" })
-    .png()
+    .flatten({ background: "#050505" })
+    .jpeg({ quality: 84, mozjpeg: true })
     .toBuffer();
 }
 

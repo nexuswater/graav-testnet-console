@@ -199,8 +199,8 @@ export function RlusdTradePanel({
 
   const onCorrectChain = chainId === XRPL_EVM_TESTNET_ID;
   const tradable = availability.state === "tradable" && (availability.graduated === false || !!pairAddress);
-  const paySymbol = side === "buy" ? "Test RLUSD" : ticker;
-  const receiveSymbol = side === "buy" ? ticker : "Test RLUSD";
+  const paySymbol = side === "buy" ? "RLUSD" : ticker;
+  const receiveSymbol = side === "buy" ? ticker : "RLUSD";
   const quoteNeedsApproval = side === "buy" && (quoteAllowance === undefined || !parsedAmount || quoteAllowance < parsedAmount);
   const coinNeedsApproval = side === "sell" && (coinAllowance === undefined || !parsedAmount || coinAllowance < parsedAmount);
   const needsApproval = quoteNeedsApproval || coinNeedsApproval;
@@ -218,17 +218,17 @@ export function RlusdTradePanel({
 
   const stateReason =
     availability.state === "unconfigured"
-      ? "This launch is not wired to a live coin and curve. Review stays disabled."
+      ? "This coin has not launched yet. Review stays disabled."
       : availability.state === "loading"
         ? "Reading the live market…"
         : availability.state === "failed"
-          ? "Live market read failed. Trading is disabled."
+          ? "The live market could not be read. Trading is disabled."
           : availability.state === "configured"
-            ? "Market addresses are present but live state is not confirmed."
+            ? "Market addresses are present but the live state is not confirmed yet."
             : !isConnected
-              ? "Connect wallet to review and sign."
+              ? "Connect your wallet to review and sign."
               : !onCorrectChain
-                ? `Switch to XRPL EVM Testnet (${XRPL_EVM_TESTNET_ID}).`
+                ? "Switch your wallet to XRPL EVM."
                 : attributionInputError
                   ? "Referrer and midwife must be valid wallet addresses."
                   : null;
@@ -376,7 +376,7 @@ export function RlusdTradePanel({
 
       {phase === "review" && (
         <div className="g-alert" style={{ marginTop: 12 }}>
-          Review this {side} then approve or sign. Chat is not authorization.
+          Review this {side}, then approve or sign in your wallet.
         </div>
       )}
 
@@ -399,7 +399,7 @@ export function RlusdTradePanel({
         </button>
       )}
 
-      <p className="g-hint">Approval may be required. Your wallet signs every transaction.</p>
+      <p className="g-hint">An approval may be required first. Your wallet signs every transaction.</p>
 
       <details className="g-details">
         <summary>Details</summary>

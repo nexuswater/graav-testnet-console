@@ -40,7 +40,7 @@ export function InvalidSessionHelp({ sessionId }: Props) {
       </header>
 
       <p className="g-micro-warn px-4 pt-3">
-        chat ≠ authorization · emit URL never auto-tx · server holds no key
+        Nothing is sent until you sign in your wallet. GRAAV never holds your key.
       </p>
 
       <main
@@ -48,13 +48,13 @@ export function InvalidSessionHelp({ sessionId }: Props) {
         style={{ maxWidth: 560, margin: "0 auto", width: "100%" }}
       >
         <div className="g-sheet">
-          <div className="g-status">Not a real session</div>
+          <div className="g-status">Not a signing request</div>
           <h1 className="g-display" style={{ fontSize: 28 }}>
-            This isn’t a real session link
+            This isn’t a signing link
           </h1>
           <p className="g-sub" style={{ marginTop: 12, lineHeight: 1.5 }}>
-            Ask GRAAV for a Buy/Swap URL or open Trade. Placeholder links like{" "}
-            <span className="g-mono">/s/{"{id}"}</span> are not signed sessions.
+            Ask GRAAV on X for a new signing link, or open Trade to sign in-app. Placeholder
+            links like <span className="g-mono">/s/{"{id}"}</span> cannot be signed.
           </p>
           {shown && (
             <p className="g-hint" style={{ marginTop: 10 }}>
@@ -65,25 +65,12 @@ export function InvalidSessionHelp({ sessionId }: Props) {
           <div className="g-kv" style={{ marginTop: 16 }}>
             <span>Chain</span>
             <span className="g-mono">
-              XRPL EVM Testnet {XRPL_EVM_TESTNET_ID} ({XRPL_EVM_TESTNET_HEX})
+              XRPL EVM {XRPL_EVM_TESTNET_ID} ({XRPL_EVM_TESTNET_HEX})
             </span>
           </div>
 
-          <div className="g-alert warn" style={{ marginTop: 16 }}>
-            Need testnet XRP?{" "}
-            <a
-              href={FAUCET_URL}
-              target="_blank"
-              rel="noreferrer"
-              className="link-x"
-              style={{ fontWeight: 650 }}
-            >
-              faucet.xrplevm.org →
-            </a>
-          </div>
-
           <Link
-            href="/"
+            href="/?tab=Trade"
             className="g-cta"
             style={{ display: "block", textAlign: "center", textDecoration: "none" }}
           >
@@ -96,10 +83,10 @@ export function InvalidSessionHelp({ sessionId }: Props) {
             className="g-cta ghost"
             style={{ display: "block", textAlign: "center", textDecoration: "none" }}
           >
-            Get testnet XRP (faucet)
+            Get XRP (faucet)
           </a>
           <p className="g-hint">
-            Fail-closed: no session invented · no auto-tx
+            No signing request was created from this link, and nothing was sent.
           </p>
         </div>
       </main>

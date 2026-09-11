@@ -18,7 +18,7 @@ export function SeedMarketField({ value, onChange, id = "seed-amount" }: Props) 
   return (
     <div className="g-field">
       <label className="g-field-label" htmlFor={id}>
-        How much to seed the market (optional)
+        Seed the market (optional)
       </label>
       <input
         id={id}
@@ -30,10 +30,7 @@ export function SeedMarketField({ value, onChange, id = "seed-amount" }: Props) 
         autoComplete="off"
         spellCheck={false}
       />
-      <p className="g-hint">
-        Test RLUSD. Review only on this desk — nothing spends until your wallet
-        signs. Chat ≠ authorization.
-      </p>
+      <p className="g-hint">RLUSD. Nothing is spent until your wallet signs.</p>
     </div>
   );
 }

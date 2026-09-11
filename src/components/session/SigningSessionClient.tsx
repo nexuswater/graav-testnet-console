@@ -23,9 +23,7 @@ import {
   type Hex,
 } from "viem";
 import {
-  ATTRIBUTION_V1_FACTORY_ADDRESS,
   FACTORY_ADDRESS,
-  M22_FACTORY_ADDRESS,
   TEST_DEX_V2_ADDRESS,
   T589_TOKEN_ADDRESS,
   GSWAP_TOKEN_ADDRESS,
@@ -60,7 +58,8 @@ import { TokenPfp } from "@/components/pfp/TokenPfp";
 import { copyToClipboard } from "@/lib/metaMaskDeepLink";
 import { asStatusText } from "@/lib/statusMsg";
 import { SeedMarketField } from "@/components/launch/SeedMarketField";
-import { GRAAV_X_HANDLE_AT, seedAmountDisplay } from "@/lib/xLaunchComposer";
+import { XMark } from "@/components/XMark";
+import { GRAAV_X_HANDLE_AT, seedAmountDisplay, sharePostIntentUrl, type XShareKind } from "@/lib/xLaunchComposer";
 
 type Props = {
   initial: PublicSessionView;
@@ -77,7 +76,7 @@ export function SigningSessionClient({ initial }: Props) {
     connectors,
     isPending: isConnecting,
   } = useConnect();
-  const { switchChain, isPending: isSwitching } = useSwitchChain();
+  const { switchChainAsync, isPending: isSwitching } = useSwitchChain();
   const onCorrectChain = chainId === XRPL_EVM_TESTNET_ID;
   const walletConnectConnector = connectors.find((c) => c.id === "walletConnect" || c.name.toLowerCase().includes("walletconnect"));
 
@@ -196,35 +195,29 @@ export function SigningSessionClient({ initial }: Props) {
       isGswapMarket(payload.market) &&
       !isM22Factory(payload.factory)
     ) {
-      setBlockReason("gSWAP market must bind M2.2 factory");
+      setBlockReason("This request pairs the market with the wrong factory. Ask GRAAV for a new link.");
       return;
     }
     // V1 never swap
     if (payload.action === "swap" && payload.dex && isV1Dex(payload.dex)) {
-      setBlockReason("Fail-closed: TestDex V1 is scar-only (never swap)");
+      setBlockReason("Swaps are not available on the legacy pool.");
       return;
     }
     // SWAP: require market.graduated()==true AND tokenToLpId(token)!=0 (SoT)
     if (payload.action === "swap") {
       if (graduated === false) {
-        setBlockReason(
-          "Fail-closed: swap requires market.graduated()==true (use buy/sell on curve)"
-        );
+        setBlockReason("This market has not graduated yet — use Buy or Sell on the curve instead.");
         return;
       }
       if (graduated === true && lpId !== null && lpId === BigInt(0)) {
-        setBlockReason(
-          "Fail-closed: tokenToLpId(token)==0 — no V2 pool (T589 scar or unwired)"
-        );
+        setBlockReason("No liquidity pool exists for this token yet, so it cannot be swapped.");
         return;
       }
       if (
         tokenAddr &&
         tokenAddr.toLowerCase() === T589_TOKEN_ADDRESS.toLowerCase()
       ) {
-        setBlockReason(
-          "Fail-closed: T589 on TestDex V1 scar — never swap"
-        );
+        setBlockReason("Swaps are not available for this legacy market.");
         return;
       }
     }
@@ -233,9 +226,7 @@ export function SigningSessionClient({ initial }: Props) {
       (payload.action === "buy" || payload.action === "sell") &&
       graduated === true
     ) {
-      setBlockReason(
-        "Fail-closed: market.graduated()==true — use action=swap on TestDex V2"
-      );
+      setBlockReason("This market graduated — ask GRAAV for a Swap link instead of Buy or Sell.");
       return;
     }
     setBlockReason(null);
@@ -284,7 +275,7 @@ export function SigningSessionClient({ initial }: Props) {
   const handleWalletConnect = async () => {
     setStatusMsg(null);
     if (!walletConnectConnector) {
-      setStatusMsg("WalletConnect is unavailable until NEXT_PUBLIC_WC_PROJECT_ID is configured.");
+      setStatusMsg("Wallet connection isn't available on this deployment yet.");
       return;
     }
     try {
@@ -301,19 +292,16 @@ export function SigningSessionClient({ initial }: Props) {
   };
 
 
+  // Connected wallet first (works for WalletConnect); injected add/switch as the fallback.
   const handleSwitch = async () => {
-    const res = await ensureXrplEvmTestnet();
-    if (!res.ok) {
-      setStatusMsg(res.error ?? "Switch failed");
+    try {
+      await switchChainAsync({ chainId: XRPL_EVM_TESTNET_ID });
       return;
+    } catch {
+      /* wallet may not know the chain yet — try the injected add-chain path */
     }
-    if (switchChain) {
-      try {
-        switchChain({ chainId: XRPL_EVM_TESTNET_ID });
-      } catch {
-        /* ensure handled */
-      }
-    }
+    const res = await ensureXrplEvmTestnet();
+    if (!res.ok) setStatusMsg(res.error ?? "Could not switch network.");
   };
 
   const safeWrite = async (
@@ -336,7 +324,7 @@ export function SigningSessionClient({ initial }: Props) {
   const execute = async () => {
     if (!canSign || !payload) return;
     if (!onCorrectChain) {
-      setStatusMsg("Wrong chain — switch to 1449000 first");
+      setStatusMsg("Switch your wallet to XRPL EVM first.");
       return;
     }
     resetWrite();
@@ -346,7 +334,7 @@ export function SigningSessionClient({ initial }: Props) {
         const name = payload.createName || "";
         const symbol = payload.createSymbol || "";
         if (!name || !symbol) {
-          setStatusMsg("createName/createSymbol missing");
+          setStatusMsg("This request is missing the coin name or ticker.");
           return;
         }
         const fac = (factoryAddr || FACTORY_ADDRESS) as Address;
@@ -371,13 +359,13 @@ export function SigningSessionClient({ initial }: Props) {
       }
 
       if (!marketAddr) {
-        setStatusMsg("market required");
+        setStatusMsg("This request is missing the market.");
         return;
       }
 
       if (payload.action === "buy") {
         if (graduated === true) {
-          setStatusMsg("Buy blocked — graduated");
+          setStatusMsg("This market graduated — Buy is not available.");
           return;
         }
         const value = parseEther(payload.amount || "0");
@@ -396,11 +384,11 @@ export function SigningSessionClient({ initial }: Props) {
 
       if (payload.action === "sell") {
         if (graduated === true) {
-          setStatusMsg("Sell blocked — graduated");
+          setStatusMsg("This market graduated — Sell is not available.");
           return;
         }
         if (!tokenAddr || !address) {
-          setStatusMsg("token/wallet not ready");
+          setStatusMsg("Still reading the token and wallet — try again in a moment.");
           return;
         }
         const amount = parseEther(payload.amount || "0");
@@ -438,19 +426,19 @@ export function SigningSessionClient({ initial }: Props) {
 
       if (payload.action === "swap") {
         if (!tokenAddr || !dexAddr) {
-          setStatusMsg("token/dex not ready");
+          setStatusMsg("Still reading the token and DEX — try again in a moment.");
           return;
         }
         if (isV1Dex(dexAddr) || dexAddr.toLowerCase() !== TEST_DEX_V2_ADDRESS.toLowerCase()) {
-          setStatusMsg("Fail-closed: V1 never swap — V2 only");
+          setStatusMsg("Swaps run only on the current DEX.");
           return;
         }
         if (graduated !== true) {
-          setStatusMsg("Fail-closed: swap requires market.graduated()==true");
+          setStatusMsg("This market has not graduated yet.");
           return;
         }
         if (lpId === null || lpId === BigInt(0)) {
-          setStatusMsg("Fail-closed: tokenToLpId(token)==0");
+          setStatusMsg("No liquidity pool for this token yet.");
           return;
         }
         const amount = parseEther(payload.amount || "0");
@@ -567,6 +555,16 @@ export function SigningSessionClient({ initial }: Props) {
   }, [payload, tokenSymbol]);
 
 
+  const signed = isConfirmed || view.status === "signed";
+  const shareSymbol =
+    (typeof tokenSymbol === "string" && tokenSymbol) || payload?.createSymbol || "";
+  const shareKind: XShareKind =
+    payload?.action === "create"
+      ? "launched"
+      : payload?.action === "sell" || (payload?.action === "swap" && payload.swapSide === "tokenToXrp")
+        ? "sold"
+        : "bought";
+
   // Placeholder / malformed / unsigned session → clear help (never blank 404)
   const unusableId = isUnusableSessionId(view.id);
   const showInvalidHelp =
@@ -591,23 +589,14 @@ export function SigningSessionClient({ initial }: Props) {
       </header>
 
       <p className="g-micro-warn px-4 pt-3">
-        chat ≠ authorization · emit URL never auto-tx · server holds no key ·{" "}
-        <a
-          href={FAUCET_URL}
-          target="_blank"
-          rel="noreferrer"
-          className="underline"
-          style={{ color: "var(--accent)", fontWeight: 650 }}
-        >
-          faucet.xrplevm.org
-        </a>
+        Nothing is sent until you sign in your wallet. GRAAV never holds your key.
       </p>
 
       <main className="g-main" style={{ maxWidth: 560, margin: "0 auto", width: "100%" }}>
         <div className="xl" style={{ fontSize: 13, color: "var(--x)", marginBottom: 4 }}>
-          From X / Chat
+          Signing request
           {expiresIn && expiresIn !== "expired"
-            ? ` · expires ${expiresIn}`
+            ? ` · expires in ${expiresIn}`
             : view.status === "expired" || expiresIn === "expired"
               ? " · expired"
               : ""}
@@ -623,7 +612,7 @@ export function SigningSessionClient({ initial }: Props) {
                   ? "Invalid"
                   : blockReason
                     ? "Blocked"
-                    : "Grok asked you to confirm"}
+                    : "Review and sign"}
           </div>
 
           {(payload?.action === "create" || payload?.action === "buy") &&
@@ -649,15 +638,15 @@ export function SigningSessionClient({ initial }: Props) {
           </h1>
           <p className="g-hint" style={{ marginTop: 8 }}>
             {payload?.action === "create"
-              ? `After the X post, repost, or DM · ${GRAAV_X_HANDLE_AT} · signature or nothing via /s`
-              : "XRPL EVM Testnet · you sign · we never hold the key"}
+              ? `Requested from your post, repost, or DM to ${GRAAV_X_HANDLE_AT}. You sign in your wallet.`
+              : "You sign in your wallet. GRAAV never holds your key."}
           </p>
           <p className="g-sub" style={{ marginTop: 6 }}>
             {payload?.action === "create"
-              ? `Seed ${seedAmountDisplay(seedAmount)} · quoted in Test RLUSD`
+              ? `Seed ${seedAmountDisplay(seedAmount)} · quoted in RLUSD`
               : `Amount ${amountDisplay}`}
-            {" · "}
-            {XRPL_EVM_TESTNET_ID} ({XRPL_EVM_TESTNET_HEX})
+            {" · XRPL EVM "}
+            {XRPL_EVM_TESTNET_ID}
           </p>
           <p className="g-micro" style={{ marginTop: 4 }}>
             Expires{" "}
@@ -665,15 +654,12 @@ export function SigningSessionClient({ initial }: Props) {
               ? `in ${expiresIn}`
               : expiryLabel}
           </p>
-          <p className="g-micro" style={{ marginTop: 8 }}>
-            Dual-factory: gSWAP→M2.2 · g589/T589-style→M2
-          </p>
 
           {payload && (
             <div style={{ marginTop: 20 }}>
               <div className="g-kv">
                 <span>Action</span>
-                <span>{payload.action}</span>
+                <span style={{ textTransform: "capitalize" }}>{payload.action}</span>
               </div>
               <div className="g-kv">
                 <span>Factory</span>
@@ -698,29 +684,25 @@ export function SigningSessionClient({ initial }: Props) {
                 </span>
               </div>
               <div className="g-kv">
-                <span>minOut</span>
+                <span>Minimum received</span>
                 <span>{payload.minOut || "0"}</span>
               </div>
               <div className="g-kv">
                 <span>Chain</span>
                 <span className="g-mono">
-                  {payload.chainId} ({XRPL_EVM_TESTNET_HEX}) locked
+                  XRPL EVM {payload.chainId} ({XRPL_EVM_TESTNET_HEX})
                 </span>
               </div>
               {graduated != null && (
                 <div className="g-kv">
-                  <span>graduated()</span>
-                  <span style={{ color: graduated ? "var(--warn)" : "var(--good)" }}>
-                    {String(graduated)}
-                  </span>
+                  <span>Graduated</span>
+                  <span>{graduated ? "yes" : "no"}</span>
                 </div>
               )}
               {payload.action === "swap" && lpId !== null && (
                 <div className="g-kv">
-                  <span>tokenToLpId</span>
-                  <span style={{ color: lpId === BigInt(0) ? "var(--bad)" : "var(--text)" }}>
-                    {lpId === BigInt(0) ? "0 (no pool)" : String(lpId)}
-                  </span>
+                  <span>Liquidity pool</span>
+                  <span>{lpId === BigInt(0) ? "none" : `#${String(lpId)}`}</span>
                 </div>
               )}
               {payload.action === "create" && (
@@ -769,8 +751,7 @@ export function SigningSessionClient({ initial }: Props) {
                   </div>
                   <SeedMarketField value={seedAmount} onChange={setSeedAmount} id="session-seed" />
                   <p className="g-hint">
-                    Chat ≠ authorization. Signature or nothing. Optional seed is
-                    review-only on this desk — Sign does not spend it.
+                    The seed is recorded for review; this signature creates the coin and does not spend it.
                   </p>
                 </>
               )}
@@ -791,12 +772,12 @@ export function SigningSessionClient({ initial }: Props) {
 
           {!onCorrectChain && isConnected && (
             <div className="g-alert bad" style={{ marginTop: 16 }}>
-              <strong>Wrong network</strong> (wallet {chainId || "—"}). In your wallet switch to{" "}
-              <strong>XRPL EVM Testnet</strong>{" "}
+              <strong>Wrong network.</strong> Switch your wallet to{" "}
+              <strong>XRPL EVM</strong>{" "}
               <span className="g-mono">
                 {XRPL_EVM_TESTNET_ID} ({XRPL_EVM_TESTNET_HEX})
               </span>{" "}
-              before Sign.
+              before signing.
             </div>
           )}
 
@@ -809,7 +790,7 @@ export function SigningSessionClient({ initial }: Props) {
                 </button>
               ) : (
                 <p className="g-micro" role="status" style={{ color: "var(--muted)", textAlign: "center" }}>
-                  WalletConnect unavailable — configure NEXT_PUBLIC_WC_PROJECT_ID to connect.
+                  Wallet connection isn&apos;t available on this deployment yet.
                 </p>
               )}
               <button type="button" onClick={() => void handleCopyLink()} className="g-cta ghost">Copy link</button>
@@ -821,9 +802,7 @@ export function SigningSessionClient({ initial }: Props) {
               disabled={isSwitching}
               className="g-cta danger"
             >
-              {isSwitching
-                ? "Switching…"
-                : `Switch to XRPL EVM Testnet · ${XRPL_EVM_TESTNET_ID} (${XRPL_EVM_TESTNET_HEX})`}
+              {isSwitching ? "Switching…" : "Switch to XRPL EVM"}
             </button>
           ) : (
             <button
@@ -842,8 +821,8 @@ export function SigningSessionClient({ initial }: Props) {
             </button>
           )}
 
-          <div className="g-alert" style={{ marginTop: 12 }}>
-            Need testnet XRP / gas to sign?{" "}
+          <p className="g-hint">
+            Need XRP for gas?{" "}
             <a
               href={FAUCET_URL}
               target="_blank"
@@ -851,13 +830,23 @@ export function SigningSessionClient({ initial }: Props) {
               className="link-x"
               style={{ fontWeight: 650 }}
             >
-              faucet.xrplevm.org →
+              Open faucet →
             </a>
-          </div>
+          </p>
+          {signed && shareSymbol && (
+            <a
+              className="g-cta ghost"
+              href={sharePostIntentUrl(shareKind, shareSymbol)}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <XMark size={14} /> Share on X
+            </a>
+          )}
           <Link href="/" className="g-cta ghost" style={{ display: "block", textAlign: "center", textDecoration: "none" }}>
-            Reject
+            {signed ? "Back to Markets" : "Reject"}
           </Link>
-          <p className="g-hint">Wrong network or expired session cannot send.</p>
+          {!signed && <p className="g-hint">An expired request or a wallet on another network cannot send.</p>}
         </div>
 
         {(statusMsg || txHash || view.txHash || writeError) && (
@@ -888,12 +877,8 @@ export function SigningSessionClient({ initial }: Props) {
 
         <p className="g-micro" style={{ marginTop: 24, textAlign: "center" }}>
           <Link href="/" style={{ color: "var(--muted)" }}>
-            ← Back to console
+            ← Back to GRAAV
           </Link>
-          {" · "}
-          M2 {shortAddr(FACTORY_ADDRESS)} / M2.2 {shortAddr(M22_FACTORY_ADDRESS)} · V2{" "}
-          {shortAddr(TEST_DEX_V2_ADDRESS)} · Attribution V1 tip{" "}
-          {shortAddr(ATTRIBUTION_V1_FACTORY_ADDRESS)}
         </p>
       </main>
     </div>

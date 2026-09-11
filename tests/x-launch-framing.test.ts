@@ -6,7 +6,7 @@ import {
   isValidLaunchTicker,
   launchComposerText,
   launchPostIntentUrl,
-  launchQuoteRtUrl,
+  launchQuoteIntentUrl,
   sanitizeLaunchTicker,
   seedAmountDisplay,
 } from "../src/lib/xLaunchComposer.js";
@@ -51,8 +51,10 @@ test("Launch composer is X-first and never promotes g589 or MOMENT", () => {
 test("Launch composer URL is intent-only (no write rail)", () => {
   const url = launchPostIntentUrl("hormuz");
   assert.equal(url.startsWith("https://x.com/intent/post?text="), true);
-  assert.equal(launchQuoteRtUrl(), "https://x.com");
   assert.equal(url.includes("tweet.write"), false);
+  const quote = launchQuoteIntentUrl("hormuz", "https://x.com/someone/status/123");
+  assert.equal(quote.startsWith("https://x.com/intent/post?text="), true);
+  assert.match(quote, /&url=https%3A%2F%2Fx\.com%2Fsomeone%2Fstatus%2F123$/);
 });
 
 test("ticker hygiene matches Launch input", () => {
@@ -62,7 +64,8 @@ test("ticker hygiene matches Launch input", () => {
   assert.equal(isValidLaunchTicker("1BAD"), false);
 });
 
-test("optional seed is review copy only", () => {
+test("optional seed is review copy only and displays RLUSD (never mRLUSD / Test RLUSD)", () => {
   assert.equal(seedAmountDisplay(""), "None (optional)");
-  assert.equal(seedAmountDisplay("25"), "25 Test RLUSD");
+  assert.equal(seedAmountDisplay("25"), "25 RLUSD");
+  assert.doesNotMatch(seedAmountDisplay("25"), /mRLUSD|Test RLUSD/i);
 });

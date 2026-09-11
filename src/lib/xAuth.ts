@@ -34,13 +34,13 @@ export function getClientXAuthHint(): XAuthConfig {
       configured: false,
       clientIdPresent: false,
       message:
-        "X app credentials not configured — identity bind is next. Connect X stays available as a stub until NEXT_PUBLIC_X_CLIENT_ID (and server X_CLIENT_SECRET) are set. X login ≠ trade authorization.",
+        "Sign in with X isn't available on this deployment yet. It links your X identity for rewards and never authorizes a trade.",
     };
   }
   return {
     configured: true,
     clientIdPresent: true,
     message:
-      "X identity bind ready (OAuth identity only — no tweet/DM write scopes). X login ≠ trade authorization.",
+      "Sign in with X links your identity for rewards. It never posts for you and never authorizes a trade.",
   };
 }

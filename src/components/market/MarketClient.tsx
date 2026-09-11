@@ -17,11 +17,16 @@ import {
   EXPLORER_URL,
   marketAbi,
   erc20Abi,
+  testDexV2Abi,
   TEST_DEX_V2_ADDRESS,
+  isV2DexConfigured,
 } from "@/lib/chain";
 import { findKnownMarket } from "@/lib/marketsRegistry";
 import { shortAddr } from "@/lib/wallet";
+import { formatPrice, poolPrice } from "@/lib/formatNumber";
 import { MarketChart } from "@/components/market/MarketChart";
+import { XTradeCta } from "@/components/XTradeCta";
+import { resolveKnown } from "@/lib/chatIntent";
 
 type Props = { ticker: string };
 
@@ -94,6 +99,16 @@ export function MarketClient({ ticker }: Props) {
     query: { enabled: !!known?.token && !!address },
   });
 
+  // Graduated markets price on the DEX pool; the curve price reads 0 after graduation.
+  const v2Configured = isV2DexConfigured();
+  const { data: v2Reserves } = useReadContract({
+    address: v2Configured ? TEST_DEX_V2_ADDRESS : undefined,
+    abi: testDexV2Abi,
+    functionName: "getReserves",
+    args: known?.token ? [known.token] : undefined,
+    query: { enabled: v2Configured && !!known?.token && graduated === true && !scar },
+  });
+
   const buyEnabled = graduated === false && !scar;
   const sellEnabled = graduated === false && !scar;
   // T589 scar: no swap even if graduated
@@ -127,23 +142,23 @@ export function MarketClient({ ticker }: Props) {
   const mintSession = useCallback(async () => {
     setErr(null);
     if (!known || !factoryAddr || !marketAddr) {
-      setErr("Unknown market — open Trade and load by symbol");
+      setErr("This market isn't listed here. Open Trade and load it by symbol.");
       return;
     }
     if (!isConnected) {
-      setErr("Connect wallet first");
+      setErr("Connect your wallet first.");
       return;
     }
     if (!onCorrectChain) {
-      setErr(`Switch to XRPL EVM Testnet (${XRPL_EVM_TESTNET_ID})`);
+      setErr("Switch your wallet to XRPL EVM.");
       return;
     }
     if (side === "swap" && !swapEnabled) {
-      setErr(scar ? "T589 scar — swap disabled" : "Swap requires graduated + V2");
+      setErr(scar ? "Swaps are not available for this legacy pool." : "Swap opens after graduation.");
       return;
     }
     if ((side === "buy" || side === "sell") && graduated === true) {
-      setErr("Market graduated — use Swap");
+      setErr("This market graduated. Use Swap.");
       return;
     }
 
@@ -189,26 +204,41 @@ export function MarketClient({ ticker }: Props) {
     router,
   ]);
 
-  const priceLabel = useMemo(() => {
-    if (price === undefined) return "—";
-    try {
-      return `${Number(formatEther(price as bigint)).toPrecision(4)} XRP`;
-    } catch {
-      return "—";
+  const priceXrp = useMemo<number | null>(() => {
+    if (graduated === true) {
+      const reserves = Array.isArray(v2Reserves) ? (v2Reserves as readonly [bigint, bigint]) : null;
+      return reserves ? poolPrice(reserves[0], reserves[1]) : null;
     }
-  }, [price]);
+    if (price === undefined) return null;
+    try {
+      const n = Number(formatEther(price as bigint));
+      return Number.isFinite(n) && n > 0 ? n : null;
+    } catch {
+      return null;
+    }
+  }, [graduated, price, v2Reserves]);
+  const priceLabel = priceXrp !== null ? `${formatPrice(priceXrp)} XRP` : "—";
 
   const ctaLabel = !isConnected
-    ? "Connect wallet"
+    ? "Connect wallet to sign here"
     : !onCorrectChain
-      ? `Switch to ${XRPL_EVM_TESTNET_ID}`
+      ? "Switch to XRPL EVM"
       : busy
-        ? "Opening session…"
+        ? "Opening signing session…"
         : side === "buy"
-          ? `Buy ${amount} XRP · Sign in wallet`
+          ? `Buy with ${amount} XRP`
           : side === "sell"
-            ? `Sell ${amount} · Sign in wallet`
-            : `Swap ${amount} XRP · Sign in wallet`;
+            ? `Sell ${amount} $${ticker}`
+            : `Swap ${amount} XRP`;
+
+  const knownOnX = resolveKnown(ticker);
+  const statusLabel = scar
+    ? "Graduated · legacy pool"
+    : graduated === true
+      ? "Graduated"
+      : graduated === false
+        ? "On curve"
+        : "";
 
   return (
     <AppChrome active="trade">
@@ -217,40 +247,41 @@ export function MarketClient({ ticker }: Props) {
         <div className="flex items-center gap-4">
           <TokenPfp ticker={ticker} size="md" />
           <div>
-            <div className="g-sub">Market</div>
+            <div className="g-sub">{known?.name || "Market"}</div>
             <h1 className="g-display" style={{ fontSize: 32 }}>
               ${ticker}
             </h1>
-            <div className="g-sub" style={{ marginTop: 4 }}>
-              {known?.tag || "Testnet"}
-              {scar ? " · scar" : ""}
-              {graduated === true ? " · graduated" : graduated === false ? " · on curve" : ""}
-            </div>
+            {statusLabel && (
+              <div className="g-sub" style={{ marginTop: 4 }}>
+                <span className={`g-dot${graduated === true ? " grad" : " live"}`} />
+                {statusLabel}
+              </div>
+            )}
           </div>
         </div>
 
         <div className="g-display" style={{ marginTop: 20, fontSize: 34 }}>
           {priceLabel}
         </div>
-        <div className="g-sub">per token</div>
+        <div className="g-sub">{priceXrp !== null ? "per token" : "price unavailable"}</div>
 
-        <MarketChart
-          ticker={ticker}
-          priceXrp={
-            price !== undefined
-              ? Number(formatEther(price as bigint))
-              : null
-          }
-        />
+        <MarketChart ticker={ticker} priceXrp={priceXrp} />
 
         {!known && (
           <div className="g-alert warn" style={{ marginTop: 16 }}>
-            Ticker not in local registry.{" "}
+            This ticker isn&apos;t listed here.{" "}
             <Link href={`/?tab=Trade&q=${encodeURIComponent(ticker)}`} className="link-x">
               Open Trade
             </Link>{" "}
-            to load by symbol.
+            to load it by symbol or address.
           </div>
+        )}
+
+        {knownOnX && !scar && (
+          <>
+            <XTradeCta side={side === "sell" ? "sell" : "buy"} ticker={knownOnX.symbol} amount={amount} />
+            <div className="g-or">or sign here</div>
+          </>
         )}
 
         <div className="g-seg" role="tablist" aria-label="Trade side">
@@ -258,7 +289,7 @@ export function MarketClient({ ticker }: Props) {
             type="button"
             className={side === "buy" ? "on" : undefined}
             disabled={!buyEnabled}
-            title={!buyEnabled ? (graduated ? "Use Swap" : "Unavailable") : "Buy on curve"}
+            title={!buyEnabled ? (graduated ? "Graduated — use Swap" : "Unavailable") : "Buy on the curve"}
             onClick={() => setSide("buy")}
           >
             Buy
@@ -267,7 +298,7 @@ export function MarketClient({ ticker }: Props) {
             type="button"
             className={side === "sell" ? "on" : undefined}
             disabled={!sellEnabled}
-            title={!sellEnabled ? "Unavailable" : "Sell on curve"}
+            title={!sellEnabled ? (graduated ? "Graduated — use Swap" : "Unavailable") : "Sell on the curve"}
             onClick={() => setSide("sell")}
           >
             Sell
@@ -278,10 +309,10 @@ export function MarketClient({ ticker }: Props) {
             disabled={!swapEnabled}
             title={
               scar
-                ? "T589 scar — no swap"
+                ? "Legacy pool — swaps unavailable"
                 : !swapEnabled
-                  ? "Requires graduated + V2"
-                  : "Swap on TestDex V2"
+                  ? "Available after graduation"
+                  : "Swap on the DEX"
             }
             onClick={() => setSide("swap")}
           >
@@ -291,7 +322,7 @@ export function MarketClient({ ticker }: Props) {
 
         {scar && (
           <div className="g-alert" style={{ marginTop: 8 }}>
-            T589 is a scar · TestDex V1 · swap disabled. Prefer g589 on curve or gSWAP for V2 swap.
+            This market graduated to a legacy pool. Trading is not available here.
           </div>
         )}
 
@@ -334,7 +365,7 @@ export function MarketClient({ ticker }: Props) {
           {ctaLabel}
         </button>
         <p className="g-hint">
-          Opens a signing session · you sign · we never hold the key · chat ≠ authorization
+          Opens a signing session. You sign in your wallet; GRAAV never holds your key.
         </p>
 
         {known && (
@@ -359,12 +390,12 @@ export function MarketClient({ ticker }: Props) {
         )}
 
         <p className="g-micro" style={{ marginTop: 24, textAlign: "center" }}>
-          <Link href="/new" style={{ color: "var(--muted)" }}>
-            New market
+          <Link href="/launch" style={{ color: "var(--muted)" }}>
+            Launch a coin
           </Link>
           {" · "}
           <Link href="/" style={{ color: "var(--muted)" }}>
-            Home
+            Markets
           </Link>
         </p>
       </main>

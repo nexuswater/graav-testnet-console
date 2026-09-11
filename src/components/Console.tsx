@@ -39,6 +39,9 @@ export function Console() {
   useEffect(() => {
     const fromUrl = parseTab(search.get("tab"));
     if (fromUrl) setTab(fromUrl);
+    // `/?tab=Trade&q=TICKER` loads that market in the Trade rail (fields only; never sends a tx).
+    const q = search.get("q")?.trim();
+    if (q && fromUrl === "Trade") setPrefill({ action: "load", loadQuery: q });
   }, [search]);
 
   const goTrade = (nextPrefill?: TradePrefill) => {
@@ -88,7 +91,7 @@ export function Console() {
         )}
         {tab === "X" && (
           <main className="g-main">
-            <XTab onGoTrade={() => goTrade()} />
+            <XTab />
           </main>
         )}
       </div>

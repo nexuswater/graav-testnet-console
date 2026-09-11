@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   useCallback,
   useEffect,
@@ -55,7 +56,7 @@ export function AccountMenu({ onStatus }: Props) {
     isPending: isConnecting,
   } = useConnect();
   const { disconnect } = useDisconnect();
-  const { switchChain, isPending: isSwitching } = useSwitchChain();
+  const { switchChainAsync, isPending: isSwitching } = useSwitchChain();
   const onCorrectChain = chainId === XRPL_EVM_TESTNET_ID;
   const walletConnectConnector = connectors.find((c) => c.id === "walletConnect" || c.name.toLowerCase().includes("walletconnect"));
 
@@ -117,7 +118,7 @@ export function AccountMenu({ onStatus }: Props) {
   const handleWalletConnect = async () => {
     setStatus(null);
     if (!walletConnectConnector) {
-      setStatus("WalletConnect is unavailable until NEXT_PUBLIC_WC_PROJECT_ID is configured.");
+      setStatus("Wallet connection isn't available on this deployment yet.");
       return;
     }
     try {
@@ -128,17 +129,17 @@ export function AccountMenu({ onStatus }: Props) {
     }
   };
 
+  // Connected wallet first (works for WalletConnect); injected add/switch as the fallback.
   const handleSwitch = async () => {
-    const res = await ensureXrplEvmTestnet();
-    if (!res.ok) {
-      setStatus(res.error ?? "Switch failed");
-      return;
-    }
+    setStatus(null);
     try {
-      switchChain?.({ chainId: XRPL_EVM_TESTNET_ID });
+      await switchChainAsync({ chainId: XRPL_EVM_TESTNET_ID });
+      return;
     } catch {
-      /* ensure already handled */
+      /* wallet may not know the chain yet — try the injected add-chain path */
     }
+    const res = await ensureXrplEvmTestnet();
+    if (!res.ok) setStatus(res.error ?? "Could not switch network.");
   };
 
   const onSignInX = () => {
@@ -221,7 +222,7 @@ export function AccountMenu({ onStatus }: Props) {
         className={`g-btn g-wallet-pill g-account-provider${walletConnectConnector ? "" : " is-muted"}`}
         disabled={!walletConnectConnector || isConnecting}
         onClick={() => void handleWalletConnect()}
-        title={walletConnectConnector ? "Connect with WalletConnect" : "WalletConnect unavailable — configure NEXT_PUBLIC_WC_PROJECT_ID"}
+        title={walletConnectConnector ? "Connect with WalletConnect" : "Wallet connection isn't available on this deployment yet"}
       >
         <WalletConnectMark size={24} />
         <span className="g-account-provider-label">
@@ -254,14 +255,14 @@ export function AccountMenu({ onStatus }: Props) {
         onClick={onSignInX}
       >
         <XMark size={24} />
-        <span className="g-account-provider-label">Login to X</span>
+        <span className="g-account-provider-label">Sign in with X</span>
         <span className="g-account-chevron" aria-hidden="true">›</span>
         </button>
       )}
 
       {!walletReady && !walletConnectConnector && (
         <p className="g-micro g-account-provider-hint" role="status">
-          WalletConnect unavailable — configure NEXT_PUBLIC_WC_PROJECT_ID to connect.
+          Wallet connection isn&apos;t available on this deployment yet.
         </p>
       )}
       {!xBound && !hint.configured && (
@@ -300,7 +301,7 @@ export function AccountMenu({ onStatus }: Props) {
               disabled={isSwitching}
               onClick={() => void handleSwitch()}
             >
-              {isSwitching ? "Switching…" : "Switch to XRPL EVM Testnet"}
+              {isSwitching ? "Switching…" : "Switch to XRPL EVM"}
             </button>
           )}
           <button
@@ -319,7 +320,7 @@ export function AccountMenu({ onStatus }: Props) {
       {xBound && xDetailsOpen && (
         <div className="g-account-section" style={{ marginTop: isConnected ? 10 : 0 }}>
           <div className="g-account-row">
-            <span className="g-av" style={{ background: "var(--x)" }}>
+            <span className="g-av" style={{ background: "var(--x)", color: "var(--cta-fg)" }}>
               <XMark />
             </span>
             <span style={{ color: "var(--text)", fontSize: 13 }}>
@@ -335,6 +336,16 @@ export function AccountMenu({ onStatus }: Props) {
           </button>
         </div>
       )}
+
+      <div className="g-account-divider" />
+      <Link
+        href="/you"
+        role="menuitem"
+        className="g-menu-item"
+        onClick={() => setOpen(false)}
+      >
+        Account &amp; rewards
+      </Link>
         </div>
       )}
     </div>

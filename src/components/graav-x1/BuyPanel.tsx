@@ -92,18 +92,18 @@ export function BuyPanel(props:WalletProps & {sessionId:string;via?:string}) {
       apply(await api<Prepared>(`/api/orders/${recovery.current.id}/submitted`,{txHash:hash}));setError('');
     }catch(e){setError((e as Error).message);}
   }
-  return <main className="graav-x1"><p className="eyebrow">GRAAV / XRPL EVM TESTNET</p><h1>Buy gSWAP</h1>
+  return <main className="graav-x1"><p className="eyebrow">SIGNING REQUEST</p><h1>Buy gSWAP</h1>
     <div className="x1-card"><div className="x1-row"><span>You pay</span><strong>0.1 XRP + network gas</strong></div>
       <div className="x1-row"><span>Wallet</span><strong>{props.connectedWallet?short(props.connectedWallet):'Not connected'}</strong></div>
       <p>Two wallet confirmations: approve this BUY intent, then confirm the transaction.</p><p className="muted">Buying does not require an X login or a rewards bind.</p>
-      <details><summary>Review destination and quote</summary><p>Chain 1449000 · V2 {X1.v2}</p><p>gSWAP token {X1.token}</p>{order && <p>Minimum output: {order.minOut} token base units. Quote expires {new Date(order.expiresAt*1000).toISOString()}.</p>}</details>
+      <details><summary>Review destination and quote</summary><p>XRPL EVM 1449000 · DEX {X1.v2}</p><p>gSWAP token {X1.token}</p>{order && <p>Minimum output: {order.minOut} token base units. Quote expires {new Date(order.expiresAt*1000).toISOString()}.</p>}</details>
       {!props.connectedWallet && <button disabled={phase==='invalid'} onClick={()=>void props.onConnect().catch(e=>setError((e as Error).message))}>Connect wallet</button>}
       <button disabled={phase!=='ready'||!props.connectedWallet} onClick={()=>void buy()}>{phase==='busy'?'Check wallet…':phase==='pending'?'Confirming…':'Review & buy 0.1 XRP'}</button>
     </div>
     <p role="status">{phase==='complete'?'BUY complete.':phase==='pending'?'Waiting for the existing transaction.':phase==='failed'?'Transaction reverted. No distributor credit recorded.':''}</p>
     <p role="alert">{error}</p>
     {(order?.txHash||recovery.current?.txHash) && <a href={`${X1.explorer}/tx/${order?.txHash||recovery.current?.txHash}`} target="_blank" rel="noreferrer">View buy transaction</a>}
-    {phase==='complete' && order?.feeSplit && <p>{order.creditReason==='ELIGIBLE'?`${formatEther(BigInt(order.feeSplit.distributorWei))} XRP distributor credit recorded (testnet off-chain).`:'No distributor credit applies to this BUY.'}</p>}
+    {phase==='complete' && order?.feeSplit && <p>{order.creditReason==='ELIGIBLE'?`${formatEther(BigInt(order.feeSplit.distributorWei))} XRP distributor credit recorded (off-chain).`:'No distributor credit applies to this BUY.'}</p>}
     {phase==='review' && recovery.current && !order?.txHash && <div className="x1-card"><label>Recover submitted transaction<input value={manualHash} onChange={e=>setManualHash(e.target.value)} placeholder="0x…" /></label><button onClick={()=>void recover()}>Check existing transaction</button></div>}
     {phase==='invalid' && <p>This link cannot be used to sign. Open a newly minted GRAAV session.</p>}
   </main>;

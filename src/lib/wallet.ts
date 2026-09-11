@@ -62,7 +62,10 @@ export async function ensureXrplEvmTestnet(): Promise<{
   try {
     const eth = getInjectedEth();
     if (!eth) {
-      return { ok: false, error: "No injected wallet found. Install MetaMask." };
+      return {
+        ok: false,
+        error: `No browser wallet found. In your wallet, add XRPL EVM (chain ${XRPL_EVM_TESTNET_ID}, RPC ${xrplEvmTestnet.rpcUrls.default.http[0]}) and switch to it.`,
+      };
     }
     const hexId = "0x" + XRPL_EVM_TESTNET_ID.toString(16);
     try {
@@ -110,7 +113,7 @@ export async function watchTokenAsset(params: {
 }): Promise<{ ok: boolean; error?: string }> {
   const eth = getInjectedEth();
   if (!eth) {
-    return { ok: false, error: "No injected wallet found." };
+    return { ok: false, error: `No browser wallet found. Add the token manually in your wallet: ${params.address}` };
   }
   try {
     await eth.request({

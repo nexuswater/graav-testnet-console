@@ -97,5 +97,13 @@
     "generated": false,
     "source": "official-simple",
     "updatedAt": "2026-09-10T23:10:00Z"
+  },
+  "NOPE": {
+    "ticker": "NOPE",
+    "pfpURI": "/pfps/NOPE.cb5b786f92b4.png",
+    "contentType": "image/png",
+    "sha256": "cb5b786f92b4798088bc96b7818f4179fc1874f2621a5167616af5761989c3d8",
+    "generated": true,
+    "updatedAt": "2026-09-11T07:14:14.257Z"
   }
 }
