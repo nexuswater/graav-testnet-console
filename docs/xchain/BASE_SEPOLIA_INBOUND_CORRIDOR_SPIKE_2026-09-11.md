@@ -83,7 +83,7 @@ lanes: squid "public-probe: 82 chains; 84532=no 1449000=no"
 provider calls: 5 · all HTTP 200 · 0 route requests
 ```
 
-Checks: `npm test` (chat 8 + rlusd 27 + rc 7 + corridor 8) PASS · `npm run check` PASS · `npm run lint` PASS (3 pre-existing `no-img-element` warnings) · `npm run build` PASS.
+Checks: `npm test` (chat 8 + rlusd 27 + rc 7 + corridor 8) PASS · `npm run check` PASS · `npm run lint` PASS (3 pre-existing `no-img-element` warnings) · `npm run build` PASS (pre-existing `pino-pretty` optional-dependency warning from wallet connectors).
 
 ## Reproduce
 
