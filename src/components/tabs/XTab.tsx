@@ -46,15 +46,39 @@ type CapResponse = {
   error?: string;
 };
 
+type CoverageRowView = {
+  fixture: string;
+  scope: string;
+  text: string;
+  status: string;
+  liveReady: boolean;
+  rail: string;
+  reason: string;
+  pass: boolean;
+  bind?: { originTweetId?: string; replyTweetId?: string; originHash?: string };
+  session?: { id: string; url: string } | null;
+};
+
+type CoverageResponse = {
+  summary?: Record<string, number>;
+  allPass?: boolean;
+  rows?: CoverageRowView[];
+  error?: string;
+};
+
 function statusColor(status: string): string {
   switch (status) {
     case "PASS":
+    case "READY":
       return "var(--good)";
     case "SCAFFOLD":
+    case "SOFT_READY":
       return "var(--x)";
     case "CLOSED":
+    case "SKIP":
       return "var(--dim)";
     case "MISSING_ENV":
+    case "BLOCKED":
       return "var(--warn)";
     case "ERROR":
       return "var(--nebula)";
@@ -65,6 +89,7 @@ function statusColor(status: string): string {
 
 export function XTab({ onGoTrade }: Props) {
   const [caps, setCaps] = useState<CapResponse | null>(null);
+  const [coverage, setCoverage] = useState<CoverageResponse | null>(null);
   const [busy, setBusy] = useState(false);
   const [dryRun, setDryRun] = useState<string | null>(null);
 
@@ -82,9 +107,19 @@ export function XTab({ onGoTrade }: Props) {
     }
   }, []);
 
+  const loadCoverage = useCallback(async () => {
+    try {
+      const res = await fetch("/api/x/coverage", { cache: "no-store" });
+      setCoverage((await res.json()) as CoverageResponse);
+    } catch (e) {
+      setCoverage({ error: String(e), rows: [] });
+    }
+  }, []);
+
   useEffect(() => {
     void loadCaps(false);
-  }, [loadCaps]);
+    void loadCoverage();
+  }, [loadCaps, loadCoverage]);
 
   const runDryReply = async () => {
     setBusy(true);
@@ -259,6 +294,59 @@ export function XTab({ onGoTrade }: Props) {
             probed {caps.probedAt}
           </p>
         )}
+      </section>
+
+      <section className="g-card">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <div className="text-sm font-semibold">Cron coverage matrix</div>
+            <p className="g-hint">
+              buy / sell / create / MOMENT · dry-run mint of /s · no X read, no post
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {coverage?.summary && (
+              <span className="g-micro" style={{ color: coverage.allPass ? "var(--good)" : "var(--warn)" }}>
+                {coverage.allPass ? "ALL PASS" : "CHECK"} · READY {coverage.summary.READY ?? 0} · SOFT {coverage.summary.SOFT_READY ?? 0} · BLOCKED {coverage.summary.BLOCKED ?? 0} · SKIP {coverage.summary.SKIP ?? 0}
+              </span>
+            )}
+            <button type="button" className="g-btn" disabled={busy} onClick={() => void loadCoverage()}>
+              Re-run
+            </button>
+          </div>
+        </div>
+        <ul className="mt-3 space-y-2 text-sm">
+          {(coverage?.rows || []).map((row) => (
+            <li key={row.fixture} className="g-card" style={{ margin: 0 }}>
+              <div className="flex flex-wrap items-baseline gap-2">
+                <span className="g-micro" style={{ color: "var(--muted)" }}>{row.scope}</span>
+                <code className="font-mono" style={{ color: "var(--text)" }}>{row.text}</code>
+                <span className="g-micro" style={{ color: statusColor(row.status) }}>{row.status}</span>
+                <span className="g-micro" style={{ color: row.liveReady ? "var(--good)" : "var(--dim)" }}>
+                  {row.liveReady ? "live when flag opens" : "dry-run only"}
+                </span>
+                {!row.pass && (
+                  <span className="g-micro" style={{ color: "var(--warn)" }}>unexpected</span>
+                )}
+              </div>
+              <p className="g-hint" style={{ marginTop: 4 }}>{row.rail !== "—" ? `${row.rail} · ` : ""}{row.reason}</p>
+              {row.session?.url && (
+                <p className="g-micro" style={{ marginTop: 4, overflowWrap: "anywhere" }}>
+                  /s minted (60s) · origin {row.bind?.originTweetId || "—"} · reply {row.bind?.replyTweetId || "—"}
+                  {row.bind?.originHash ? ` · originHash ${row.bind.originHash.slice(0, 10)}…` : ""}
+                </p>
+              )}
+            </li>
+          ))}
+          {!coverage?.rows?.length && (
+            <li className="g-hint">{coverage?.error || "Loading…"}</li>
+          )}
+        </ul>
+        <p className="g-hint" style={{ marginTop: 8 }}>
+          Write stays CLOSED. READY rows post only after FEATURE_PUBLIC_X_WRITE + product token;
+          SOFT_READY create waits for the /s Coin V1 sign rail; MOMENT waits for the first Moment market.
+          SoT: docs/x/CRON_COVERAGE_MATRIX_2026-09-11.md
+        </p>
       </section>
 
       <ul className="space-y-2 text-sm">
