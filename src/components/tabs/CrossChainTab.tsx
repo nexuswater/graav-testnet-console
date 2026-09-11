@@ -16,6 +16,7 @@ import {
   isActiveCorridor,
   type CorridorGate,
 } from "@/lib/crosschain/corridor";
+import { BaseSepoliaCorridorCard } from "@/components/tabs/BaseSepoliaCorridorCard";
 
 type ProbeStatus = "ok" | "blocked" | "unsupported";
 
@@ -249,6 +250,8 @@ export function CrossChainTab({ onGoTrade }: Props) {
       <div className="g-alert">
         Availability: testnet Buy is disabled. {NO_LIVE_QUOTE_LINE} Base Sepolia is the only corridor under check.
       </div>
+
+      <BaseSepoliaCorridorCard />
 
       <details className="g-details">
         <summary>Details</summary>
