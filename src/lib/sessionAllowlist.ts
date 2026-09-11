@@ -1,10 +1,12 @@
 /**
  * Dual-factory allowlist for signing sessions (S).
  * SoT: S_SESSION_BIND_ABI.md · docs/TESTNET_REGISTRY.md · chain.ts
- * Do not collapse M2 / M2.2.
+ * Do not collapse M2 / M2.2. Attribution V1 tip (stack2) is its own lane;
+ * the Coin Soft Factory (RLUSD) is another. Retired stack1 is never listed.
  */
 import type { Address } from "viem";
 import {
+  ATTRIBUTION_V1_FACTORY_ADDRESS,
   FACTORY_ADDRESS,
   M22_FACTORY_ADDRESS,
   TEST_DEX_V1_ADDRESS,
@@ -31,6 +33,7 @@ type HexAddress = `0x${string}`;
 export const ALLOWED_FACTORIES = [
   FACTORY_ADDRESS,
   M22_FACTORY_ADDRESS,
+  ATTRIBUTION_V1_FACTORY_ADDRESS,
   RLUSD_CLONE_FACTORY_ADDRESS,
 ] as const;
 
@@ -96,6 +99,11 @@ export function isRlusdCloneFactory(addr: string): boolean {
   return normAddr(addr) === normAddr(RLUSD_CLONE_FACTORY_ADDRESS);
 }
 
+/** Attribution V1 tip (stack2, TEMPLATE_VERSION 2) — XRP curve with buyWithAttribution. */
+export function isAttributionV1Factory(addr: string): boolean {
+  return normAddr(addr) === normAddr(ATTRIBUTION_V1_FACTORY_ADDRESS);
+}
+
 export function isRlusdCloneMarket(addr: string): boolean {
   return !!RLUSD_CLONE_CURVE_ADDRESS && normAddr(addr) === normAddr(RLUSD_CLONE_CURVE_ADDRESS);
 }
@@ -124,6 +132,7 @@ export function isV2Dex(addr: string): boolean {
 export function factoryShortLabel(factory: string): string {
   if (isM22Factory(factory)) return "M2.2";
   if (isM2Factory(factory)) return "M2";
+  if (isAttributionV1Factory(factory)) return "Attribution V1";
   if (isRlusdCloneFactory(factory)) return "Coin";
   return "unknown";
 }
@@ -145,7 +154,7 @@ export function validateAllowlist(input: AllowlistCheckInput): string | null {
     return `chainId must be ${SESSION_CHAIN_ID} (got ${input.chainId})`;
   }
   if (!input.factory || !isAllowedFactory(input.factory)) {
-    return "factory not on allowlist (M2, M2.2, or RLUSD clone)";
+    return "factory not on allowlist (M2, M2.2, Attribution V1, or RLUSD clone)";
   }
   if (input.market) {
     if (!isAllowedMarket(input.market)) {
