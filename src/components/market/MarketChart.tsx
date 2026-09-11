@@ -72,9 +72,9 @@ export function MarketChart({ ticker, priceXrp = null }: Props) {
             style={
               range === r
                 ? {
-                    background: "var(--nebula-deep)",
-                    color: "#fff",
-                    borderColor: "var(--nebula-deep)",
+                    background: "var(--cta-bg)",
+                    color: "var(--cta-fg)",
+                    borderColor: "var(--cta-bg)",
                   }
                 : undefined
             }

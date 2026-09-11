@@ -154,6 +154,18 @@ Legend: **✓** works · **⊘** disabled with a visible reason · **ℹ** infor
 | Trade status card once confirmed | ✓ **Share on X** for the side just traded |
 | Launch once `Coin created` | ✓ **Share on X** (`Launched $TICKER …`) |
 
+## Theme contrast (dark + light)
+
+Every color in `globals.css` and the components now resolves from the theme tokens; the last hardcoded dark values were removed after light-theme captures showed real failures. Verified in both themes (`polish1-{dark,light}-state-*`):
+
+| Element | Before (light theme) | Now |
+| --- | --- | --- |
+| Segmented control active pill (Buy · Sell · Swap, swap side) | black pill, black label | `--bg` pill with `--border` ring, `--text` label |
+| `.g-alert.warn / .bad / .good` | light-blue / slate / mint text on light grey | `--text` on `--bg-2`, tone from the border |
+| Account panel provider buttons + chevrons | dark gradient with dark text, `#e7e7e9` chevron | `--bg` / `--border`, `--secondary` chevron |
+| Avatars, pfp placeholders, X badge | `#222` / `#0b0f14` backgrounds, `#fff` glyphs | `--surface` backgrounds, `--cta-fg` glyphs |
+| Chart timeframe active button, `/new` download link, danger CTA | white text on light surface | `--cta-bg` / `--cta-fg` |
+
 ## Images and metadata
 
 | Item | Behaviour |

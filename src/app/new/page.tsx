@@ -207,8 +207,8 @@ export default function NewMarketPage() {
                     download={`${ticker}-graav-token.png`}
                     style={{
                       display: "inline-block",
-                      background: "var(--x)",
-                      color: "#fff",
+                      background: "var(--cta-bg)",
+                      color: "var(--cta-fg)",
                       border: 0,
                       textDecoration: "none",
                     }}

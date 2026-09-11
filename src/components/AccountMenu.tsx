@@ -320,7 +320,7 @@ export function AccountMenu({ onStatus }: Props) {
       {xBound && xDetailsOpen && (
         <div className="g-account-section" style={{ marginTop: isConnected ? 10 : 0 }}>
           <div className="g-account-row">
-            <span className="g-av" style={{ background: "var(--x)" }}>
+            <span className="g-av" style={{ background: "var(--x)", color: "var(--cta-fg)" }}>
               <XMark />
             </span>
             <span style={{ color: "var(--text)", fontSize: 13 }}>
