@@ -1,0 +1,134 @@
+{
+  "spike": "GRAAV Base Sepolia inbound corridor",
+  "capturedAt": "2026-09-11T04:00:00Z",
+  "capturedFrom": "cloud agent sandbox, unauthenticated public endpoints, Squid integrator id `test` (public probe)",
+  "corridor": {
+    "source": { "chain": "Base Sepolia", "chainId": 84532, "axelarId": "base-sepolia", "asset": "USDC", "address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e", "decimals": 6 },
+    "destination": { "chain": "XRPL EVM Testnet", "chainId": 1449000, "axelarId": "xrpl-evm", "asset": "RLUSD (console quote, on-chain MockRLUSD/mRLUSD)", "address": "0x04B9eF8Fa40E6336e8404a18cC4F6a5a852e913F", "decimals": 18 }
+  },
+  "verdict": { "route": "FAIL", "buyEnabled": false, "executionAdapter": "BUY_ADAPTER_NOT_CONFIGURED" },
+  "onChain": {
+    "xrplEvmTestnet": {
+      "rpc": "https://rpc.testnet.xrplevm.org",
+      "eth_chainId": "0x161c28 (1449000)",
+      "eth_blockNumber": "0x82c763 (8570723)",
+      "consoleQuote_0x04B9": { "codeBytes": 1904, "name": "MockRLUSD", "symbol": "mRLUSD", "decimals": 18 },
+      "otherTestRlusd_0x61F1": {
+        "address": "0x61F16049EBdC3BB505b0dBeeb31DE09C3AEf53f7",
+        "codeBytes": 1678,
+        "name": "RLUSD",
+        "symbol": "RLUSD",
+        "decimals": 18,
+        "totalSupply": "100000000000000000000000",
+        "holders": 9779,
+        "blockscoutContractName": "Token",
+        "compiler": "v0.8.28+commit.7893614a",
+        "sourceVerified": false,
+        "creator": "0x163687C7ed8eB1F9a3223CbFDA73CEfD6509E0eB",
+        "creationTx": "0x1297e7a24017b19094de7b288fcb7a1daf13831130da8b1f9006dd30e5989b91",
+        "owner()": "reverts",
+        "minter()": "reverts",
+        "interchainTokenId()": "reverts",
+        "interchainTokenService()": "reverts",
+        "conclusion": "plain ERC-20 test token; not Axelar ITS, not Wormhole NTT managed; not the console quote asset"
+      },
+      "axelarGateway": "0xe432150cce91c13a887f7D836923d5597adD8E31",
+      "axelarInterchainTokenService": { "address": "0xB5FB4BE02232B1bBA4dC8f81dc24C26980dE9e3C", "codeBytes": 421 },
+      "wormholeCore": { "address": "0xaBf89de706B583424328B54dD05a8fC986750Da8", "codeBytes": 680 },
+      "wormholeTokenBridge": { "address": "0x7d8eBc211C4221eA18E511E4f0fD50c5A539f275", "codeBytes": 680 }
+    },
+    "baseSepolia": {
+      "rpc": "https://sepolia.base.org",
+      "eth_chainId": "0x14a34 (84532)",
+      "eth_blockNumber": "0x2c80e72 (46665330)",
+      "usdc_0x036C": { "codeBytes": 1798, "name": "USDC", "symbol": "USDC", "decimals": 6 },
+      "axelarInterchainTokenService": { "address": "0xB5FB4BE02232B1bBA4dC8f81dc24C26980dE9e3C", "codeBytes": 421 },
+      "axelarGateway": "0xe432150cce91c13a887f7D836923d5597adD8E31",
+      "axelarAusdc": "0x254d06f33bDc5b8ee05b2ea472107E300226659A",
+      "wormholeTokenBridge": "0x86F55A04690fd7815A3D802bD587e83eA888B239"
+    }
+  },
+  "providers": {
+    "squid": {
+      "base": "https://v2.api.squidrouter.com/v2",
+      "integrator": "test (public probe; SQUID_INTEGRATOR_ID not configured in this environment)",
+      "GET /v2/chains": { "status": 200, "chainCount": 82, "testnetChains": 0, "has_8453_Base": true, "has_84532_BaseSepolia": false, "has_1449000_XrplEvmTestnet": false, "has_1440000_XrplEvmMainnet": false },
+      "GET /v2/tokens?chainId=84532": { "status": 400, "type": "SCHEMA_VALIDATION_ERROR", "message": "chainId: 84532 unsupported chain id" },
+      "GET /v2/tokens?chainId=1449000": { "status": 400, "type": "SCHEMA_VALIDATION_ERROR", "message": "chainId: 1449000 unsupported chain id" },
+      "GET /v2/tokens?chainId=1440000": { "status": 200, "body": {}, "note": "chain id accepted by schema but zero tokens for the public integrator (Squid Intents gating)" },
+      "GET /v2/tokens?chainId=8453": { "status": 200, "usdc": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913" },
+      "POST /v2/route quoteOnly 84532 USDC -> 1449000 0x04B9": { "status": 400, "type": "SCHEMA_VALIDATION_ERROR", "message": "fromChain: 84532 unsupported chain id" },
+      "POST /v2/route quoteOnly 8453 USDC -> 1440000 RLUSD 0x8d58 (mainnet policy lane, context only)": { "status": 500, "type": "BAD_REQUEST", "message": "Low liquidity, please reduce swap amount and try again" },
+      "rateLimit": "HTTP 429 RATE_LIMIT observed after ~6 rapid calls with integrator `test`",
+      "docs": "docs.squidrouter.com lists xrpl-evm 1440000 (mainnet) and xrpl-mainnet; XRPL routes require Squid Intents enabled on the integrator id; no testnet catalog"
+    },
+    "axelarTestnet": {
+      "base": "https://testnet.api.axelarscan.io/api",
+      "getChains": { "status": 200, "chainCount": 77, "base-sepolia": { "chain_id": 84532 }, "xrpl-evm": { "chain_id": 1449000, "gateway": "0xe432150cce91c13a887f7D836923d5597adD8E31" }, "xrpl": { "chain_id": null } },
+      "getITSAssets": {
+        "status": 200,
+        "count": 4,
+        "assets": [
+          { "symbol": "YSLC", "chains": ["fantom", "kava", "moonbeam"] },
+          { "symbol": "XRP", "chains": ["xrpl", "xrpl-evm"], "xrpl-evm": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" },
+          { "symbol": "SQD", "chains": ["ethereum-sepolia", "flow", "sui", "xrpl", "xrpl-evm"], "xrpl-evm": "0xd5e67bFbFfE0A6439be6738587B115053f77aB3b" },
+          { "symbol": "TEST", "chains": ["ethereum-sepolia", "sui", "xrpl"] }
+        ],
+        "rlusdAnywhere": false,
+        "usdcAnywhere": false,
+        "onBaseSepolia": []
+      },
+      "getAssets": { "status": 200, "count": 27, "uausdc": { "symbol": "aUSDC", "on_base-sepolia": "0x254d06f33bDc5b8ee05b2ea472107E300226659A", "on_xrpl-evm": false }, "anyGatewayAssetOnXrplEvm": false }
+    },
+    "axelarMainnetContextOnly": {
+      "getChains": { "base": 8453, "xrpl-evm": 1440000 },
+      "getITSAssets": { "count": 151, "onXrplEvm": ["XRP", "DAI", "FDUSD", "USDT", "WETH", "USDC.axl", "WBTC", "mMEV", "mF-ONE", "mBTC", "mTBILL", "mBASIS", "mRe7YIELD", "mEDGE", "sUSDf", "USDf", "USDC.xrpl", "mXRP", "DT0"], "rlusd": false, "spanningBaseAndXrplEvm": [] },
+      "note": "RLUSD on XRPL EVM mainnet is a Wormhole NTT deployment, not Axelar ITS. Mainnet execution is out of scope (No Production)."
+    },
+    "lifi": {
+      "GET /v1/chains?chainTypes=EVM": { "status": 200, "chainCount": 70, "84532": { "key": "bast", "name": "Base Sepolia Testnet", "mainnet": false }, "1449000": false, "1440000": false },
+      "GET /v1/tokens?chains=84532": { "status": 200, "usdc": "0x036CbD53842c5426634e7929541eC2318f3dCF7e" },
+      "GET /v1/quote 84532 USDC -> 1449000 0x04B9": { "status": 400, "code": 1011, "message": "/toChain must be equal to one of the allowed values, /toChain must match exactly one schema in oneOf" },
+      "GET /v1/connections?fromChain=84532": { "status": 400, "connections": [] }
+    },
+    "debridge": { "GET /v1.0/supported-chains-info": { "status": 200, "chainCount": 17, "8453": true, "84532": false, "1449000": false } },
+    "circleCctp": {
+      "supportedDomainsDoc": "developers.circle.com/cctp/cctp-supported-blockchains",
+      "base": { "domain": 6, "testnetIncluded": true },
+      "xrplEvm": "absent from CCTP domains",
+      "GET iris-api-sandbox /v2/burn/USDC/fees/6/0": { "status": 200 }
+    },
+    "wormhole": {
+      "sdkChainIds": { "XRPLEVM": 57, "BaseSepolia": 10004 },
+      "testnetContractsOnXrplEvm": { "core": "0xaBf89de706B583424328B54dD05a8fC986750Da8", "tokenBridge": "0x7d8eBc211C4221eA18E511E4f0fD50c5A539f275" },
+      "GET api.testnet.wormholescan.io native-token-transfer/token-list": { "status": 501, "error": "Not implemented by the testnet environment" },
+      "GET api.wormholescan.io native-token-transfer/token-list": { "status": 200, "rlusd": { "symbol": "Ripple USD", "platforms": ["ethereum", "xrp"] } },
+      "note": "Token Bridge would deliver wrapped USDC, not RLUSD; no public quote API; SDK enum alone never counts as PASS"
+    }
+  },
+  "consoleEndpoint": {
+    "GET /api/crosschain/corridor/base-sepolia (next dev, 2026-09-11T04:10:25Z)": {
+      "status": 424,
+      "cacheControl": "no-store",
+      "verdict": "FAIL",
+      "buyEnabled": false,
+      "liveExecutionEnabled": false,
+      "gates": {
+        "source-chain": "FAIL — Squid /v2/chains does not list 84532 (82 chains, no testnets).",
+        "source-usdc": "FAIL — Not queried: chain 84532 absent from Squid /v2/chains",
+        "dest-chain": "FAIL — Squid /v2/chains does not list 1449000 (82 chains).",
+        "dest-rlusd": "FAIL — Not queried: chain 1449000 absent from Squid /v2/chains",
+        "live-quote": "FAIL — Quote not requested: catalog gates did not pass; no route request sent",
+        "native-bridge-asset": "FAIL — No USDC or RLUSD asset spans base-sepolia and xrpl-evm on Axelar testnet. ITS on xrpl-evm: [XRP, SQD]; gateway on xrpl-evm: [none].",
+        "execution-adapter": "FAIL — BUY_ADAPTER_NOT_CONFIGURED"
+      },
+      "providerCalls": [
+        { "provider": "squid", "url": "https://v2.api.squidrouter.com/v2/chains", "status": 200 },
+        { "provider": "axelar", "url": "https://testnet.api.axelarscan.io/api/getChains", "status": 200 },
+        { "provider": "axelar", "url": "https://testnet.api.axelarscan.io/api/getITSAssets", "status": 200 },
+        { "provider": "axelar", "url": "https://testnet.api.axelarscan.io/api/getAssets", "status": 200 },
+        { "provider": "lifi", "url": "https://li.quest/v1/chains?chainTypes=EVM", "status": 200 }
+      ]
+    }
+  }
+}

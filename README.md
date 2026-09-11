@@ -12,7 +12,7 @@ Tabbed GRAAV product shell on XRPL EVM Testnet (same Next.js app).
 |-----|--------|
 | Trade | Live — create/load/buy/sell/graduate on Factory (chain 1449000) |
 | Portfolio | Live — native XRP + Factory ERC-20 balances |
-| Cross-chain | Gated — no proven automated route; Buy-from-Base/Eth disabled |
+| Cross-chain | Gated — no proven automated route; Buy-from-Base/Eth disabled. Base Sepolia USDC→RLUSD corridor verdict: `GET /api/crosschain/corridor/base-sepolia` (424 while FAIL/HOLD; see `docs/xchain/`) |
 | Chat | Local intents only — handoff to Trade with Sign in wallet |
 | X | Identity bind + capability matrix; mention bot scaffold; FEATURE_PUBLIC_X_WRITE=false |
 
