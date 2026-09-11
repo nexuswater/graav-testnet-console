@@ -6,6 +6,7 @@ import { FAUCET_URL, XRPL_EVM_TESTNET_ID } from "@/lib/chain";
 import { shortAddr } from "@/lib/wallet";
 import type { TradePrefill } from "@/lib/tradePrefill";
 import { homeMarkets } from "@/lib/marketsRegistry";
+import { BaseSepoliaCorridorCard } from "@/components/tabs/BaseSepoliaCorridorCard";
 
 type ProbeStatus = "ok" | "blocked" | "unsupported";
 
@@ -188,6 +189,8 @@ export function CrossChainTab({ onGoTrade }: Props) {
       <div className="g-alert">
         Availability: testnet Buy is disabled. A live Squid USDC→RLUSD quote is required before any Buy.
       </div>
+
+      <BaseSepoliaCorridorCard />
 
       <details className="g-details">
         <summary>Details</summary>
