@@ -106,7 +106,21 @@ Product operator identity is **`@graav_xyz`** — never personal `@Josh_XRPL`. C
 | Connect X identity OAuth | CONNECTED (env set) |
 | X API read mentions | SCAFFOLD / BLOCKED on product keys |
 | X bot `reply-session` | SCAFFOLD (dry-run mints `/s`; no public post) |
+| Cron `x-auto-reply` | SCAFFOLD — auto dry-run while write is CLOSED (mints `/s`, no claim, no post); `?fixtures=1` matrix needs no X keys |
 | Public X write | CLOSED (`FEATURE_PUBLIC_X_WRITE=false`) |
+
+### Cron coverage matrix (buy / sell / create / MOMENT)
+
+SoT: `docs/x/CRON_COVERAGE_MATRIX_2026-09-11.md` · live view: `GET /api/x/coverage` and the X tab.
+
+| Intent | Status | Opens with |
+|--------|--------|------------|
+| buy `$g589` (M2 curve) · buy `$gSWAP` (V2 swap, M2.2) · sell `$g589` | READY — `/s` signable today | `FEATURE_PUBLIC_X_WRITE=true` + product token |
+| create `launch $TICKER` | SOFT_READY — `/s` minted on the Coin V1 factory with `originTweetId` + `replyTweetId` + `originHash` bound; Sign closed | `/s` Coin V1 sign rail (LaunchAuthorizer), then the flag |
+| MOMENT buy / sell | BLOCKED — coin/curve `null` | first signed `createCoin` + `/s` RLUSD approve+buy rail |
+| two cashtags · missing `$` · percent sell · bad ticker | BLOCKED (fail-closed) | — |
+
+Soft-ready bind: `replyTweetId` = the mention; `originTweetId` = quoted post › replied-to post › the mention itself; create adds `originHash = keccak256(utf8(originTweetId))` (= Coin V1 `sourcePostId`).
 
 ### Env checklist (Vercel Production)
 
@@ -126,7 +140,9 @@ Product operator identity is **`@graav_xyz`** — never personal `@Josh_XRPL`. C
 |--------|------|---------|
 | `GET` | `/api/x/capabilities` | Capability matrix + spine + env checklist (`?probeMentions=1`) |
 | `GET` | `/api/x/mentions` | Capability only; `?live=1` hits X mentions |
-| `POST` | `/api/x/reply-session` | Parse mention intent → mint `/api/s`; post reply only if feature+token (default `dryRun`) |
+| `GET` | `/api/x/coverage` | Cron coverage matrix — canonical buy / sell / create / MOMENT fixtures through the cron path (no X read, no post; 60 s sessions) |
+| `POST` | `/api/x/reply-session` | Parse mention intent → mint `/api/s`; returns `coverage`; posts only if feature+token+`dryRun:false`+signable rail (default `dryRun`) |
+| `GET/POST` | `/api/cron/x-auto-reply` | `CRON_SECRET`. Auto dry-run while write is CLOSED; `?dryRun=1` forces; `?fixtures=1` runs the matrix without X keys; live posts READY rows only |
 
 Intents match ChatTab allowlist (`buy $g589 0.1`, `buy $gSWAP 0.1`, …). Dual-factory unchanged. One cashtag per API post. Quote-post API is Enterprise.
 
