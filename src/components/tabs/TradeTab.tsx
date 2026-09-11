@@ -45,6 +45,7 @@ import { resolveKnown } from "@/lib/chatIntent";
 import { homeMarkets } from "@/lib/marketsRegistry";
 import { XMark } from "@/components/XMark";
 import { GRAAV_X_HANDLE_AT, sharePostIntentUrl } from "@/lib/xLaunchComposer";
+import { useWalletActions } from "@/lib/useWalletActions";
 
 function explorerAddress(addr: string) {
   return `${EXPLORER_URL}/address/${addr}`;
@@ -69,6 +70,7 @@ export function TradeTab({
   const onCorrectChain = chainId === XRPL_EVM_TESTNET_ID;
   const canTrade = isConnected && onCorrectChain;
   const v2Configured = isV2DexConfigured();
+  const { connect, switchToXrplEvm, walletConnectConnector, isConnecting, isSwitching } = useWalletActions();
 
   const [loadQuery, setLoadQuery] = useState("gSWAP");
   const [marketAddr, setMarketAddr] = useState<Address | null>(null);
@@ -604,19 +606,18 @@ export function TradeTab({
   const xAmount =
     activeSide === "buy" ? buyXrp : activeSide === "sell" ? sellAmount : swapAmount;
   const quickPicks = homeMarkets();
-  const walletHint = !isConnected
-    ? "Connect your wallet to sign here."
-    : !onCorrectChain
-      ? "Switch your wallet to XRPL EVM to sign here."
-      : null;
+  const walletStep: "connect" | "switch" | null = !isConnected ? "connect" : !onCorrectChain ? "switch" : null;
+  const doWalletStep = async () => {
+    const res = walletStep === "connect" ? await connect() : await switchToXrplEvm();
+    if (!res.ok) setStatusMsg(res.error ?? "Wallet action failed.");
+  };
 
   return (
     <div className="space-y-5">
       <section>
         <h1 className="g-title">Trade</h1>
         <p className="g-sub" style={{ marginTop: 8 }}>
-          Daily trading happens on X — post or DM {GRAAV_X_HANDLE_AT} and sign the link it sends.
-          This in-app rail is the fallback. Your wallet signs either way.
+          Post or DM {GRAAV_X_HANDLE_AT} and sign the link it sends, or sign here. Your wallet signs either way.
         </p>
       </section>
 
@@ -695,7 +696,24 @@ export function TradeTab({
 
           <div className="g-or">{knownOnX ? "or sign here" : "sign here"}</div>
 
-          {walletHint && <div className="g-alert" style={{ marginTop: 12 }}>{walletHint}</div>}
+          {walletStep && (
+            <div className="g-alert" style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+              <span>
+                {walletStep === "connect"
+                  ? walletConnectConnector
+                    ? "Connect your wallet to sign here."
+                    : "Wallet connection isn't available on this deployment yet — trade from X instead."
+                  : "Switch your wallet to XRPL EVM to sign here."}
+              </span>
+              {(walletStep === "switch" || walletConnectConnector) && (
+                <button type="button" className="g-btn sm" disabled={isConnecting || isSwitching} onClick={() => void doWalletStep()}>
+                  {walletStep === "connect"
+                    ? isConnecting ? "Connecting…" : "Connect wallet"
+                    : isSwitching ? "Switching…" : "Switch network"}
+                </button>
+              )}
+            </div>
+          )}
 
           <div className="g-seg" role="tablist" aria-label="Trade side">
             <button
@@ -753,7 +771,6 @@ export function TradeTab({
               >
                 Buy {symbol || "token"}
               </button>
-              <p className="g-hint">You sign in your wallet. GRAAV never holds your key.</p>
             </>
           )}
 
@@ -877,7 +894,6 @@ export function TradeTab({
                   >
                     Swap
                   </button>
-                  <p className="g-hint">You sign in your wallet. GRAAV never holds your key.</p>
                 </>
               )}
             </>

@@ -1,8 +1,17 @@
 import { X1 } from '@/lib/graav-x1/core/config';
+import type { TypedData } from '@/lib/graav-x1/core/types';
 import { address, need } from './web-validation';
 
 export type EvmProvider = { request(args:{method:string;params?:unknown[]}):Promise<unknown> };
-export type WalletProps = { connectedWallet: string|null; getProvider():EvmProvider|null; onConnect():Promise<void> };
+export type WalletProps = {
+  connectedWallet: string|null;
+  getProvider():EvmProvider|null;
+  onConnect():Promise<void>;
+  /** Signs through the connected connector (WalletConnect or injected); falls back to getProvider when absent. */
+  signTypedData?(wallet:string,typedData:TypedData):Promise<string>;
+  /** Switches the connected wallet to XRPL EVM; falls back to the injected provider path when absent. */
+  switchToChain?():Promise<void>;
+};
 
 export class ConsoleApiError extends Error {
   constructor(public readonly code: string, public readonly status = 0) { super(code); this.name = "ConsoleApiError"; }
@@ -17,6 +26,11 @@ export function userFacingError(error: unknown, fallback = "BIND_ERROR — Pleas
   }
   const message = error instanceof Error ? error.message : "";
   if (/expected pattern|invalid url/i.test(message)) return "BIND_ERROR — The identity request was invalid. Reload and try again.";
+  const short = (error as { shortMessage?: string } | null)?.shortMessage;
+  if (/user rejected|user denied|denied|cancel/i.test(short || message)) return "Cancelled in your wallet. Nothing was changed.";
+  // wagmi / viem errors carry a one-line shortMessage; our own need() checks throw plain Errors.
+  if (short) return short;
+  if (message && error instanceof Error && error.constructor === Error) return message;
   return fallback;
 }
 export async function requireWallet(getProvider:()=>EvmProvider|null,expected:string) {

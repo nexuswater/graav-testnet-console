@@ -83,6 +83,7 @@ export function SigningSessionClient({ initial }: Props) {
   const [statusMsg, setStatusMsg] = useState<string | null>(null);
   const [seedAmount, setSeedAmount] = useState("");
   const [blockReason, setBlockReason] = useState<string | null>(null);
+  const [nowSec, setNowSec] = useState(() => Math.floor(Date.now() / 1000));
   const [tokenAddr, setTokenAddr] = useState<Address | null>(
     (payload?.token as Address) || null
   );
@@ -164,14 +165,29 @@ export function SigningSessionClient({ initial }: Props) {
     };
   }, [publicClient, marketAddr, payload?.action]);
 
+  // Tick once a second while the request is pending so the countdown is live and
+  // the page flips to Expired on its own instead of leaving Sign enabled.
+  const pendingExpiry = view.status === "pending" ? payload?.expiry ?? null : null;
+  useEffect(() => {
+    if (!pendingExpiry) return;
+    const tick = () => setNowSec(Math.floor(Date.now() / 1000));
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, [pendingExpiry]);
+  const expiredLocally = pendingExpiry !== null && nowSec >= pendingExpiry;
+  useEffect(() => {
+    if (expiredLocally) void refreshStatus();
+  }, [expiredLocally, refreshStatus]);
+
   // Fail-closed gates
   useEffect(() => {
     if (!payload) {
       setBlockReason(view.error || "Invalid session");
       return;
     }
-    if (view.status === "expired") {
-      setBlockReason("Session expired");
+    if (view.status === "expired" || expiredLocally) {
+      setBlockReason("This request expired. Ask GRAAV for a new link or open Trade.");
       return;
     }
     if (view.status === "invalid") {
@@ -230,7 +246,7 @@ export function SigningSessionClient({ initial }: Props) {
       return;
     }
     setBlockReason(null);
-  }, [payload, view.status, view.error, graduated, tokenAddr, lpId]);
+  }, [payload, view.status, view.error, graduated, tokenAddr, lpId, expiredLocally]);
 
   useEffect(() => {
     if (isConfirmed && txHash) {
@@ -492,23 +508,22 @@ export function SigningSessionClient({ initial }: Props) {
     }
   };
 
+  // Shown in the visitor's own time zone; the countdown below is the live cue.
   const expiryLabel = payload
-    ? new Date(payload.expiry * 1000).toLocaleString("en-US", {
-        timeZone: "America/Chicago",
-        dateStyle: "short",
-        timeStyle: "medium",
-      }) + " CT"
+    ? new Date(payload.expiry * 1000).toLocaleString(undefined, {
+        dateStyle: "medium",
+        timeStyle: "short",
+      })
     : "—";
 
   const expiresIn = useMemo(() => {
     if (!payload?.expiry) return null;
-    const ms = payload.expiry * 1000 - Date.now();
-    if (ms <= 0) return "expired";
-    const totalSec = Math.floor(ms / 1000);
+    const totalSec = payload.expiry - nowSec;
+    if (totalSec <= 0) return "expired";
     const m = Math.floor(totalSec / 60);
     const s = totalSec % 60;
     return `${m}:${String(s).padStart(2, "0")}`;
-  }, [payload?.expiry]);
+  }, [payload?.expiry, nowSec]);
 
   const actionSummary = useMemo(() => {
     if (!payload) return "Session";
@@ -580,7 +595,7 @@ export function SigningSessionClient({ initial }: Props) {
       <header className="g-top">
         <div className="g-top-brand">
           <GraavLogo height={30} />
-          <span className="g-pill">TESTNET</span>
+          <span className="g-pill g-testnet" title="XRPL EVM Testnet · test assets only">TESTNET</span>
         </div>
         <div className="g-top-actions">
           <AccountMenu onStatus={(msg) => setStatusMsg(asStatusText(msg))} />
@@ -588,25 +603,12 @@ export function SigningSessionClient({ initial }: Props) {
         </div>
       </header>
 
-      <p className="g-micro-warn px-4 pt-3">
-        Nothing is sent until you sign in your wallet. GRAAV never holds your key.
-      </p>
-
       <main className="g-main" style={{ maxWidth: 560, margin: "0 auto", width: "100%" }}>
-        <div className="xl" style={{ fontSize: 13, color: "var(--x)", marginBottom: 4 }}>
-          Signing request
-          {expiresIn && expiresIn !== "expired"
-            ? ` · expires in ${expiresIn}`
-            : view.status === "expired" || expiresIn === "expired"
-              ? " · expired"
-              : ""}
-        </div>
-
         <div className="g-sheet">
           <div className="g-status">
             {view.status === "signed"
               ? "Signed"
-              : view.status === "expired"
+              : view.status === "expired" || expiredLocally
                 ? "Expired"
                 : view.status === "invalid"
                   ? "Invalid"
@@ -638,8 +640,9 @@ export function SigningSessionClient({ initial }: Props) {
           </h1>
           <p className="g-hint" style={{ marginTop: 8 }}>
             {payload?.action === "create"
-              ? `Requested from your post, repost, or DM to ${GRAAV_X_HANDLE_AT}. You sign in your wallet.`
-              : "You sign in your wallet. GRAAV never holds your key."}
+              ? `Requested from your post, repost, or DM to ${GRAAV_X_HANDLE_AT}.`
+              : "Nothing is sent until you sign in your wallet."}{" "}
+            GRAAV never holds your key.
           </p>
           <p className="g-sub" style={{ marginTop: 6 }}>
             {payload?.action === "create"
@@ -648,11 +651,12 @@ export function SigningSessionClient({ initial }: Props) {
             {" · XRPL EVM "}
             {XRPL_EVM_TESTNET_ID}
           </p>
-          <p className="g-micro" style={{ marginTop: 4 }}>
-            Expires{" "}
-            {expiresIn && expiresIn !== "expired"
-              ? `in ${expiresIn}`
-              : expiryLabel}
+          <p className="g-micro" style={{ marginTop: 4 }} aria-live="polite">
+            {signed
+              ? `Signed · request was valid until ${expiryLabel}`
+              : expiresIn && expiresIn !== "expired"
+                ? `Expires in ${expiresIn} · ${expiryLabel}`
+                : `Expired ${expiryLabel}`}
           </p>
 
           {payload && (
@@ -711,6 +715,7 @@ export function SigningSessionClient({ initial }: Props) {
                     <div className="g-alert" style={{ margin: "16px 0 4px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         {payload.creatorProfileImageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element -- remote X avatar; not on the image loader allowlist
                           <img src={payload.creatorProfileImageUrl} alt="" width={42} height={42} style={{ borderRadius: "50%", objectFit: "cover" }} />
                         ) : (
                           <span className="g-av" aria-hidden>{payload.creatorXUsername?.slice(0, 1).toUpperCase() || "X"}</span>
@@ -843,10 +848,14 @@ export function SigningSessionClient({ initial }: Props) {
               <XMark size={14} /> Share on X
             </a>
           )}
+          {(blockReason || view.status === "expired" || expiredLocally) && !signed && (
+            <Link href="/?tab=Trade" className="g-cta ghost" style={{ display: "block", textAlign: "center", textDecoration: "none" }}>
+              Open Trade
+            </Link>
+          )}
           <Link href="/" className="g-cta ghost" style={{ display: "block", textAlign: "center", textDecoration: "none" }}>
-            {signed ? "Back to Markets" : "Reject"}
+            {signed ? "Back to Markets" : blockReason ? "Back to Markets" : "Reject"}
           </Link>
-          {!signed && <p className="g-hint">An expired request or a wallet on another network cannot send.</p>}
         </div>
 
         {(statusMsg || txHash || view.txHash || writeError) && (
@@ -874,12 +883,6 @@ export function SigningSessionClient({ initial }: Props) {
             )}
           </div>
         )}
-
-        <p className="g-micro" style={{ marginTop: 24, textAlign: "center" }}>
-          <Link href="/" style={{ color: "var(--muted)" }}>
-            ← Back to GRAAV
-          </Link>
-        </p>
       </main>
     </div>
   );

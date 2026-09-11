@@ -7,24 +7,37 @@ import { useRouter } from "next/navigation";
 import { AppChrome } from "@/components/AppChrome";
 import { FACTORY_ADDRESS, XRPL_EVM_TESTNET_ID } from "@/lib/chain";
 import type { PfpProfile } from "@/lib/pfpTypes";
+import { sourcePostIdFromInput } from "@/lib/rlusd-v1/createCoin";
+import { useWalletActions } from "@/lib/useWalletActions";
+import { parseXPostUrl } from "@/lib/xLaunchComposer";
+
+/** Accepts an x.com status link or a bare numeric post id; empty means no origin. */
+function originPostId(raw: string): { id: string | null; invalid: boolean } {
+  const trimmed = raw.trim();
+  if (!trimmed) return { id: null, invalid: false };
+  if (/^\d{5,25}$/.test(trimmed)) return { id: trimmed, invalid: false };
+  const parsed = parseXPostUrl(trimmed);
+  return parsed ? { id: parsed.id, invalid: false } : { id: null, invalid: true };
+}
 
 export default function NewMarketPage() {
   const { address, isConnected } = useAccount();
+  const { connect, walletConnectConnector, isConnecting } = useWalletActions();
   const router = useRouter();
   const [name, setName] = useState("");
   const [symbol, setSymbol] = useState("");
-  const [origin, setOrigin] = useState("");
+  const [originInput, setOriginInput] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [profile, setProfile] = useState<PfpProfile | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  const [sessionUrl, setSessionUrl] = useState<string | null>(null);
 
   const ticker = useMemo(
     () => symbol.trim().replace(/^\$/, ""),
     [symbol]
   );
+  const origin = useMemo(() => originPostId(originInput), [originInput]);
 
   const onPick = (f: File | null) => {
     setFile(f);
@@ -76,7 +89,11 @@ export default function NewMarketPage() {
       if (!name.trim() || !ticker) {
         throw new Error("Name and symbol required");
       }
+      if (origin.invalid) {
+        throw new Error("Paste a full x.com post link or its numeric id for the origin, or leave it empty.");
+      }
       // CREATE on M2 factory (meme / curve). gSWAP never on M2 — new markets use M2.
+      // The origin post binds into calldata as originHash = keccak256(utf8(postId)); it is never the image.
       const res = await fetch("/api/s", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -89,11 +106,13 @@ export default function NewMarketPage() {
           metadataURI: p.pfpURI,
           amount: "0",
           minOut: "0",
+          ...(origin.id
+            ? { originTweetId: origin.id, originHash: sourcePostIdFromInput(origin.id) }
+            : {}),
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "session failed");
-      setSessionUrl(data.url as string);
       router.push(`/s/${encodeURIComponent(data.id)}`);
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
@@ -132,13 +151,24 @@ export default function NewMarketPage() {
             />
           </label>
           <label className="g-field block" style={{ marginTop: 12 }}>
-            <span>Origin (optional X URL)</span>
+            <span>Origin post (optional)</span>
             <input
-              value={origin}
-              onChange={(e) => setOrigin(e.target.value)}
-              placeholder="https://x.com/…"
+              value={originInput}
+              onChange={(e) => setOriginInput(e.target.value)}
+              placeholder="https://x.com/…/status/…"
+              inputMode="url"
+              autoComplete="off"
+              spellCheck={false}
+              aria-invalid={origin.invalid || undefined}
             />
           </label>
+          <p className="g-hint" style={{ marginTop: 6 }}>
+            {origin.invalid
+              ? "Paste a full x.com post link or its numeric id, or leave it empty."
+              : origin.id
+                ? `Post ${origin.id} is recorded as the origin of this market.`
+                : "The post this coin comes from. Recorded on the market; never used as the image."}
+          </p>
 
           <div style={{ marginTop: 16 }}>
             <div className="g-sub" style={{ marginBottom: 8 }}>
@@ -224,8 +254,22 @@ export default function NewMarketPage() {
           )}
 
           {!isConnected && (
-            <div className="g-alert warn" style={{ marginTop: 16 }}>
-              Connect your wallet first — creating a market requires your signature.
+            <div className="g-alert" style={{ marginTop: 16 }}>
+              You can connect on the signing page, or{" "}
+              {walletConnectConnector ? (
+                <button
+                  type="button"
+                  className="link-x"
+                  style={{ background: "none", border: 0, padding: 0, cursor: "pointer", fontWeight: 650 }}
+                  disabled={isConnecting}
+                  onClick={() => void connect().then((r) => { if (!r.ok) setErr(r.error ?? "Could not connect a wallet."); })}
+                >
+                  {isConnecting ? "connecting…" : "connect your wallet now"}
+                </button>
+              ) : (
+                <span>connect a wallet once it is available on this deployment</span>
+              )}
+              . Your signature creates the market.
             </div>
           )}
 
@@ -238,19 +282,14 @@ export default function NewMarketPage() {
           <button
             type="button"
             className="g-cta"
-            disabled={busy || !name.trim() || !ticker}
+            disabled={busy || !name.trim() || !ticker || origin.invalid}
             onClick={() => void handleCreateSession()}
           >
             {busy ? "Preparing…" : "Review and sign"}
           </button>
           <p className="g-hint">
-            Opens a signing session for the create. The origin post is recorded; it never becomes the token image.
+            Opens a signing request for the create. Nothing is created until your wallet signs.
           </p>
-          {sessionUrl && (
-            <p className="g-micro" style={{ marginTop: 8, wordBreak: "break-all" }}>
-              Session: {sessionUrl}
-            </p>
-          )}
         </div>
       </main>
     </AppChrome>

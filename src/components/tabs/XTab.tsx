@@ -224,10 +224,7 @@ export function XTab() {
 
       <div className="g-sheet" style={{ marginTop: 0 }}>
         <h3 className="text-sm font-semibold">Sign in with X</h3>
-        <p className="g-hint">
-          Links your X identity for creator and share rewards. It never posts for you and never
-          authorizes a trade.
-        </p>
+        <p className="g-hint">Links your X identity for creator and share rewards.</p>
         <div className="mt-3">
           <ConnectX />
         </div>

@@ -55,7 +55,7 @@ export function ChatTab({ onHandoff }: Props) {
     {
       id: "welcome",
       role: "bot",
-      text: `Ask me to launch, buy, sell, or show your portfolio. The same commands work in posts, reposts, and DMs to ${GRAAV_X_HANDLE_AT}. Chat previews; your wallet signs.\n\nTry: LAUNCH HORMUZ · BUY gSWAP 0.1 · PORTFOLIO`,
+      text: `Ask me to launch, buy, sell, or show your portfolio. The same commands work in posts, reposts, and DMs to ${GRAAV_X_HANDLE_AT}.\n\nTry: LAUNCH HORMUZ · BUY gSWAP 0.1 · PORTFOLIO`,
     },
   ]);
 

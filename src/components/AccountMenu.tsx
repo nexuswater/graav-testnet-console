@@ -25,6 +25,7 @@ import { asStatusText } from "@/lib/statusMsg";
 import { WalletConnectMark } from "@/components/WalletConnectMark";
 import { XMark } from "@/components/XMark";
 import { XrplMark } from "@/components/XrplMark";
+import { tradePostIntentUrl } from "@/lib/xLaunchComposer";
 
 type MeResponse = {
   bound: boolean;
@@ -190,6 +191,7 @@ export function AccountMenu({ onStatus }: Props) {
         onClick={() => setOpen((v) => !v)}
       >
         {xBound && me?.profileImageUrl && !xAvatarFailed ? (
+          // eslint-disable-next-line @next/next/no-img-element -- remote X avatar; not on the image loader allowlist
           <img className="g-account-trigger-avatar" src={me.profileImageUrl} alt="" onError={() => setXAvatarFailed(true)} />
         ) : walletReady ? (
           <span className="g-av">{avLetter}</span>
@@ -240,6 +242,7 @@ export function AccountMenu({ onStatus }: Props) {
           title={"profile details"}
         >
           {me?.profileImageUrl && !xAvatarFailed ? (
+            // eslint-disable-next-line @next/next/no-img-element -- remote X avatar; not on the image loader allowlist
             <img className="g-account-avatar" src={me.profileImageUrl} alt="" onError={() => setXAvatarFailed(true)} />
           ) : (
             <span className="g-account-avatar g-account-avatar-fallback">{xLetter}</span>
@@ -346,6 +349,19 @@ export function AccountMenu({ onStatus }: Props) {
       >
         Account &amp; rewards
       </Link>
+      {(walletReady || xBound) && (
+        <a
+          href={tradePostIntentUrl("buy", "gSWAP", "0.1")}
+          role="menuitem"
+          className="g-menu-item"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Opens X with a buy command prefilled — nothing is posted for you"
+          onClick={() => setOpen(false)}
+        >
+          Trade on X ↗
+        </a>
+      )}
         </div>
       )}
     </div>

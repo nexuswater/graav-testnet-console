@@ -11,6 +11,8 @@ import {
   type CorridorGate,
 } from "@/lib/crosschain/corridor";
 import { BaseSepoliaCorridorCard } from "@/components/tabs/BaseSepoliaCorridorCard";
+import { XMark } from "@/components/XMark";
+import { GRAAV_X_HANDLE_AT, tradeDmUrl, tradePostIntentUrl } from "@/lib/xLaunchComposer";
 
 type ProbeStatus = "ok" | "blocked" | "unsupported";
 
@@ -170,8 +172,7 @@ export function CrossChainTab({ onGoTrade }: Props) {
       <section>
         <h1 className="g-title">Funding</h1>
         <p className="g-sub" style={{ marginTop: 8 }}>
-          Bring USDC in from another chain and land as RLUSD on XRPL EVM. Buying through a
-          corridor opens only once its live route checks pass.
+          Bring USDC in from another chain and land as RLUSD on XRPL EVM.
         </p>
       </section>
 
@@ -180,9 +181,32 @@ export function CrossChainTab({ onGoTrade }: Props) {
       <div className="g-card">
         <div style={{ fontWeight: 650 }}>Already on XRPL EVM?</div>
         <p className="g-sub" style={{ marginTop: 4 }}>
-          You only need XRP for gas. Then trade from a post or DM on X, or in the in-app rail.
+          You only need XRP for gas. Then trade from a post or DM to {GRAAV_X_HANDLE_AT}, or sign here.
         </p>
         <div className="flex flex-wrap gap-2" style={{ marginTop: 12 }}>
+          <a
+            href={tradePostIntentUrl("buy", "gSWAP", "0.1")}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="g-btn sm"
+            style={{ background: "var(--cta-bg)", color: "var(--cta-fg)", border: 0, fontWeight: 650, textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}
+            title="Opens X with a buy command prefilled — nothing is posted for you"
+          >
+            <XMark size={12} /> Buy on X
+          </a>
+          <a
+            href={tradeDmUrl("buy", "gSWAP", "0.1")}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="g-btn sm"
+            style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}
+            title={`DM ${GRAAV_X_HANDLE_AT}`}
+          >
+            <XMark size={12} /> DM
+          </a>
+          <button type="button" onClick={() => onGoTrade()} className="g-btn sm">
+            Open Trade
+          </button>
           <a
             href={FAUCET_URL}
             target="_blank"
@@ -192,14 +216,6 @@ export function CrossChainTab({ onGoTrade }: Props) {
           >
             Get XRP (faucet)
           </a>
-          <button
-            type="button"
-            onClick={() => onGoTrade()}
-            className="g-btn sm"
-            style={{ background: "var(--cta-bg)", color: "var(--cta-fg)", border: 0, fontWeight: 650 }}
-          >
-            Open Trade
-          </button>
         </div>
       </div>
 
