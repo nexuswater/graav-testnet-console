@@ -94,13 +94,14 @@ export function AppShell({
         </div>
       </header>
 
-      <div className="g-secondary-nav" aria-label="Product path">
-        <Link href="/launch" className={isOn("launch") ? "on" : undefined}>Ideas</Link>
+      <div className="g-secondary-nav" aria-label="graav.xyz — setup, charts, account">
+        <Link href="/launch" className={isOn("launch") ? "on" : undefined}>Setup</Link>
         <span aria-hidden="true">→</span>
-        <Link href="/" className={isOn("markets") ? "on" : undefined}>Coins</Link>
+        <Link href="/" className={isOn("markets") ? "on" : undefined}>Charts</Link>
         <span aria-hidden="true">→</span>
-        <Link href="/you" className={isOn("you") ? "on" : undefined}>Ownership</Link>
+        <Link href="/you" className={isOn("you") ? "on" : undefined}>Account</Link>
       </div>
+      <p className="g-lock-bar">Daily ops on X · this desk is setup, charts, and account</p>
 
       {message && (
         <div className="g-status-msg">

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { TokenPfp } from "@/components/pfp/TokenPfp";
 import { ArrowRightIcon, SearchIcon } from "@/components/shell/Icons";
+import { XPrimaryNote } from "@/components/XPrimaryNote";
 import { homeMarkets } from "@/lib/marketsRegistry";
 import { registryRowAvailability } from "@/lib/rlusd-v1/availability";
 import { RLUSD_MARKET_REGISTRY } from "@/lib/rlusd-v1/marketRegistry";
@@ -71,15 +72,19 @@ export function MarketsView() {
       <section className="g-hero">
         <div>
           <h1 className="g-hero-title">Ideas become markets.</h1>
-          <p className="g-hero-sub">Discover coins born from posts.</p>
+          <p className="g-hero-sub">
+            Charts on graav.xyz. Daily launch, trade, and share happen on X — posts, reposts, or DMs.
+          </p>
         </div>
         <Link href="/launch" className="g-cta g-cta-inline">
-          Launch coin →
+          Launch on X →
         </Link>
       </section>
 
+      <XPrimaryNote />
+
       <div className="g-network-bar">
-        <span>XRPL EVM Testnet · Test assets only</span>
+        <span>XRPL EVM Testnet · Test RLUSD / XRP · test assets only</span>
         <span className="g-network-status">
           <span className="g-dot" />
           New coin launches are being connected
@@ -93,8 +98,8 @@ export function MarketsView() {
             className="g-search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search coins or paste an X post"
-            aria-label="Search coins or paste an X post"
+            placeholder="Search coins"
+            aria-label="Search coins"
           />
         </label>
         <div className="g-filters" role="tablist" aria-label="Market filters">
@@ -146,10 +151,10 @@ export function MarketsView() {
       </div>
 
       <footer className="g-launch-progress">
-        <span>Create from a post</span>
+        <span>Daily on X</span>
         <ol>
-          <li>Choose a post</li>
-          <li>Review details</li>
+          <li>Post · repost · DM</li>
+          <li>Open /s · optional seed</li>
           <li>Sign in wallet</li>
         </ol>
       </footer>

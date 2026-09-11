@@ -1,5 +1,12 @@
 import { NextResponse } from "next/server";
 import { XRPL_EVM_TESTNET_ID, FAUCET_URL } from "@/lib/chain";
+import {
+  BASE_SEPOLIA_CORRIDOR,
+  DEFERRED_REASON,
+  baseCorridorGate,
+  isActiveCorridor,
+  type CorridorGate,
+} from "@/lib/crosschain/corridor";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,7 +33,8 @@ type SourceDef = {
   substitute?: { label: string; chainId: number; axelarId?: string };
 };
 
-/** Spend-USDC sources → settle 1449000. Never invent routes. */
+/** Spend-USDC sources → settle 1449000. Never invent routes.
+ * Only ACTIVE corridors (Base Sepolia) are probed this slice; others are deferred. */
 const SOURCES: SourceDef[] = [
   {
     key: "base",
@@ -192,6 +200,8 @@ export type ProbeResponse = {
   note: string;
   anyPass: boolean;
   buyEnabledCount: number;
+  /** Base Sepolia first corridor gate (USDC → RLUSD → 1449000). Fail-closed. */
+  corridor: CorridorGate;
   /** Aggregated USDC→GRAAV path (SoT). Never invent PASS. */
   path: AggregatedPath;
   providers: ProviderRow[];
@@ -276,6 +286,7 @@ async function probeSquid(integrator: string) {
   const usdcByChain = new Map<number, { hasUsdc: boolean; address: string | null }>();
   const needIds = new Set<number>();
   for (const s of SOURCES) {
+    if (!isActiveCorridor(s.key)) continue;
     needIds.add(s.chainId);
     if (s.substitute) needIds.add(s.substitute.chainId);
   }
@@ -707,6 +718,26 @@ function buildLeg(
   };
 }
 
+/** Deferred sources are not probed. Fail-closed placeholder, never a route. */
+function deferredLeg(def: SourceDef): ProbeLeg {
+  return {
+    key: def.key,
+    label: def.label,
+    fromChainId: def.chainId,
+    toChainId: DEST,
+    provider: "none",
+    providers: [],
+    nextStep: NEXT_FAUCET_TRADE,
+    group: def.group,
+    hasUsdc: false,
+    usdcAddress: null,
+    ok: false,
+    result: "FAIL",
+    status: "unsupported",
+    reason: `DEFERRED: ${def.label} (${def.chainId}) — ${DEFERRED_REASON}`,
+  };
+}
+
 async function buildProbe(): Promise<ProbeResponse> {
   const integrator = pickIntegrator();
 
@@ -731,10 +762,25 @@ async function buildProbe(): Promise<ProbeResponse> {
   const byKey: Record<string, ProbeLeg> = {};
   const sources: ProbeLeg[] = [];
   for (const s of SOURCES) {
-    const row = buildLeg(s, { providers, squid, axelar });
+    const row = isActiveCorridor(s.key)
+      ? buildLeg(s, { providers, squid, axelar })
+      : deferredLeg(s);
     byKey[s.key] = row;
     sources.push(row);
   }
+
+  const corridor = baseCorridorGate({
+    squidHasDest: squid.hasDest,
+    squidHasSource: squid.ids.has(String(BASE_SEPOLIA_CORRIDOR.chainId)),
+    usdcOnSource: squid.usdcByChain.get(BASE_SEPOLIA_CORRIDOR.chainId)?.hasUsdc ?? false,
+    rlusdOnDest: axelar.hasRlusdOnDest,
+    axelarHasSource:
+      axelar.sourceIds.has(BASE_SEPOLIA_CORRIDOR.axelarId) ||
+      axelar.sourceChainIds.has(String(BASE_SEPOLIA_CORRIDOR.chainId)),
+    // Never true this slice: no live quote, no new write rails.
+    liveQuote: false,
+    signedTxWired: false,
+  });
 
   const buyEnabledCount = sources.filter((r) => r.ok && r.result === "PASS").length;
   // Buy remains fail-closed until a live Squid USDC→RLUSD quote and depth smoke pass.
@@ -777,7 +823,7 @@ async function buildProbe(): Promise<ProbeResponse> {
         label: "USDC on source EVM",
         status: "planned",
         detail:
-          "Base · Hyperliquid · Robinhood + top-7 — spend USDC on source; not hold-USDC-on-dest.",
+          "Base Sepolia first corridor — spend USDC on source; not hold-USDC-on-dest. Arb / RH / HL deferred until Base PASS.",
       },
       {
         id: "aggregator-settle",
@@ -815,9 +861,10 @@ async function buildProbe(): Promise<ProbeResponse> {
     destLabel: "XRPL EVM Testnet",
     faucet: FAUCET_URL,
     note:
-      "Aggregated*: Squid-first USDC→RLUSD on XRPL EVM 1440000. Live quote + depth smoke is required before Buy. Testnet 1449000 is fail-closed; display RLUSD only.",
+      "Base Sepolia is the first inbound corridor: USDC → RLUSD → XRPL EVM 1449000. Live quote + depth smoke is required before Buy. Fail-closed; display RLUSD only. Arb / RH / HL deferred until Base PASS.",
     anyPass: buyEnabledCount > 0,
     buyEnabledCount,
+    corridor,
     path,
     providers,
     squid: {

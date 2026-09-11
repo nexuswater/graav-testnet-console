@@ -16,9 +16,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GRAAV · XRPL EVM Testnet",
+  title: "GRAAV · setup, charts, account",
   description:
-    "GRAAV standalone signing desk on XRPL EVM Testnet. TESTNET · not mainnet · chat ≠ authorization.",
+    "graav.xyz is setup, account, and charts. Daily ops on X — posts, reposts, and DMs. TESTNET · chat ≠ authorization · signature or nothing via /s.",
 };
 
 export default function RootLayout({

@@ -48,6 +48,7 @@ import { shortAddr } from "@/lib/wallet";
 import type { TradePrefill } from "@/lib/tradePrefill";
 import { Field } from "@/components/ui";
 import { TokenPfp } from "@/components/pfp/TokenPfp";
+import { XPrimaryNote } from "@/components/XPrimaryNote";
 import { RLUSD_V1 as RLUSD } from "@/lib/rlusd-v1/config";
 import { RLUSD_MARKET_REGISTRY } from "@/lib/rlusd-v1/marketRegistry";
 import { RlusdTradePanel } from "@/components/rlusd/RlusdTradePanel";
@@ -699,21 +700,22 @@ export function TradeTab({
 
       {RLUSD.profile === "testnet-clone" && (
         <div className="g-alert" style={{ marginBottom: 16 }}>
-          RLUSD Coin V1 factory is pinned. New launches stay unavailable until a signed createCoin binds a coin and curve.
+          RLUSD Coin V1 factory is pinned. Daily launch is on X. In-app trade here is fallback until a signed createCoin binds a coin and curve.
           <span className="flex flex-wrap gap-2" style={{ marginTop: 10 }}>
-            <Link href="/launch" className="g-btn sm" style={{ textDecoration: "none" }}>Launch coin</Link>
-            <Link href="/" className="g-btn sm" style={{ textDecoration: "none" }}>Markets</Link>
+            <Link href="/launch" className="g-btn sm" style={{ textDecoration: "none" }}>Launch on X</Link>
+            <Link href="/" className="g-btn sm" style={{ textDecoration: "none" }}>Charts</Link>
           </span>
         </div>
       )}
+      <XPrimaryNote />
       <div className="flex items-center justify-between" style={{ marginBottom: 8 }}>
-        <h1 className="g-title">Markets</h1>
+        <h1 className="g-title">Trade · fallback</h1>
         <Link
           href="/new"
           className="g-btn sm"
           style={{ background: "var(--x)", color: "#fff", border: 0, fontWeight: 650, textDecoration: "none" }}
         >
-          New market
+          Advanced · new market
         </Link>
       </div>
       <section aria-labelledby="rlusd-markets">

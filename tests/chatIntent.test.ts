@@ -44,5 +44,10 @@ test("does not invent a session for malformed or garbage text", () => {
 
 test("extracts other commands from surrounding prose", () => {
   assert.equal(parseIntent("hey @graav_xyz, portfolio please").kind, "portfolio");
-  assert.equal(parseIntent("please CREATE $newcoin when ready").kind, "launch");
+  const launch = parseIntent("please CREATE $newcoin when ready");
+  assert.equal(launch.kind, "launch");
+  assert.match(launch.reply, /on X/i);
+  assert.match(launch.reply, /\/s/);
+  assert.match(launch.reply, /Chat never authorizes/i);
+  assert.equal(launch.handoff?.label, "Launch $newcoin on X");
 });

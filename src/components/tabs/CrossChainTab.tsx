@@ -6,6 +6,16 @@ import { FAUCET_URL, XRPL_EVM_TESTNET_ID } from "@/lib/chain";
 import { shortAddr } from "@/lib/wallet";
 import type { TradePrefill } from "@/lib/tradePrefill";
 import { homeMarkets } from "@/lib/marketsRegistry";
+import { CROSS_CHAIN_FAIL_CLOSED_LINE } from "@/lib/xPrimary";
+import {
+  BASE_SEPOLIA_CORRIDOR,
+  CORRIDOR_ORDER_LINE,
+  DEFERRED_CORRIDORS,
+  DEFERRED_REASON,
+  NO_LIVE_QUOTE_LINE,
+  isActiveCorridor,
+  type CorridorGate,
+} from "@/lib/crosschain/corridor";
 
 type ProbeStatus = "ok" | "blocked" | "unsupported";
 
@@ -86,6 +96,7 @@ type ProbeResponse = {
   note?: string;
   anyPass?: boolean;
   buyEnabledCount?: number;
+  corridor?: CorridorGate;
   path?: AggregatedPath;
   providers?: ProviderRow[];
   squid: {
@@ -155,13 +166,14 @@ export function CrossChainTab({ onGoTrade }: Props) {
 
   const dest = address || null;
   const sources = probe?.sources ?? [];
-  const priority = sources.filter((s) => s.group === "priority3");
-  const top7 = sources.filter((s) => s.group === "top7");
+  const active = sources.filter((s) => isActiveCorridor(s.key));
+  const deferred = sources.filter((s) => !isActiveCorridor(s.key));
   const enabled = sources.filter((s) => s.ok && s.result === "PASS");
   const providers = probe?.providers ?? [];
   const path = probe?.path;
-  const anyPass = !!(probe?.anyPass && path?.buyEnabled);
-  const selected = sources.find((s) => s.key === selectedKey) ?? null;
+  const corridor = probe?.corridor ?? null;
+  const anyPass = !!(probe?.anyPass && path?.buyEnabled && corridor?.pass);
+  const selected = sources.find((s) => s.key === selectedKey && isActiveCorridor(s.key)) ?? null;
   const featured = homeMarkets();
 
   const handoffTrade = (sym: string) => {
@@ -178,15 +190,64 @@ export function CrossChainTab({ onGoTrade }: Props) {
       <section>
         <h1 className="g-title">Funding</h1>
         <p className="g-sub" style={{ marginTop: 8 }}>
-          Testnet funding stays fail-closed. Display quote is RLUSD. Mainnet Buy is closed.
+          Home is XRPL EVM Testnet {XRPL_EVM_TESTNET_ID} with Test RLUSD. Testnet funding stays fail-closed. Mainnet Buy is closed.
         </p>
         <p className="g-hint" style={{ marginTop: 8 }}>
-          Availability is shown below. Probe diagnostics stay behind Details.
+          {CORRIDOR_ORDER_LINE} Probe diagnostics stay behind Details. Daily ops stay on X.
         </p>
       </section>
 
+      <div className="g-card g-corridor" aria-labelledby="base-corridor-title">
+        <div className="flex items-center justify-between gap-2 flex-wrap" style={{ marginBottom: 8 }}>
+          <div>
+            <div id="base-corridor-title" style={{ fontWeight: 650 }}>
+              First corridor · {BASE_SEPOLIA_CORRIDOR.label}
+            </div>
+            <div className="g-micro" style={{ marginTop: 2 }}>
+              {BASE_SEPOLIA_CORRIDOR.path} · {BASE_SEPOLIA_CORRIDOR.via}
+            </div>
+          </div>
+          <span className="g-pill g-corridor-status" data-pass={corridor?.pass ? "true" : "false"}>
+            {loading && !corridor ? "PROBING" : corridor?.status ?? "FAIL-CLOSED"}
+          </span>
+        </div>
+        <ol className="g-route-order g-corridor-checks" aria-label="Base Sepolia route checks">
+          {(corridor?.checks ?? []).map((k) => (
+            <li key={k.id}>
+              <span className="g-micro">{k.ok ? "OK" : "BLOCK"}</span>
+              <span>
+                <strong>{k.label}</strong>
+                <em>{k.detail}</em>
+              </span>
+            </li>
+          ))}
+          {!corridor && (
+            <li>
+              <span className="g-micro">{loading ? "…" : "—"}</span>
+              <strong>{loading ? "Probing Base Sepolia catalogs…" : err || "Probe unavailable — fail-closed"}</strong>
+            </li>
+          )}
+        </ol>
+        <p className="g-hint">
+          {CROSS_CHAIN_FAIL_CLOSED_LINE} {NO_LIVE_QUOTE_LINE} Buy stays disabled until every
+          check is OK on Base. Catalog presence ≠ live quote.
+        </p>
+        <div className="g-corridor-deferred">
+          <span className="g-micro">NEXT</span>
+          <span>
+            {DEFERRED_CORRIDORS.filter((d) => d.stage === "after-base").map((d) => d.label).join(" · ")} — only after Base Sepolia PASS.
+          </span>
+        </div>
+        <div className="g-corridor-deferred" style={{ marginTop: 6, paddingTop: 6 }}>
+          <span className="g-micro">LATER</span>
+          <span>
+            {DEFERRED_CORRIDORS.filter((d) => d.stage === "later").map((d) => d.label).join(" · ")} — {DEFERRED_REASON}
+          </span>
+        </div>
+      </div>
+
       <div className="g-alert">
-        Availability: testnet Buy is disabled. A live Squid USDC→RLUSD quote is required before any Buy.
+        Availability: testnet Buy is disabled. {NO_LIVE_QUOTE_LINE} Base Sepolia is the only corridor under check.
       </div>
 
       <details className="g-details">
@@ -379,14 +440,14 @@ export function CrossChainTab({ onGoTrade }: Props) {
         )}
       </div>
 
-      {/* Source select + honest handoff */}
+      {/* Source select + honest handoff — Base only this slice */}
       <div className="g-card">
-        <div style={{ fontWeight: 650 }}>Source USDC → RLUSD (policy preview)</div>
+        <div style={{ fontWeight: 650 }}>Source USDC → RLUSD (Base Sepolia first)</div>
         <p className="g-micro" style={{ marginTop: 4, color: "var(--muted)" }}>
-          Select a source to inspect the Squid-first lane; testnet Buy is fail-closed.
+          Only Base Sepolia is wired for route checks. Testnet Buy is fail-closed.
         </p>
         <div className="flex flex-wrap gap-2" style={{ marginTop: 10 }}>
-          {sources.map((s) => (
+          {active.map((s) => (
             <button
               key={s.key}
               type="button"
@@ -401,11 +462,23 @@ export function CrossChainTab({ onGoTrade }: Props) {
               {s.label}
             </button>
           ))}
+          {deferred.map((s) => (
+            <button
+              key={s.key}
+              type="button"
+              className="g-btn sm"
+              disabled
+              title={DEFERRED_REASON}
+              style={{ opacity: 0.4, cursor: "not-allowed" }}
+            >
+              {s.label} · deferred
+            </button>
+          ))}
         </div>
         {selected && (
           <div style={{ marginTop: 12 }}>
             <div className="g-alert warn">
-              No live Squid USDC→RLUSD quote is available. Testnet Buy on 1449000 stays disabled.
+              No live Squid USDC→RLUSD quote from Base Sepolia. Testnet Buy on 1449000 stays disabled.
             </div>
             <div className="flex flex-wrap gap-2 items-center" style={{ marginTop: 10 }}>
               <label className="g-micro">
@@ -491,9 +564,9 @@ export function CrossChainTab({ onGoTrade }: Props) {
             )}
 
             <div style={{ fontWeight: 650, marginTop: 8 }}>
-              Priority 3 — Base · Hyperliquid · Robinhood
+              First corridor — Base Sepolia
             </div>
-            {priority.map((leg) => (
+            {active.map((leg) => (
               <SourceCard
                 key={leg.key}
                 leg={leg}
@@ -504,26 +577,20 @@ export function CrossChainTab({ onGoTrade }: Props) {
             ))}
 
             <div style={{ fontWeight: 650, marginTop: 8 }}>
-              Top 7 v1 testnets
+              Deferred — not probed this slice
             </div>
-            {top7.map((leg) => (
-              <SourceCard
-                key={leg.key}
-                leg={leg}
-                anyPass={anyPass}
-                onSelect={() => setSelectedKey(leg.key)}
-                selected={selectedKey === leg.key}
-              />
-            ))}
+            <p className="g-micro" style={{ color: "var(--muted)" }}>
+              Arbitrum Sepolia only after Base PASS · Robinhood / Hyperliquid later ·{" "}
+              {deferred.filter((leg) => !DEFERRED_CORRIDORS.some((d) => d.key === leg.key)).map((leg) => leg.label).join(" · ")}
+            </p>
           </div>
         )}
       </div>
 
       {probe && !anyPass && (
         <p className="g-hint">
-          No Buy CTAs enabled — no provider proves E2E USDC → {XRPL_EVM_TESTNET_ID}.
-          Axelar lists dest but USDC ITS not registered. Use faucet + Trade on
-          destination.
+          No Buy CTAs enabled — Base Sepolia has not proven E2E USDC → RLUSD → {XRPL_EVM_TESTNET_ID}.
+          Use faucet + Trade on destination.
         </p>
       )}
       </details>
