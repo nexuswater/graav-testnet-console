@@ -6,8 +6,6 @@ import { FAUCET_URL, XRPL_EVM_TESTNET_ID } from "@/lib/chain";
 import { shortAddr } from "@/lib/wallet";
 import type { TradePrefill } from "@/lib/tradePrefill";
 import {
-  BASE_SEPOLIA_CORRIDOR,
-  DEFERRED_CORRIDORS,
   DEFERRED_REASON,
   isActiveCorridor,
   type CorridorGate,
@@ -177,52 +175,7 @@ export function CrossChainTab({ onGoTrade }: Props) {
         </p>
       </section>
 
-      <div className="g-card g-corridor" aria-labelledby="base-corridor-title">
-        <div className="flex items-center justify-between gap-2 flex-wrap" style={{ marginBottom: 8 }}>
-          <div>
-            <div id="base-corridor-title" style={{ fontWeight: 650 }}>
-              {BASE_SEPOLIA_CORRIDOR.label} → XRPL EVM
-            </div>
-            <div className="g-micro" style={{ marginTop: 2 }}>
-              USDC → RLUSD · via {BASE_SEPOLIA_CORRIDOR.via.replace("Aggregated · ", "")}
-            </div>
-          </div>
-          <span className="g-pill g-corridor-status" data-pass={gateOpen ? "true" : "false"}>
-            {loading && !corridor ? "Checking" : gateOpen ? "Open" : "Not yet open"}
-          </span>
-        </div>
-        <ol className="g-route-order g-corridor-checks" aria-label="Route checks">
-          {checks.map((k) => (
-            <li key={k.id}>
-              <span className="g-micro">{k.ok ? "OK" : "—"}</span>
-              <span>
-                <strong>{k.label}</strong>
-                <em>{k.detail}</em>
-              </span>
-            </li>
-          ))}
-          {!corridor && (
-            <li>
-              <span className="g-micro">{loading ? "…" : "—"}</span>
-              <strong>{loading ? "Checking route catalogs…" : err || "Route check unavailable"}</strong>
-            </li>
-          )}
-        </ol>
-        <p className="g-hint">
-          {checks.length > 0 ? `${okCount} of ${checks.length} checks pass. ` : ""}
-          Buy stays off until a live quote and signed transaction rail exist for this corridor.
-        </p>
-        <div className="g-corridor-deferred">
-          <span className="g-micro">NEXT</span>
-          <span>
-            {DEFERRED_CORRIDORS.filter((d) => d.stage === "after-base").map((d) => d.label).join(" · ")} — after {BASE_SEPOLIA_CORRIDOR.label} opens.
-          </span>
-        </div>
-        <div className="g-corridor-deferred" style={{ marginTop: 6, paddingTop: 6 }}>
-          <span className="g-micro">LATER</span>
-          <span>{DEFERRED_CORRIDORS.filter((d) => d.stage === "later").map((d) => d.label).join(" · ")}</span>
-        </div>
-      </div>
+      <BaseSepoliaCorridorCard />
 
       <div className="g-card">
         <div style={{ fontWeight: 650 }}>Already on XRPL EVM?</div>
@@ -250,10 +203,37 @@ export function CrossChainTab({ onGoTrade }: Props) {
         </div>
       </div>
 
-      <BaseSepoliaCorridorCard />
-
       <details className="g-details">
         <summary>Route diagnostics</summary>
+
+        <div className="g-card" style={{ marginTop: 12 }}>
+          <div style={{ fontWeight: 650 }}>Catalog checks</div>
+          <p className="g-hint" style={{ marginTop: 4 }}>
+            Provider catalogs only — being listed is not a route. The card above is the live verdict.
+          </p>
+          <ol className="g-route-order g-corridor-checks" aria-label="Catalog checks" style={{ marginTop: 8 }}>
+            {checks.map((k) => (
+              <li key={k.id}>
+                <span className="g-micro">{k.ok ? "OK" : "—"}</span>
+                <span>
+                  <strong>{k.label}</strong>
+                  <em>{k.detail}</em>
+                </span>
+              </li>
+            ))}
+            {!corridor && (
+              <li>
+                <span className="g-micro">{loading ? "…" : "—"}</span>
+                <strong>{loading ? "Checking catalogs…" : err || "Catalog check unavailable"}</strong>
+              </li>
+            )}
+          </ol>
+          {checks.length > 0 && (
+            <p className="g-micro" style={{ marginTop: 8, color: "var(--muted)" }}>
+              {okCount} of {checks.length} catalog checks pass.
+            </p>
+          )}
+        </div>
 
         <div className="g-card" style={{ marginTop: 12 }}>
           <div className="flex items-center justify-between gap-2 flex-wrap">
